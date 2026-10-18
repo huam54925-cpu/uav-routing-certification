@@ -1,0 +1,11 @@
+import LeanCompletion.UAV.Case1Infeasible
+#print axioms UAVProof.Case1Certificate.certificate_decomposition
+#print axioms UAVProof.Case1Certificate.certificate_value
+#print axioms UAVProof.Case1Certificate.certificate_lower
+#print axioms UAVProof.Case1Fleet.bound_ge_three_adjusted
+#print axioms UAVProof.Case1Fleet.at_most_three_infeasible_of_certificate
+#print axioms UAVProof.Case1Infeasible.at_most_three_infeasible
+#print axioms UAVProof.Case1Infeasible.feasible_fleet_card_ge_four
+#print axioms UAVProof.Case1Infeasible.one_vehicle_infeasible
+#print axioms UAVProof.Case1Infeasible.two_vehicles_infeasible
+#print axioms UAVProof.Case1Infeasible.three_vehicles_infeasible

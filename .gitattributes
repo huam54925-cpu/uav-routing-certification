@@ -1,0 +1,9 @@
+# Preserve published source and fixed input bytes across platforms.
+# In particular, the binding scripts hash the original JSON file bytes.
+* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Frozen TeX uses a significant backslash-space at line end; retain its bytes.
+/paper/original/main.tex whitespace=-blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+/paper/revised/main.tex whitespace=-blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+*.pdf binary
+*.png binary
+*.xlsx binary
