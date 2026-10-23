@@ -24,3 +24,10 @@ StructuralServiceCuts, LargeServiceCuts, FixedFlowObstruction and
 FixedFlowStructuralCutExample. See [service-cut verification and build commands](../../docs/SERVICE_CUTS_VERIFICATION.md)
 for the new results, dependency targets and local-cache limitations. These
 extensions do not replace the thirteen frozen Case1 modules above.
+
+SharedReturnServiceCuts generalizes forced-return accounting to a set of nodes,
+and SharedReturnLargeServiceCuts combines that accounting with large-service
+counting while retaining the number of routes serving the threshold set.
+See [shared-return results and verification](../../docs/SHARED_RETURN_SERVICE_CUTS.md)
+for build commands, singleton specializations, redundancy results, and the
+remaining strict-strength question.
