@@ -66,9 +66,10 @@ and capacity C=T-s(a) to the existing large-service counting framework:
 - `required_effective_threshold_count_le` supplies the filtered threshold-set
   interface with coverage assumed on B.
 
-The threshold is strict. No claim is made at equality. A strict-strength
-witness relative to a specified collection of earlier conditions remains
-future work. No additional four-node counterexample was added.
+The threshold is strict. No claim is made at equality. A subsequent six-node
+witness is now provided by SharedReturnSeparationExample, relative to its
+explicit PreviousConditions. See [the separation status and resume note](SHARED_RETURN_SEPARATION_STATUS.md).
+No additional four-node counterexample was added.
 
 A mathematical observation, not a separate theorem formalized in these files:
 under the shared-return support and exact coverage, all outgoing edges of

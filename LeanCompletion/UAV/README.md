@@ -30,4 +30,9 @@ and SharedReturnLargeServiceCuts combines that accounting with large-service
 counting while retaining the number of routes serving the threshold set.
 See [shared-return results and verification](../../docs/SHARED_RETURN_SERVICE_CUTS.md)
 for build commands, singleton specializations, redundancy results, and the
-remaining strict-strength question.
+scope of strict-strength comparisons.
+
+SharedReturnSeparationExample supplies the six-node strict-separation witness
+relative to its explicit PreviousConditions. See the [completion and resume note](../../docs/SHARED_RETURN_SEPARATION_STATUS.md)
+for the preserved decidableAllowed repair, user-reported Lean verification,
+and the exact point at which research was paused.
