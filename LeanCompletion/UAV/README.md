@@ -16,3 +16,11 @@ This is a reading order; the source imports specify the exact dependency graph. 
 `certificates/` includes the fixed instance and dual certificate, the JSON-to-Lean binding and distance-comparison helpers, the independent exact dual verifier, and the previously local-only four-UAV feasibility verifier. The four-UAV witness is the existing [`solution.json`](../../submission_package/question1/results/solution.json); it is not duplicated here.
 
 [`verification/Case1Audit.lean`](../../verification/Case1Audit.lean) contains the ten audit commands used in the completed local proof work, without publishing the raw audit output. Historical outcomes are recorded in [the closure report](../../docs/CASE1_KERNEL_CLOSURE_STATUS.md). New-package execution instructions and limitations are in [REPRODUCIBILITY.md](../../docs/REPRODUCIBILITY.md).
+
+## Service-cut research extensions
+
+The research branch also contains ResourceCuts, AggregateCounterexample,
+StructuralServiceCuts, LargeServiceCuts, FixedFlowObstruction and
+FixedFlowStructuralCutExample. See [service-cut verification and build commands](../../docs/SERVICE_CUTS_VERIFICATION.md)
+for the new results, dependency targets and local-cache limitations. These
+extensions do not replace the thirteen frozen Case1 modules above.

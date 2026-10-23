@@ -290,11 +290,147 @@ theorem requiredService_le_cut_capacity
 
 
 
+/-! Pure arithmetic: no routes or graph assumptions. -/
 
+/-- Positive capacity gives an integer lower bound on the count. -/
+theorem ceil_div_le_nat_of_le_mul
+    (W C : ℚ) (q : ℕ)
+    (hC : 0 < C)
+    (hbound : W ≤ (q : ℚ) * C) :
+    Int.ceil (W / C) ≤ (q : ℤ) := by
+  have hdiv : W / C ≤ (q : ℚ) :=
+    (div_le_iff₀ hC).2 hbound
+  apply Int.ceil_le.mpr
+  exact_mod_cast hdiv
 
+/-- Positive work cannot fit into nonpositive total capacity. -/
+theorem not_le_mul_of_pos_of_nonpos
+    (W q C : ℚ)
+    (hW : 0 < W)
+    (hq : 0 ≤ q)
+    (hC : C ≤ 0) :
+    ¬ W ≤ q * C := by
+  intro hbound
+  have hmul : q * C ≤ 0 :=
+    mul_nonpos_of_nonneg_of_nonpos hq hC
+  exact (not_le_of_gt hW) (hbound.trans hmul)
 
+/-! Connect the arithmetic lemmas to actual route service. -/
 
+section Routes
 
+variable {V ι : Type*}
+variable [DecidableEq V] [Fintype V]
+variable {depot : V}
 
+/-- Exact coverage gives a serving-route capacity bound,
+without any sign assumption on the remaining capacity. -/
+theorem requiredService_le_serving_capacity
+    (ks : Finset ι)
+    (routes : ι → LegalRoute depot)
+    (S : Finset V)
+    (service : V → ℚ)
+    (required : V → ℕ)
+    (overhead : ι → ℚ)
+    (T tau : ℚ)
+    (hdepot : depot ∉ S)
+    (hvisits : ∀ i, i ≠ depot →
+      totalVisitCount ks routes i = required i)
+    (hbudget : ∀ k ∈ ks,
+      routeServiceIn (routes k) S service + overhead k ≤ T)
+    (hoverhead : ∀ k ∈ ks,
+      Serves (routes k) S → tau ≤ overhead k) :
+    requiredServiceIn S service required ≤
+      (servingCount ks routes S : ℚ) * (T - tau) := by
+  exact service_le_serving_capacity
+    ks routes S
+    (fun k => routeServiceIn (routes k) S service)
+    overhead
+    (requiredServiceIn S service required)
+    T tau
+    (sum_routeServiceIn_eq_required
+      ks routes S service required hdepot hvisits)
+    (by
+      intro k _ hnot
+      exact routeServiceIn_zero_of_not_serves
+        (routes k) S service hnot)
+    hbudget hoverhead
+
+/-- Positive remaining capacity gives the full chain:
+rounded demand ≤ serving-route count ≤ outgoing cut flow. -/
+theorem requiredService_integer_capacity_chain
+    (ks : Finset ι)
+    (routes : ι → LegalRoute depot)
+    (S : Finset V)
+    (service : V → ℚ)
+    (required : V → ℕ)
+    (overhead : ι → ℚ)
+    (T tau : ℚ)
+    (hdepot : depot ∉ S)
+    (hvisits : ∀ i, i ≠ depot →
+      totalVisitCount ks routes i = required i)
+    (hremaining : 0 < T - tau)
+    (hbudget : ∀ k ∈ ks,
+      routeServiceIn (routes k) S service + overhead k ≤ T)
+    (hoverhead : ∀ k ∈ ks,
+      Serves (routes k) S → tau ≤ overhead k) :
+    Int.ceil
+        (requiredServiceIn S service required / (T - tau)) ≤
+        (servingCount ks routes S : ℤ) ∧
+      (servingCount ks routes S : ℤ) ≤
+        (outCutFlow S (totalRouteFlow ks routes) : ℤ) := by
+  have hcapacity :=
+    requiredService_le_serving_capacity
+      ks routes S service required overhead T tau
+      hdepot hvisits hbudget hoverhead
+  constructor
+  · exact ceil_div_le_nat_of_le_mul
+      (requiredServiceIn S service required)
+      (T - tau)
+      (servingCount ks routes S)
+      hremaining hcapacity
+  · exact_mod_cast
+      (servingCount_le_cutFlow ks routes S hdepot)
+
+/-- Positive required service and nonpositive remaining capacity
+are incompatible with exact coverage and the route budgets. -/
+theorem impossible_of_requiredService_pos_of_nonpos_capacity
+    (ks : Finset ι)
+    (routes : ι → LegalRoute depot)
+    (S : Finset V)
+    (service : V → ℚ)
+    (required : V → ℕ)
+    (overhead : ι → ℚ)
+    (T tau : ℚ)
+    (hdepot : depot ∉ S)
+    (hvisits : ∀ i, i ≠ depot →
+      totalVisitCount ks routes i = required i)
+    (hpositive : 0 < requiredServiceIn S service required)
+    (hremaining : T - tau ≤ 0)
+    (hbudget : ∀ k ∈ ks,
+      routeServiceIn (routes k) S service + overhead k ≤ T)
+    (hoverhead : ∀ k ∈ ks,
+      Serves (routes k) S → tau ≤ overhead k) :
+    False := by
+  have hcapacity :=
+    requiredService_le_serving_capacity
+      ks routes S service required overhead T tau
+      hdepot hvisits hbudget hoverhead
+  exact not_le_mul_of_pos_of_nonpos
+    (requiredServiceIn S service required)
+    (servingCount ks routes S : ℚ)
+    (T - tau)
+    hpositive
+    (Nat.cast_nonneg _)
+    hremaining
+    hcapacity
+
+end Routes
+
+#print axioms ceil_div_le_nat_of_le_mul
+#print axioms not_le_mul_of_pos_of_nonpos
+#print axioms requiredService_le_serving_capacity
+#print axioms requiredService_integer_capacity_chain
+#print axioms impossible_of_requiredService_pos_of_nonpos_capacity
 
 end UAVProof.ResourceCuts
