@@ -57,8 +57,15 @@ exact legal route decomposition.
 projection and aggregate edge-flow projection. Exact projection to a loop-free
 physical flow forces every edge between copies of the same physical node to
 have zero flow; this is a derived theorem, not an additional lift assumption.
-It also projects supported copy routes to legal physical routes.
+It also projects supported copy routes to legal physical routes. The updated
+snapshot adds visit-count identities, prescribed-demand coverage, and exact
+edge-flow projection, together with source proofs of service-cost and budget
+preservation.
 
 See [the theorem scope and verification record](../../docs/SINGLE_VISIT_COPY_LIFT_STATUS.md)
-for hypotheses, the service-only budget boundary, build commands and remaining
-lift-existence and resource-preservation work.
+for hypotheses, the service-only budget boundary, build commands, and the pause
+point. The latest user-reported audit prints 19 declarations through
+`projected_copy_routes_exact`; the three service declarations still need their
+own axiom-output record. This upload was not independently compiled.
+The full lift sufficiency assembly and the physical-route-to-copy construction
+remain unfinished.
