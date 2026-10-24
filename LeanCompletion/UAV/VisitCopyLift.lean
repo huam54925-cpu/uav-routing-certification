@@ -898,3 +898,6 @@ end UAVProof.VisitCopyLift
 #print axioms UAVProof.VisitCopyLift.projectFlow_sum
 #print axioms UAVProof.VisitCopyLift.totalRouteFlow_mapLegalRoute
 #print axioms UAVProof.VisitCopyLift.projected_copy_routes_exact
+#print axioms UAVProof.VisitCopyLift.routeServiceIn_mapLegalRoute
+#print axioms UAVProof.VisitCopyLift.projected_copy_route_service
+#print axioms UAVProof.VisitCopyLift.projected_copy_route_budget
