@@ -64,8 +64,9 @@ preservation.
 
 See [the theorem scope and verification record](../../docs/SINGLE_VISIT_COPY_LIFT_STATUS.md)
 for hypotheses, the service-only budget boundary, build commands, and the pause
-point. The latest user-reported audit prints 19 declarations through
-`projected_copy_routes_exact`; the three service declarations still need their
-own axiom-output record. This upload was not independently compiled.
+point. The latest user-reported local run exits with code 0 and prints all 22
+axiom checks, including the three service-cost and budget declarations, with no
+`sorryAx`. The source update only adds those three audit commands; proofs are
+unchanged. This upload was not independently compiled.
 The full lift sufficiency assembly and the physical-route-to-copy construction
 remain unfinished.
