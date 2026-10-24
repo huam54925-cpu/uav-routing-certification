@@ -36,3 +36,12 @@ SharedReturnSeparationExample supplies the six-node strict-separation witness
 relative to its explicit PreviousConditions. See the [completion and resume note](../../docs/SHARED_RETURN_SEPARATION_STATUS.md)
 for the preserved decidableAllowed repair, user-reported Lean verification,
 and the exact point at which research was paused.
+
+## Research direction and related work (2026-10-24)
+
+See [the literature comparison and decomposition research plan](../../docs/RESOURCE_DECOMPOSITION_RESEARCH_PLAN_20261024.md)
+for the two current questions: how repeated visits affect aggregate sufficiency,
+and how exact edge multiplicities differ from support-only feasibility.
+The note distinguishes existing results from proposed single-visit, occurrence-lift,
+and hub-spoke decomposition theorems, and links the existing research issues.
+It records a literature review and plan, not new Lean verification or a novelty claim.
