@@ -45,3 +45,20 @@ and how exact edge multiplicities differ from support-only feasibility.
 The note distinguishes existing results from proposed single-visit, occurrence-lift,
 and hub-spoke decomposition theorems, and links the existing research issues.
 It records a literature review and plan, not new Lean verification or a novelty claim.
+
+## Single-visit baseline and visit-copy foundations (2026-10-24)
+
+[SingleVisitDecomposition.lean](SingleVisitDecomposition.lean) proves that, under
+the single-visit structural assumptions, nonnegative service fees and a positive
+budget, all rounded service-capacity cuts are equivalent to a budget-feasible
+exact legal route decomposition.
+
+[VisitCopyLift.lean](VisitCopyLift.lean) defines visit copies, their physical
+projection and aggregate edge-flow projection. Exact projection to a loop-free
+physical flow forces every edge between copies of the same physical node to
+have zero flow; this is a derived theorem, not an additional lift assumption.
+It also projects supported copy routes to legal physical routes.
+
+See [the theorem scope and verification record](../../docs/SINGLE_VISIT_COPY_LIFT_STATUS.md)
+for hypotheses, the service-only budget boundary, build commands and remaining
+lift-existence and resource-preservation work.
