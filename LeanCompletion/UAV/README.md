@@ -70,3 +70,16 @@ axiom checks, including the three service-cost and budget declarations, with no
 unchanged. This upload was not independently compiled.
 The full lift sufficiency assembly and the physical-route-to-copy construction
 remain unfinished.
+
+## Copy obstructions and profile cuts (2026-10-26)
+
+Building on the lift/decomposition equivalence added in `f7147cf`, five new
+modules connect copy-level obstructions, the limits of fibre-count compression,
+service identities, attained minimum cuts, and exact regrouping of all copy
+capacity cuts by realizable count profile. The earlier unfinished-work statement
+above describes the October 24 snapshot, before that equivalence was added.
+
+See [the results and current verification scope](../../docs/COPY_PROFILE_CUTS_STATUS.md).
+Build the new chain with `lake build LeanCompletion.UAV.CopyProfileCuts`.
+The October 26 build succeeded in the existing local project, compiling the
+final module and replaying cached results for the other four new modules.
