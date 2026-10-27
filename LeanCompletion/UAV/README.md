@@ -1,6 +1,6 @@
 # Case1 proof and certificates
 
-The thirteen `.lean` files are preserved from [the completed proof commit](https://github.com/huam54925-cpu/Drone-Issues/commit/0d4466cbfacf3fe01ca98494663742f9a612b645).
+The thirteen frozen Case1 `.lean` files are preserved from [the completed proof commit](https://github.com/huam54925-cpu/Drone-Issues/commit/0d4466cbfacf3fe01ca98494663742f9a612b645).
 
 ```text
 WeakDuality / Flow
@@ -64,12 +64,14 @@ preservation.
 
 See [the theorem scope and verification record](../../docs/SINGLE_VISIT_COPY_LIFT_STATUS.md)
 for hypotheses, the service-only budget boundary, build commands, and the pause
-point. The latest user-reported local run exits with code 0 and prints all 22
+point. The October 24 user-reported local run exits with code 0 and prints all 22
 axiom checks, including the three service-cost and budget declarations, with no
 `sorryAx`. The source update only adds those three audit commands; proofs are
 unchanged. This upload was not independently compiled.
-The full lift sufficiency assembly and the physical-route-to-copy construction
-remain unfinished.
+At that October 24 snapshot, the full lift sufficiency assembly and the
+physical-route-to-copy construction were unfinished. Both directions were
+subsequently completed in [f7147cf](https://github.com/huam54925-cpu/uav-routing-certification/commit/f7147cf13d043537fc1a2f2d361eee251b3685e6);
+see the current-status update in the linked verification record.
 
 ## Copy obstructions and profile cuts (2026-10-26)
 
@@ -93,5 +95,9 @@ existing four-node witness's minimum cut as 1 against a rounded requirement of 2
 
 See [the statements and user-reported verification record](../../docs/COPY_PROFILE_DECOMPOSITION_STATUS.md).
 Build this chain with `lake build LeanCompletion.UAV.CopyProfileExample`.
-The user reported a successful local build and seven example axiom reports;
-this publication pass did not rerun Lean.
+The user supplied three local verification rounds: a direct Lean check of
+CopyProfileRealizability (4 axiom reports), a successful build of
+CopyProfileDecomposition (3), and a successful build of CopyProfileExample (7).
+All three exited with code 0; the 14 distinct reports contain no `sorryAx`.
+Replayed dependency reports are not counted as new checks. This documentation
+update did not rerun Lean or bind the historical builds to source hashes.

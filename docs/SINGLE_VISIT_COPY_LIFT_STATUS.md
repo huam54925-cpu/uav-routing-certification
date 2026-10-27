@@ -8,6 +8,27 @@
 后续 22 项审计补充基于 `37edad4d9ddfef571c1307ad5d1ffc809106e62b`；
 本次新增内容和证据边界见第 7 节及第 8 节。
 
+## 当前状态补记（2026-10-27）
+
+下文第 1–8 节保留 2026-10-24 的历史快照与当时验证范围。
+其中“尚未完成”“暂停”等表述只描述当时状态，不代表当前源码。
+
+- [f7147cf](https://github.com/huam54925-cpu/uav-routing-certification/commit/f7147cf13d043537fc1a2f2d361eee251b3685e6)
+  已补齐提升充分性、从物理访问位置构造副本提升的反方向，并汇总
+  `UAVProof.VisitCopyLift.serviceCopyLift_iff_exact_decomposition`。
+  用户报告的本地编译及最终定理公理检查见
+  [Issue #10](https://github.com/huam54925-cpu/uav-routing-certification/issues/10)。
+- [8eca910](https://github.com/huam54925-cpu/uav-routing-certification/commit/8eca910242c8479647bc0214e59fabf07f33bfde)
+  补充副本障碍、数量轮廓的表达限制及全部轮廓割等价性；
+  见[对应状态记录](COPY_PROFILE_CUTS_STATUS.md)。
+- [d2ee575](https://github.com/huam54925-cpu/uav-routing-certification/commit/d2ee5751dc6a01589bee5f99514f63076ef6406e)
+  补充明确轮廓范围、完整分解接口和固定提升的精确最小割见证；
+  见[三轮本地验证记录](COPY_PROFILE_DECOMPOSITION_STATUS.md)。
+
+完整等价仍限于非负服务费用和正服务预算、无自环物理流等明确假设。
+没有证明任意物理流都有合格提升，没有加入飞行费用，也未提供高效搜索算法。
+本次仅同步说明，未重跑 Lean，未完成独立工程的干净重建。
+
 ## 1. 首次发布文件与结论
 
 首次发布新增两个独立 Lean 模块：

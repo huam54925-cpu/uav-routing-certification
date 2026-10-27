@@ -1,7 +1,7 @@
 # 有界轮廓、精确分解与四节点见证（2026-10-27）
 
 在 [10 月 26 日的轮廓割结果](COPY_PROFILE_CUTS_STATUS.md) 基础上，
-本次原样发布三个本地新增模块，继续使用
+提交 `d2ee5751dc6a01589bee5f99514f63076ef6406e` 原样发布三个本地新增模块，继续使用
 `research/structural-service-cuts-20261023` 分支。
 
 ## 新增结果与边界
@@ -19,25 +19,39 @@
 
 ## 验证来源
 
-用户于 2026-10-27 提供本地 Lake 构建完成记录：目标
-`LeanCompletion.UAV.CopyProfileExample` 构建成功，`LeanExitCode=0`。
-该目标导入 `CopyProfileDecomposition`，后者导入
-`CopyProfileRealizability` 与既有 `CopyProfileCuts`。
+用户于 2026-10-27 分三轮提供本地验证记录：
 
-用户提供的输出包含 `CopyProfileExample` 的七项公理报告：
-`badProfile_values`、`badProfile_bounds`、`badProfile_kappa_eq_one`、
-`badProfile_work_eq_four`、`badProfile_requirement_eq_two`、
-`badProfile_violates_profile_cut`、`witness_not_all_bounded_profile_cuts`。
-这些报告仅列出 `propext`、`Classical.choice`、`Quot.sound` 或其子集，
-没有 `sorryAx`。所提供的片段未包含前两个模块的独立公理报告，
-因此不将它表述为三个模块全部审计命令的新输出。
+| 模块 | 执行方式 | 本轮该模块的公理报告 | 结果 |
+| --- | --- | --- | --- |
+| `CopyProfileRealizability` | `lake env lean .\LeanCompletion\UAV\CopyProfileRealizability.lean` | 4 项 | `LeanExitCode=0` |
+| `CopyProfileDecomposition` | `lake build LeanCompletion.UAV.CopyProfileDecomposition` | 3 项 | Built，构建成功，`LeanExitCode=0` |
+| `CopyProfileExample` | `lake build LeanCompletion.UAV.CopyProfileExample` | 7 项 | Built，构建成功，`LeanExitCode=0` |
 
-本次上传检查了三份源码、导入依赖、文档链接和提交差异，未重新运行
-Lean，也未做干净环境重建。三份发布源码与当前本地文件逐字节一致；
-用户构建输出未附源码哈希，因此不声称已完成该历史构建与文件的哈希绑定。
-源码未发现 `sorry`、`admit`、新增 `axiom` 声明或 `native_decide`。
-`CopyProfileRealizability` 文件头关于回复环境未编译的说明保留原样；
-它指写作阶段，与上述用户提供的后续构建记录分别说明。
+合计 14 项不同声明的公理报告，按各自模块的三轮输出记录；后续构建
+重放的依赖报告不重复计数，也不据此声称依赖在该轮全部重新编译。
+这些报告覆盖三个文件现有的全部 `#print axioms` 命令：
+
+- `CopyProfileRealizability`：`copiesBelow_card`、
+  `visitProfile_le_required`、`canonicalSet_profile`、
+  `realizableProfile_iff_bounds`。
+- `CopyProfileDecomposition`：`profile_cuts_iff_bounded_profile_cuts`、
+  `serviceCopyLift_iff_structural_bounded_profile_cuts`、
+  `exact_decomposition_iff_bounded_profile_lift`。
+- `CopyProfileExample`：`badProfile_values`、`badProfile_bounds`、
+  `badProfile_kappa_eq_one`、`badProfile_work_eq_four`、
+  `badProfile_requirement_eq_two`、`badProfile_violates_profile_cut`、
+  `witness_not_all_bounded_profile_cuts`。
+
+14 项报告仅列出 `propext`、`Classical.choice`、`Quot.sound` 或其子集，
+均无 `sorryAx`。这些是用户提供的本地执行结果，本次文档同步未重新运行
+Lean，也未做干净环境重建；用户输出未附源码哈希，因此尚未完成
+历史构建与远端源码的哈希绑定。
+
+原发布记录说明三份上传源码与发布时本地文件逐字节一致；这不等于
+历史编译文件已获哈希绑定。本次仅把 `CopyProfileRealizability` 的文件头
+改为指向本记录，定义、定理、证明及审计命令均未改动。
+原发布源码检查未发现 `sorry`、`admit`、新增 `axiom` 声明或
+`native_decide`。
 
 后续可在已配置的工程根目录执行：
 

@@ -10,7 +10,8 @@ import Mathlib.Data.Finset.Card
 
 构造：在每个非基地节点的副本中选取编号小于 q(v) 的副本。
 
-已对照仓库接口；本回复环境未运行 Lean 编译。
+2026-10-27 用户报告的本地验证及证据范围见
+仓库 docs/COPY_PROFILE_DECOMPOSITION_STATUS.md。
 -/
 
 namespace UAVProof.CopyProfileRealizability
