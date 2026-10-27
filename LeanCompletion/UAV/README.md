@@ -125,3 +125,17 @@ See [the results and build record](../../docs/COPY_PROFILE_REPORT_STATUS.md).
 `lake build LeanCompletion.UAV.CopyProfileReport` built this module from
 source successfully with cached dependencies; its seven axiom reports contain
 no `sorryAx`.
+
+For the same fixed physical flow, the earlier
+`CopyLiftObstruction.FourNode.no_budget_exact_family` already rules out
+every budget-three exact decomposition; `no_service_copy_lift` rules out
+every service lift at that budget. The report for a single witness is not
+the basis of that universal exclusion. Budget four is now certified feasible.
+The instance has two routes; four is a service budget, not a fleet size.
+
+The next main direction is [support feasibility versus exact edge multiplicities (#12)](https://github.com/huam54925-cpu/uav-routing-certification/issues/12):
+prove conditional equivalence on a controlled graph class, then seek a strict
+separation within the same support. Smaller sufficient representations remain
+a subsequent question. [Threshold and explicit-route work (#11)](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)
+is auxiliary example cleanup, not a prerequisite. This documentation update
+does not rerun Lean or change the published source.

@@ -33,6 +33,32 @@ lake env lean verification/Case1Audit.lean
 
 Lake 将按锁文件获取依赖；缓存用于 mathlib，具体证书数值仍需 Lean 内核归约。数值模块可能需要较多时间与内存。保留命令退出码及完整输出到本地 `verification/runs/`，不要把旧 PASS 当作这次构建的输出。将来若新包构建失败，应记录失败并修复配置，不能反向声称旧环境证明失效或新包已验证。
 
+## 服务费用研究扩展的复现入口（2026-10-27）
+
+在研究分支 `research/structural-service-cuts-20261023` 的已配置工程中，
+可单独构建完整轮廓检查与报告依赖链：
+
+```powershell
+lake build LeanCompletion.UAV.CopyProfileReport
+Write-Host "BuildExitCode=$LASTEXITCODE"
+```
+
+该入口包含预算 4 的 `decide +kernel` 定理及七项公理打印命令。
+预期显示一条预算 3 违规记录、预算 4 空列表及记录数 0。
+复现时应检查退出码，并区分本次 `Built` 与依赖 `Replayed`，
+不能将缓存输出当成所有模块都重新编译。
+
+历史本地执行与证据来源见[检查器状态](COPY_PROFILE_CHECKER_STATUS.md)和
+[报告状态](COPY_PROFILE_REPORT_STATUS.md)。本次仅补充复现说明，未执行这些命令。
+这些本地工程检查不等同于独立 UAV 工程的干净重建；上文 Case1 的迁移状态
+也不因研究扩展的成功检查而改变。
+
+辅助[阈值任务（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)
+尚未实现，当前命令不声称核验了任意预算的阈值等价或显式物理路线见证。
+当前理论主任务见[模型比较与同支持分离（#12）](https://github.com/huam54925-cpu/uav-routing-certification/issues/12)，
+尚无对应的新编译结论。
+原始输出仍仅保留在本地忽略目录 `verification/runs/`。
+
 ## 固定输入身份
 
 | 对象 | SHA-256 |

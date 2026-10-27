@@ -20,6 +20,18 @@
 `checkAll` 只检查容量割；完整提升还必须满足 `IsStructuralCopyLift`。
 路线模型和分解接口沿用[前阶段结果](COPY_PROFILE_DECOMPOSITION_STATUS.md)。
 
+## 后续认证（2026-10-27）
+
+提交 [1e1f829](https://github.com/huam54925-cpu/uav-routing-certification/commit/1e1f82901cdd9932ebcbd19596a54698089a58ed)
+新增 `CopyProfileReport.witness_check_four`，使用 `decide +kernel`
+证明既有四节点 witnessFlow 在预算 4 下的检查为真，并结合结构条件得到
+服务提升和精确分解。详见[报告及验证记录](COPY_PROFILE_REPORT_STATUS.md)。
+
+下方“本次验证范围”保留检查器发布时的缓存重放记录。
+其中“预算 4 的 #eval 本身不是独立 Lean 定理”仍成立；
+后续新增定理提供了另一个证明层次，不能反向把先前的 #eval 记成内核证明。
+本次说明更新没有重新编译枚举器或检查器。
+
 ## 本次验证范围
 
 2026-10-27，在已有本地工程执行：

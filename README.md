@@ -21,14 +21,30 @@
 
 研究分支 `research/structural-service-cuts-20261023` 已完成访问副本提升
 与预算可行精确分解的等价定理，并将全部副本容量割精确重组为轮廓最小割约束。
-新增结果给出轮廓的明确整数范围、完整分解接口，以及四节点指定提升中
-`kappa = 1 < ceil(4/3) = 2` 的违规轮廓见证。
+现已给出轮廓的明确整数范围、固定副本流上的可执行最小割枚举与容量割
+检查器，以及可读违规报告和预算 4 的内核认证。
 
-本阶段只计服务费用，不含飞行费用；结果仍依赖副本流，尚未提供可执行的
-通用提升搜索或最小割算法。用户分三轮提供本地验证成功及 14 项无
-`sorryAx` 的公理报告。详见[结果与验证范围](docs/COPY_PROFILE_DECOMPOSITION_STATUS.md)
-和[副本障碍与轮廓割](docs/COPY_PROFILE_CUTS_STATUS.md)；这些研究扩展不改变上述
-Case1 混合验证结论，也不表示已完成独立工程的干净重建。
+在同一个四节点固定物理流上，预算 3 时不存在任何预算可行精确分解
+（既有 `no_budget_exact_family`）；预算 4 时则存在精确分解
+（新增 `exact_decomposition_four`）。指定提升的违规轮廓为
+`(0,2,1,0)`，满足 `kappa = 1 < ceil(4/3) = 2`。
+这里的 3、4 是逐路线服务费用预算，路线数为 2，不是 Case1 的机队规模。
+
+检查器采用指数规模枚举，仍依赖给定副本流；尚无通用提升搜索或高效轮廓
+最小化算法。完整服务提升还需要结构条件，不能仅凭容量割检查为真推出。
+结果与验证来源分别见[分解接口](docs/COPY_PROFILE_DECOMPOSITION_STATUS.md)、
+[轮廓割](docs/COPY_PROFILE_CUTS_STATUS.md)、
+[枚举与检查](docs/COPY_PROFILE_CHECKER_STATUS.md)和
+[违规报告与预算 4 认证](docs/COPY_PROFILE_REPORT_STATUS.md)。
+各阶段的本地检查、缓存重放和公理报告分别记录，不把历史输出算作本次新验证。
+
+本阶段仅计服务费用、不含飞行费用，不改变上述 Case1 混合验证结论，
+也不表示已完成独立工程的干净重建。
+当前主线是重复访问下的资源受限精确分解及其信息需求：
+[下一步研究支持图可行与精确边重数可行的等价边界和严格分离（#12）](https://github.com/huam54925-cpu/uav-routing-certification/issues/12)。
+先建立模型映射与限定结构上的等价基准，再寻找同支持严格分离见证，
+随后研究更小的充分信息表示。具体预算阈值和显式路线仅作为
+[辅助例子整理（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)。
 
 ## 阅读入口
 
