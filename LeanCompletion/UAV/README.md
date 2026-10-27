@@ -101,3 +101,16 @@ CopyProfileDecomposition (3), and a successful build of CopyProfileExample (7).
 All three exited with code 0; the 14 distinct reports contain no `sorryAx`.
 Replayed dependency reports are not counted as new checks. This documentation
 update did not rerun Lean or bind the historical builds to source hashes.
+
+## Executable profile enumeration and checking (2026-10-27)
+
+CopyProfileEnumeration computes the exact minimum cut and all minimizing
+subsets for a specified profile. CopyProfileChecker checks all bounded profiles
+of a fixed copy flow and proves equivalence with the mathematical capacity-cut
+conditions. These are exponential enumeration tools; structural lift conditions
+remain separate.
+
+See [the interfaces, examples and verification scope](../../docs/COPY_PROFILE_CHECKER_STATUS.md).
+The local `lake build LeanCompletion.UAV.CopyProfileChecker` completed
+successfully using cached results for both new modules, including 17 axiom
+reports without `sorryAx`. No fresh standalone build is claimed.
