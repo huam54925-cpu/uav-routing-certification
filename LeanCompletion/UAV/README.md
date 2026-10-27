@@ -83,3 +83,15 @@ See [the results and current verification scope](../../docs/COPY_PROFILE_CUTS_ST
 Build the new chain with `lake build LeanCompletion.UAV.CopyProfileCuts`.
 The October 26 build succeeded in the existing local project, compiling the
 final module and replaying cached results for the other four new modules.
+
+## Bounded profiles and exact decomposition (2026-10-27)
+
+CopyProfileRealizability characterizes realizable profiles by explicit integer
+bounds. CopyProfileDecomposition connects these bounded profile cuts to exact
+service-budget-feasible route decomposition. CopyProfileExample computes the
+existing four-node witness's minimum cut as 1 against a rounded requirement of 2.
+
+See [the statements and user-reported verification record](../../docs/COPY_PROFILE_DECOMPOSITION_STATUS.md).
+Build this chain with `lake build LeanCompletion.UAV.CopyProfileExample`.
+The user reported a successful local build and seven example axiom reports;
+this publication pass did not rerun Lean.
