@@ -114,3 +114,14 @@ See [the interfaces, examples and verification scope](../../docs/COPY_PROFILE_CH
 The local `lake build LeanCompletion.UAV.CopyProfileChecker` completed
 successfully using cached results for both new modules, including 17 axiom
 reports without `sorryAx`. No fresh standalone build is claimed.
+
+## Violation reports and budget-four proof (2026-10-27)
+
+CopyProfileReport renders the four-node witness's violating profiles and
+minimizing subsets, proves report soundness, and uses `decide +kernel` to
+certify the budget-four check. This yields a service lift and an exact
+service-budget-feasible decomposition for the fixed physical flow.
+See [the results and build record](../../docs/COPY_PROFILE_REPORT_STATUS.md).
+`lake build LeanCompletion.UAV.CopyProfileReport` built this module from
+source successfully with cached dependencies; its seven axiom reports contain
+no `sorryAx`.
