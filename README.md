@@ -54,7 +54,12 @@
 退出码 0、22 项公理报告无 sorryAx；远端源码哈希与记录一致。
 本次仅同步文档，没有重新运行 Lean，也没有新增独立工程干净重建结论。
 
-下一步是 [next 单指针表示、prev 冗余消除及规范范围（#13）](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)。
+现已完成 [next 单指针表示、prev 冗余消除及有界完整证书](docs/BOUNDED_NEXT_CERTIFICATE_STATUS.md)：
+同一组证书见证满足基地秩为零、任务秩在 1…N、全部费用势在 0…T，
+并与上述精确可行性等价，固定 m 时仍保留基地出流等式。
+四个新模块此前本地构建均为 Built、退出码 0，57 项公理报告无 sorryAx；
+本次阶段发布没有重新编译或完成独立工程干净重建。
+下一步研究规范后缀费用势的公共分母及整数网格（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
 充要刻画不意味着证书最小、搜索高效或已有多项式算法。
 [具体预算阈值与显式路线（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)仍为辅助整理。
 

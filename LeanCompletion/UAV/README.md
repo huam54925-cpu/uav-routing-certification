@@ -147,7 +147,7 @@ Support means containment in the allowed positive edges, not equality of positiv
 supports or domination by their prescribed multiplicities. Hub equivalence does
 not assert budget feasibility. These are service-only results.
 
-The latest proof commit is [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c).
+The inverse-construction proof commit is [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c).
 Under physical loop-freeness, nonnegative rational fees and T > 0, the fixed-count
 theorem retains `m = outFlow Finset.univ x depot`. Zero demand, zero fleet size,
 zero fees and nonconsecutive repeated visits remain permitted.
@@ -163,8 +163,21 @@ separately records the earlier four modules and 58 cached reports.
 Build command: `lake build LeanCompletion.UAV.LocalVisitPairingCompleteness`.
 
 [Issue #12](https://github.com/huam54925-cpu/uav-routing-certification/issues/12) summarizes the comparison and representation results.
-[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13) now tracks next-only representation, removal of
-redundant prev information and canonical bounds; the inverse construction and
-both iff theorems are complete. Minimality, executable certificate search and
+[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13) has now completed next-only representation,
+removal of redundant prev information and canonical numerical bounds, in addition
+to the inverse construction and both iff theorems. Minimality, executable certificate search and
 complexity claims remain unproved. [Issue #11](https://github.com/huam54925-cpu/uav-routing-certification/issues/11) is auxiliary
 example cleanup.
+
+## Bounded next-only certificates (2026-10-31)
+
+`LocalVisitPairingNext`, `LocalVisitPairingNextCertificate`, `LocalVisitPairingBounds`
+and `LocalVisitPairingBoundedCertificate` extend the existing modules without
+changing them. One set of witnesses supplies successor consistency, decreasing
+rank, exact projection, budget potential and all numerical bounds.
+The fixed-count feasibility iff retains the depot-outflow equality.
+
+See [the assumptions, boundary cases and prior local build evidence](../../docs/BOUNDED_NEXT_CERTIFICATE_STATUS.md).
+Build with `lake build LeanCompletion.UAV.LocalVisitPairingBoundedCertificate`.
+Canonical potential denominators and integer-grid bounds are the next step;
+rational bit complexity and efficient search remain open.

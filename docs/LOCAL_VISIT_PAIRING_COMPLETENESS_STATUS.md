@@ -109,7 +109,14 @@ Write-Host "LeanExitCode=$buildCode"
 详见 [历史发布记录](STRUCTURAL_DECOMPOSITION_PUBLICATION_STATUS.md)，
 不得与本次 22 项检查混为一次新执行。
 
-## 下一步与未完成事项
+## 后续状态更新（2026-10-31）
+
+下面原先列出的 next-only 表示与规范数值范围现已完成，详见
+[有界完整证书状态](BOUNDED_NEXT_CERTIFICATE_STATUS.md)。原完备性模块及其历史
+验证记录保持不变。新增四模块已经接回固定 m 的可行性 iff；后续重点转向
+规范势的公共分母、整数网格与编码位数。
+
+## 完备性阶段当时的后续计划（历史记录）
 
 1. 优先证明仅记录 next 的表示与现有 Pairing 等价。
    必须限制每个任务目标至多一个任务前驱；基地可接受多个前驱。
