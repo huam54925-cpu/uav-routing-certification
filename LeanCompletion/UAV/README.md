@@ -179,5 +179,10 @@ The fixed-count feasibility iff retains the depot-outflow equality.
 
 See [the assumptions, boundary cases and prior local build evidence](../../docs/BOUNDED_NEXT_CERTIFICATE_STATUS.md).
 Build with `lake build LeanCompletion.UAV.LocalVisitPairingBoundedCertificate`.
-Canonical potential denominators and integer-grid bounds are the next step;
-rational bit complexity and efficient search remain open.
+`LocalVisitPairingPotentialGrid` now constructs a positive common denominator
+from the service inputs and proves integer and natural grid bounds for canonical
+suffix potentials, including the depot. The previous local build was Built (23s),
+exit code 0, with nine axiom reports containing only standard axioms or subsets.
+This publication did not rerun Lean. Build with
+`lake build LeanCompletion.UAV.LocalVisitPairingPotentialGrid`.
+Final finite-certificate encoding, rational bit complexity and efficient search remain open.

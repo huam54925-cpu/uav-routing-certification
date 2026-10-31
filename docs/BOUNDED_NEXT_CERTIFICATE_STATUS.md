@@ -62,11 +62,37 @@ ExactFeasible o x d m s T
 
 复现入口：`lake build LeanCompletion.UAV.LocalVisitPairingBoundedCertificate`。
 
+## 规范势的公共分母与整数网格（后续提交，2026-10-31）
+
+新增 `LocalVisitPairingPotentialGrid.lean`。对有限有理服务费用，选取全部
+输入服务分母的乘积 D，证明 D>0，且任意列表、后缀和与规范 routePotential
+经 D 缩放后均为整数。重复访问按次数累加；整数性不要求费用非负或预算条件。
+
+结合非负服务、0 ≤ T 和逐路线预算，先证明整数见证 z 非负且
+z ≤ floor(D*T)，再转为自然数 k。最终由同一个正 D 对全部副本满足：
+
+```text
+∀ c, ∃ k : ℕ, (k : ℚ) = (D : ℚ) * routePotential ... c
+  ∧ (k : ℤ) ≤ Int.floor ((D : ℚ) * T)
+```
+
+D 只依赖服务费用，不包含 T 的分母；D*T 无须为整数。基地、空路线族、
+零需求均保留，无 Nonempty 假设。本结论针对指定规范势，不声称任意费用势
+均位于同一个网格。
+
+前一轮实际本地构建为 **Built（23s）**、`LeanExitCode=0`，新模块无警告；
+9 项公理报告仅含标准公理或子集，无 sorryAx，源码无占位证明或新增公理。
+本次提交核对并复制同一源码，没有重新执行 Lean；既有源码及依赖版本不变。
+原始日志留在 ignored `verification/runs/2026-10-31-potential-grid/`，不上传。
+目标独立工程的干净重建仍未完成。
+
+复现入口：`lake build LeanCompletion.UAV.LocalVisitPairingPotentialGrid`。
+
 ## 后续边界
 
 证书存在性允许从可行路线重新构造另一份 next，不保证保持输入 next。
-有理势落在 [0,T] 并不意味着编码位数有界。下一批研究规范后缀和的
-公共分母与整数网格；它不属于本次阶段提交。尚未证明最终有限编码、
+有理势落在 [0,T] 并不意味着编码位数有界。规范后缀和的公共分母与整数网格
+已由上述后续提交完成，但尚未定义最终有限编码证书，尚未证明
 位复杂度、信息最小性或多项式搜索算法。
 复杂度必须区分总访问数 N 与原始输入位数；二进制需求下展开 N 个副本
 本身可能很大。仅计服务费用的研究结论不改变冻结 Case1 应用基线。

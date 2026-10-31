@@ -59,7 +59,9 @@
 并与上述精确可行性等价，固定 m 时仍保留基地出流等式。
 四个新模块此前本地构建均为 Built、退出码 0，57 项公理报告无 sorryAx；
 本次阶段发布没有重新编译或完成独立工程干净重建。
-下一步研究规范后缀费用势的公共分母及整数网格（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
+后续模块 `LocalVisitPairingPotentialGrid` 已证明规范后缀势的公共分母与整数网格，
+此前本地构建 Built（23s）、退出码 0，9 项公理报告无 sorryAx。
+下一步是最终有限编码证书与位复杂度（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
 充要刻画不意味着证书最小、搜索高效或已有多项式算法。
 [具体预算阈值与显式路线（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)仍为辅助整理。
 
