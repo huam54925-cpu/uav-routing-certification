@@ -1,6 +1,6 @@
 # UAV Routing Certification · 多无人机巡检严格验证
 
-整理原论文、问题一至三程序、后续 ALNS 研究及 Case1 的数学证明。研究重点从寻找候选路线发展为：在固定模型下证明最小机队规模。
+整理原论文、问题一至三程序、后续 ALNS 研究及 Case1 的数学证明。当前研究分支聚焦重复访问下的资源受限精确路线分解、支持与边重数的区别，以及局部证书的表示等价；原应用证明作为历史基线保留。
 
 ## Case1 结论（2026-10-18 验证基线）
 
@@ -17,7 +17,7 @@
 
 这是对原论文问题一的后续研究。原论文中的候选状态是当时的记录，不代表今天仍未证明三机不可行。结论限定于当前模型，详见[模型对照](docs/MODEL_CORRESPONDENCE.md)。
 
-## 服务费用模型的研究进展（2026-10-27）
+## 服务费用模型的研究进展（2026-10-31）
 
 研究分支 `research/structural-service-cuts-20261023` 已完成访问副本提升
 与预算可行精确分解的等价定理，并将全部副本容量割精确重组为轮廓最小割约束。
@@ -40,11 +40,23 @@
 
 本阶段仅计服务费用、不含飞行费用，不改变上述 Case1 混合验证结论，
 也不表示已完成独立工程的干净重建。
-当前主线是重复访问下的资源受限精确分解及其信息需求：
-[下一步研究支持图可行与精确边重数可行的等价边界和严格分离（#12）](https://github.com/huam54925-cpu/uav-routing-certification/issues/12)。
-先建立模型映射与限定结构上的等价基准，再寻找同支持严格分离见证，
-随后研究更小的充分信息表示。具体预算阈值和显式路线仅作为
-[辅助例子整理（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)。
+当前主线是重复访问下的资源受限精确分解及其信息需求。已完成：
+
+- 支持可行与精确可行的比较、严格单枢纽条件等价，以及同一允许支持图内的严格分离（[总览 #12](https://github.com/huam54925-cpu/uav-routing-certification/issues/12)）。
+- 局部配对、递减秩与费用势推出预算可行精确分解；全部副本容量割由证书推导。
+- [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c) 新增逆向构造及两个最终 iff：
+  在物理无自环、服务费用非负、T>0 下，
+  `ExactFeasible o x d m s T ↔ m = outFlow univ x o ∧ HasLocalCertificate o d x s T`。
+  允许零路线数、零需求、零费用及非相邻重复访问。
+
+完整接口和证据见[局部证书充要刻画状态](docs/LOCAL_VISIT_PAIRING_COMPLETENESS_STATUS.md)。
+用户 10 月 30 日的局部构建记录为新模块 Built（25s）、16 项依赖 Replayed、
+退出码 0、22 项公理报告无 sorryAx；远端源码哈希与记录一致。
+本次仅同步文档，没有重新运行 Lean，也没有新增独立工程干净重建结论。
+
+下一步是 [next 单指针表示、prev 冗余消除及规范范围（#13）](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)。
+充要刻画不意味着证书最小、搜索高效或已有多项式算法。
+[具体预算阈值与显式路线（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)仍为辅助整理。
 
 ## 阅读入口
 

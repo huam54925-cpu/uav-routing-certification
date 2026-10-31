@@ -3,7 +3,18 @@
 Published to `research/structural-service-cuts-20261023`, based on
 `3594b596ccbfb500483c0d1f84d69ebc0ac84e4c`.
 
-## New modules and scope
+## Current-status pointer — 2026-10-31
+
+The record below describes the October 29 publication only. Completeness was
+subsequently proved in [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c):
+LocalVisitPairingCompleteness adds the reverse construction and canonical-count
+and fixed-count exact-feasibility equivalences. See the
+[complete theorem and verification status](LOCAL_VISIT_PAIRING_COMPLETENESS_STATUS.md).
+The earlier four modules retain their original source bytes, including draft
+pending-verification headers; use the dated records here for validation status.
+The historical 58 cached reports are not the later module's 22 reports.
+
+## New modules and scope at the October 29 publication
 
 - [SupportExactFeasibility](../LeanCompletion/UAV/SupportExactFeasibility.lean)
   defines support containment and exact edge-flow feasibility with the same

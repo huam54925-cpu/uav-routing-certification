@@ -1,4 +1,4 @@
-# Case1 proof and certificates
+# UAV proofs, certificates and structural decomposition research
 
 The thirteen frozen Case1 `.lean` files are preserved from [the completed proof commit](https://github.com/huam54925-cpu/Drone-Issues/commit/0d4466cbfacf3fe01ca98494663742f9a612b645).
 
@@ -133,9 +133,38 @@ every service lift at that budget. The report for a single witness is not
 the basis of that universal exclusion. Budget four is now certified feasible.
 The instance has two routes; four is a service budget, not a fleet size.
 
-The next main direction is [support feasibility versus exact edge multiplicities (#12)](https://github.com/huam54925-cpu/uav-routing-certification/issues/12):
-prove conditional equivalence on a controlled graph class, then seek a strict
-separation within the same support. Smaller sufficient representations remain
-a subsequent question. [Threshold and explicit-route work (#11)](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)
-is auxiliary example cleanup, not a prerequisite. This documentation update
-does not rerun Lean or change the published source.
+## Support/exact comparison and local certificates (2026-10-31)
+
+| Module | Completed result |
+| --- | --- |
+| [SupportExactFeasibility.lean](SupportExactFeasibility.lean) | Common feasibility predicates, exact implies support, equivalence under flow uniqueness from support and degrees |
+| [HubSpokeSupportExact.lean](HubSpokeSupportExact.lean) | Hub support/degree uniqueness and conditional support/exact equivalence |
+| [SameSupportSeparation.lean](SameSupportSeparation.lean) | Support-feasible but budget-infeasible prescribed exact flow within the same allowed support |
+| [LocalVisitPairing.lean](LocalVisitPairing.lean) | Pairing, descending rank and budget potential imply exact feasible decomposition and all copy capacity cuts |
+| [LocalVisitPairingCompleteness.lean](LocalVisitPairingCompleteness.lean) | Arbitrary exact feasible families yield local certificates; canonical-count and fixed-count iff theorems |
+
+Support means containment in the allowed positive edges, not equality of positive
+supports or domination by their prescribed multiplicities. Hub equivalence does
+not assert budget feasibility. These are service-only results.
+
+The latest proof commit is [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c).
+Under physical loop-freeness, nonnegative rational fees and T > 0, the fixed-count
+theorem retains `m = outFlow Finset.univ x depot`. Zero demand, zero fleet size,
+zero fees and nonconsecutive repeated visits remain permitted.
+
+See [completeness statements and verification evidence](../../docs/LOCAL_VISIT_PAIRING_COMPLETENESS_STATUS.md).
+The user's October 30 local run built the new module in 25s, replayed sixteen
+existing LeanCompletion dependency entries, and exited 0; 22 selected axiom
+reports contain no sorryAx. The remote source SHA256 matches the supplied
+verification record. This documentation update did not execute Lean or perform
+a clean standalone build. The [October 29 publication record](../../docs/STRUCTURAL_DECOMPOSITION_PUBLICATION_STATUS.md)
+separately records the earlier four modules and 58 cached reports.
+
+Build command: `lake build LeanCompletion.UAV.LocalVisitPairingCompleteness`.
+
+[Issue #12](https://github.com/huam54925-cpu/uav-routing-certification/issues/12) summarizes the comparison and representation results.
+[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13) now tracks next-only representation, removal of
+redundant prev information and canonical bounds; the inverse construction and
+both iff theorems are complete. Minimality, executable certificate search and
+complexity claims remain unproved. [Issue #11](https://github.com/huam54925-cpu/uav-routing-certification/issues/11) is auxiliary
+example cleanup.
