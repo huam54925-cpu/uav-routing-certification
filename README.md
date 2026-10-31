@@ -61,7 +61,14 @@
 本次阶段发布没有重新编译或完成独立工程干净重建。
 后续模块 `LocalVisitPairingPotentialGrid` 已证明规范后缀势的公共分母与整数网格，
 此前本地构建 Built（23s）、退出码 0，9 项公理报告无 sorryAx。
-下一步是最终有限编码证书与位复杂度（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
+现已进一步完成[有限候选、单份证书检查器与表示容量界](docs/FINITE_CERTIFICATE_STATUS.md)：
+候选存在性接回精确可行性，检查器接受与既有有效性定义严格等价。
+原始候选数精确为 `(N+1)^(2*(N+1)) * (B+1)^(N+1)`；
+该数包含无效候选与基地字段冗余，不是路线分解数。
+选取覆盖取值范围的位宽 `wN`、`wB` 后，表示容量为 `2^((N+1)*(2*wN+wB))`。
+下一步是将公共分母与网格上界的位数联系到有理输入；
+尚未实现二进制序列化或证书搜索，也未证明检查器时间复杂度
+（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
 充要刻画不意味着证书最小、搜索高效或已有多项式算法。
 [具体预算阈值与显式路线（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)仍为辅助整理。
 

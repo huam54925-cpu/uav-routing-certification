@@ -185,4 +185,21 @@ suffix potentials, including the depot. The previous local build was Built (23s)
 exit code 0, with nine axiom reports containing only standard axioms or subsets.
 This publication did not rerun Lean. Build with
 `lake build LeanCompletion.UAV.LocalVisitPairingPotentialGrid`.
-Final finite-certificate encoding, rational bit complexity and efficient search remain open.
+
+## Finite candidates, checking and size (2026-10-31)
+
+`LocalVisitPairingFiniteCertificate` defines actual finite candidate data and
+proves that valid candidates exist exactly when exact decomposition is feasible,
+under the established hypotheses and with the fixed-fleet count condition.
+`LocalVisitPairingFiniteChecker` validates one supplied candidate using direct
+edge counts and exact arithmetic; acceptance is equivalent to validity without
+extra hypotheses. Rejecting one candidate does not establish infeasibility.
+
+`LocalVisitPairingCertificateSize` proves the raw cardinality
+`(N+1)^(2*(N+1)) * (B+1)^(N+1)` and fixed-width capacity bounds, including
+zero bounds and negative budgets. Raw counts include invalid candidates and
+redundant depot entries. Sufficient widths are `Nat.size N` and `Nat.size B`.
+See [the interfaces, evidence and scope](../../docs/FINITE_CERTIFICATE_STATUS.md).
+Build with `lake build LeanCompletion.UAV.LocalVisitPairingCertificateSize`.
+Binary serialization, rational input bit complexity, certificate search and
+checker runtime bounds remain open.
