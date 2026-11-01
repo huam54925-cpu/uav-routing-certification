@@ -1,97 +1,120 @@
-# UAV Routing Certification · 多无人机巡检严格验证
+# UAV Routing Certification
 
-整理原论文、问题一至三程序、后续 ALNS 研究及 Case1 的数学证明。当前研究分支聚焦重复访问下的资源受限精确路线分解、支持与边重数的区别，以及局部证书的表示等价；原应用证明作为历史基线保留。
+**Lean 4 formalization of exact route decomposition, structural service constraints, and budget certificates.**
 
-## Case1 结论（2026-10-18 验证基线）
+This research branch studies when an integer edge flow can be realized by legal depot routes with exact visit demands and individual service budgets. The current focus is tree-supported routing: explicit flow existence, exact decomposition, and a complete edge-count matrix characterization of budget feasibility.
 
-对于本仓库固定的 Case1 坐标、精确巡检次数、合法路线及九小时时限：
+**Research snapshot: November 1, 2026** · Branch: `research/structural-service-cuts-20261023` · Latest proof batch: [`e04db4c`](https://github.com/huam54925-cpu/uav-routing-certification/commit/e04db4c37376e65d252553e241f23f2d1b74453b)
 
-| 结论 | 证据 | 边界 |
-| --- | --- | --- |
-| 少于四架不可能完成任务 | Lean 形式化下界，包含具体证书数值和 0–3 架排除 | 原验证环境中的编译、公理审计已通过 |
-| 四架存在可行方案 | Python 独立验证器，整数平方根距离上界、精确时间比较 | 2026-10-18 历史 PASS，退出码 0 |
-| 最小参与机队规模为四架 | 上述下界与可行见证结合 | 混合验证；四机可行性尚未成为 Lean 定理 |
-| 四机最短完工时间 | 当前只有可行上界 | 未证明全局最优 |
+[Budget matrix results](docs/TREE_BUDGET_MATRIX.md) · [Tree existence and decomposition](docs/TREE_FLOW_EXISTENCE.md) · [Tree uniqueness and hub packing](docs/TREE_HUB_FORMALIZATION.md) · [Research roadmap](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)
 
-最终 Lean 入口为 [`UAVProof.Case1Infeasible.feasible_fleet_card_ge_four`](LeanCompletion/UAV/Case1Infeasible.lean)。三机距离下界为 **1158.3991045 km**，超过九小时预算允许的 **1155 km**。四机见证覆盖 52 个点、72 次巡检，总距离处于 **[1559.493156, 1559.493220] km**。
+## Current mathematical results
 
-这是对原论文问题一的后续研究。原论文中的候选状态是当时的记录，不代表今天仍未证明三机不可行。结论限定于当前模型，详见[模型对照](docs/MODEL_CORRESPONDENCE.md)。
-
-## 服务费用模型的研究进展（2026-10-31）
-
-研究分支 `research/structural-service-cuts-20261023` 已完成访问副本提升
-与预算可行精确分解的等价定理，并将全部副本容量割精确重组为轮廓最小割约束。
-现已给出轮廓的明确整数范围、固定副本流上的可执行最小割枚举与容量割
-检查器，以及可读违规报告和预算 4 的内核认证。
-
-在同一个四节点固定物理流上，预算 3 时不存在任何预算可行精确分解
-（既有 `no_budget_exact_family`）；预算 4 时则存在精确分解
-（新增 `exact_decomposition_four`）。指定提升的违规轮廓为
-`(0,2,1,0)`，满足 `kappa = 1 < ceil(4/3) = 2`。
-这里的 3、4 是逐路线服务费用预算，路线数为 2，不是 Case1 的机队规模。
-
-检查器采用指数规模枚举，仍依赖给定副本流；尚无通用提升搜索或高效轮廓
-最小化算法。完整服务提升还需要结构条件，不能仅凭容量割检查为真推出。
-结果与验证来源分别见[分解接口](docs/COPY_PROFILE_DECOMPOSITION_STATUS.md)、
-[轮廓割](docs/COPY_PROFILE_CUTS_STATUS.md)、
-[枚举与检查](docs/COPY_PROFILE_CHECKER_STATUS.md)和
-[违规报告与预算 4 认证](docs/COPY_PROFILE_REPORT_STATUS.md)。
-各阶段的本地检查、缓存重放和公理报告分别记录，不把历史输出算作本次新验证。
-
-本阶段仅计服务费用、不含飞行费用，不改变上述 Case1 混合验证结论，
-也不表示已完成独立工程的干净重建。
-当前主线是重复访问下的资源受限精确分解及其信息需求。已完成：
-
-- 支持可行与精确可行的比较、严格单枢纽条件等价，以及同一允许支持图内的严格分离（[总览 #12](https://github.com/huam54925-cpu/uav-routing-certification/issues/12)）。
-- 局部配对、递减秩与费用势推出预算可行精确分解；全部副本容量割由证书推导。
-- [46be65c](https://github.com/huam54925-cpu/uav-routing-certification/commit/46be65c20534bfdd537c270ecdb596bf43d9120c) 新增逆向构造及两个最终 iff：
-  在物理无自环、服务费用非负、T>0 下，
-  `ExactFeasible o x d m s T ↔ m = outFlow univ x o ∧ HasLocalCertificate o d x s T`。
-  允许零路线数、零需求、零费用及非相邻重复访问。
-
-完整接口和证据见[局部证书充要刻画状态](docs/LOCAL_VISIT_PAIRING_COMPLETENESS_STATUS.md)。
-用户 10 月 30 日的局部构建记录为新模块 Built（25s）、16 项依赖 Replayed、
-退出码 0、22 项公理报告无 sorryAx；远端源码哈希与记录一致。
-本次仅同步文档，没有重新运行 Lean，也没有新增独立工程干净重建结论。
-
-现已完成 [next 单指针表示、prev 冗余消除及有界完整证书](docs/BOUNDED_NEXT_CERTIFICATE_STATUS.md)：
-同一组证书见证满足基地秩为零、任务秩在 1…N、全部费用势在 0…T，
-并与上述精确可行性等价，固定 m 时仍保留基地出流等式。
-四个新模块此前本地构建均为 Built、退出码 0，57 项公理报告无 sorryAx；
-本次阶段发布没有重新编译或完成独立工程干净重建。
-后续模块 `LocalVisitPairingPotentialGrid` 已证明规范后缀势的公共分母与整数网格，
-此前本地构建 Built（23s）、退出码 0，9 项公理报告无 sorryAx。
-现已进一步完成[有限候选、单份证书检查器与表示容量界](docs/FINITE_CERTIFICATE_STATUS.md)：
-候选存在性接回精确可行性，检查器接受与既有有效性定义严格等价。
-原始候选数精确为 `(N+1)^(2*(N+1)) * (B+1)^(N+1)`；
-该数包含无效候选与基地字段冗余，不是路线分解数。
-选取覆盖取值范围的位宽 `wN`、`wB` 后，表示容量为 `2^((N+1)*(2*wN+wB))`。
-下一步是将公共分母与网格上界的位数联系到有理输入；
-尚未实现二进制序列化或证书搜索，也未证明检查器时间复杂度
-（[Issue #13](https://github.com/huam54925-cpu/uav-routing-certification/issues/13)）。
-充要刻画不意味着证书最小、搜索高效或已有多项式算法。
-[具体预算阈值与显式路线（#11）](https://github.com/huam54925-cpu/uav-routing-certification/issues/11)仍为辅助整理。
-
-## 阅读入口
-
-| 材料 | 位置 |
+| Question | Formalized result |
 | --- | --- |
-| 原论文及附录、图件 | [paper/original](paper/original/README.md) |
-| 重复巡检下界修正稿 | [paper/revised](paper/revised/README.md) |
-| 题目、输入表格和结果模板 | [source_materials/problem_A](source_materials/problem_A/README.md) |
-| 问题一至三程序及已发表的结果附件 | [submission_package](submission_package/README.md) |
-| ALNS、连通性割、精确证书及研究记录 | [research](research/README.md) |
-| 13 个冻结 Case1 模块、后续研究扩展及证书验证工具 | [LeanCompletion/UAV](LeanCompletion/UAV/README.md) |
-| 研究过程与贡献对应 | [研究时间线](docs/RESEARCH_TIMELINE.md)、[阶段报告提纲](docs/REPORT_PLAN.md) |
-| 版本来源和所有原分支 | [材料来源](docs/SOURCES.md) |
-| 固定版本与核验命令 | [复现说明](docs/REPRODUCIBILITY.md) |
+| What determines a tree-supported flow? | Specified incoming and outgoing degrees determine at most one flow. An integer recursion gives an explicit existence criterion and an alternating subtree-sum formula. |
+| When does a compatible tree flow admit legal depot routes? | Exactly when all positive-flow edges are connected to the depot; equivalently, every positive-demand non-root vertex has a positive parent-edge multiplicity. |
+| What information determines a route's service cost? | Its parent-edge multiplicities determine every visit count and its service cost, independently of the chosen legal visit order. |
+| When are individual budgets feasible on a tree? | Exactly when flow compatibility and a four-constraint edge-count matrix hold: column sums, one depot departure per row, ancestor closure, and row budgets. |
+| Can the one-departure condition be relaxed? | For nonnegative non-depot fees, rows can be split and normalized without changing feasibility. A signed-fee counterexample shows why nonnegativity matters. |
+| Is there a closed-form special case? | For a non-depot hub with one satellite, nonnegative task fees and a nonempty fleet, feasibility is determined by a ceiling-allocation formula. |
 
-## 证明与复现状态
+The public theorem [`exists_tree_budget_routes_iff`](LeanCompletion/UAV/TreeBudgetCriterion.lean) accepts a finite tree, depot, demands, fleet size, service fees, and budget. It derives flow compatibility in the forward direction and constructs the rooted representation internally. No preselected route ordering or additional unproved rooted-tree data is required.
 
-十三个 Lean 模块保留原证明提交 `0d4466cbfacf3fe01ca98494663742f9a612b645` 的源码。原有本地编译及公理审计结果见[数值闭合记录](docs/CASE1_KERNEL_CLOSURE_STATUS.md)。新仓库补充独立 Lake 入口，沿用 Lean `4.30.0-rc2` 和同一 mathlib 提交。
+### Model
 
-**迁移期间没有重新运行 Lean 编译、求解器或已通过的证书检查，也没有完成新仓库的干净环境重建。** 迁移时的检查范围是来源与文件完整性、配置和文档。历史文档中的“本轮”“今天”指文档原来的工作阶段。
+Routes start and end at the depot, have a nonempty internal visit list, never visit the depot internally, and have distinct consecutive vertices. Repeated task visits are allowed and each incurs its service fee. Demands count visits exactly; the depot's demand and service fee are ignored. Support means containment, so some tree edges may carry zero flow.
 
-原仓库的全部九个分支已核对，相关代码和精选材料按主题汇集；没有合并旧仓库全部 Git 历史。原始日志、队列快照、聊天记录、构建缓存及下载依赖不随迁移上传。原仓库固定提交作为历史档案保留。
+The tree matrix equivalence allows arbitrary rational service fees and budgets. Splitting normalization assumes nonnegative fees only at non-depot vertices. These results concern **service costs**; flight distances and time windows are outside this model.
 
-仓库保留创建时的 [Apache-2.0 LICENSE](LICENSE)。题目及第三方材料保持原来源与署名；其来源说明不构成对第三方材料的重新授权。
+## Illustrated mathematical overview
+
+The three pages below explain the definitions, proof ideas, matrix constraints, normalization, and verification boundary. Click a page to open the full-resolution image.
+
+[![Page 1: model, tree-flow uniqueness, integer existence criterion, and positive-flow connectivity](docs/images/tree-routing-20261101/page-01.png)](docs/images/tree-routing-20261101/page-01.png)
+
+[![Page 2: exact decomposition, four matrix constraints, linear service cost, nonnegative splitting, and the single-satellite formula](docs/images/tree-routing-20261101/page-02.png)](docs/images/tree-routing-20261101/page-02.png)
+
+[![Page 3: formalization entry point, recorded verification, and remaining algorithmic work](docs/images/tree-routing-20261101/page-03.png)](docs/images/tree-routing-20261101/page-03.png)
+
+## Proof and source map
+
+| Layer | Lean source | Explanation |
+| --- | --- | --- |
+| Tree-flow uniqueness and support/exact equivalence | [TreeSupportExact](LeanCompletion/UAV/TreeSupportExact.lean) | [Tree and hub baseline](docs/TREE_HUB_FORMALIZATION.md) |
+| Integer recursion and flow existence | [TreeFlowExistence](LeanCompletion/UAV/TreeFlowExistence.lean), [TreeFlowAlternating](LeanCompletion/UAV/TreeFlowAlternating.lean) | [Tree existence](docs/TREE_FLOW_EXISTENCE.md) |
+| Connectivity and budget-free decomposition | [TreeFlowConnectivity](LeanCompletion/UAV/TreeFlowConnectivity.lean), [TreeRouteDecomposition](LeanCompletion/UAV/TreeRouteDecomposition.lean), [TreeFlowCriterion](LeanCompletion/UAV/TreeFlowCriterion.lean) | [Decomposition and boundary cases](docs/TREE_FLOW_EXISTENCE.md) |
+| Row realization, visit counts, and linear cost | [TreeBudgetRow](LeanCompletion/UAV/TreeBudgetRow.lean) | [Single rows and cost sufficiency](docs/TREE_BUDGET_MATRIX.md#single-rows-and-cost-sufficiency) |
+| Budget matrix iff and direct tree entry point | [TreeBudgetMatrix](LeanCompletion/UAV/TreeBudgetMatrix.lean), [TreeBudgetCriterion](LeanCompletion/UAV/TreeBudgetCriterion.lean) | [Four-constraint theorem](docs/TREE_BUDGET_MATRIX.md#four-constraint-theorem) |
+| Nonnegative splitting normalization | [TreeBudgetNormalization](LeanCompletion/UAV/TreeBudgetNormalization.lean) | [Splitting](docs/TREE_BUDGET_MATRIX.md#nonnegative-splitting-normalization) |
+| Hub packing and the single-satellite formula | [HubSpokePacking](LeanCompletion/UAV/HubSpokePacking.lean), [SingleSatelliteClosed](LeanCompletion/UAV/SingleSatelliteClosed.lean) | [Single satellite](docs/TREE_BUDGET_MATRIX.md#single-satellite) |
+| Boundary and regression proofs | [TreeFlowExamples](LeanCompletion/UAV/TreeFlowExamples.lean), [TreeBudgetExamples](LeanCompletion/UAV/TreeBudgetExamples.lean) | Nine tree-flow checks and ten budget regression proofs |
+
+The decomposition layer also proves a more general result for **symmetric, loop-free integer flows**: with prescribed degrees, depot connectivity of positive flow is equivalent to exact budget-free decomposition. Its proof uses a bounded maximal partial route family and an excursion-insertion argument.
+
+## Verification status
+
+The November 1 proof batches add **18 Lean modules and three explanatory documents**:
+
+- [`101fddd`](https://github.com/huam54925-cpu/uav-routing-certification/commit/101fddd7a947f751afd6fb060de08978ad4c82a6): tree-flow uniqueness and strict-hub packing.
+- [`674120e`](https://github.com/huam54925-cpu/uav-routing-certification/commit/674120ef954dbddef40acbf315f8b461e2b24fe0): tree-flow existence, connectivity, insertion, decomposition, and alternating sums.
+- [`e04db4c`](https://github.com/huam54925-cpu/uav-routing-certification/commit/e04db4c37376e65d252553e241f23f2d1b74453b): tree budget matrices, splitting normalization, and the single-satellite formula.
+
+**Recorded validation: local cached builds passed in the original development project. No independent clean rebuild or standalone publication-package rebuild is claimed.** The latest batch records exit code 0 and main-theorem/regression axiom reports containing only `propext`, `Classical.choice`, and `Quot.sound`, with no `sorryAx`. Non-fatal linter warnings remain. This README update does not constitute a new Lean build or axiom audit.
+
+Toolchain: Lean `4.30.0-rc2`, with dependency revisions pinned in [lake-manifest.json](lake-manifest.json). Targeted commands from the project root:
+
+```powershell
+lake build LeanCompletion.UAV.TreeFlowCriterion LeanCompletion.UAV.TreeFlowExamples
+lake build LeanCompletion.UAV.TreeBudgetExamples
+```
+
+These are existence and equivalence theorems. The tree-budget batch does **not** deliver a compiled route generator, matrix-search algorithm, general-tree dynamic program, or polynomial-time guarantee. Raw build logs and build products remain local.
+
+## Earlier general certificate framework
+
+The tree results build on the broader study of repeated visits and exact resource-constrained decomposition:
+
+- Visit-copy lifting and exact decomposition: [decomposition status](docs/COPY_PROFILE_DECOMPOSITION_STATUS.md).
+- Profile cuts, fixed-lift enumeration, and violation reports: [cuts](docs/COPY_PROFILE_CUTS_STATUS.md), [checker](docs/COPY_PROFILE_CHECKER_STATUS.md), [reports](docs/COPY_PROFILE_REPORT_STATUS.md).
+- Local pairing, ranks, and service potentials: [completeness](docs/LOCAL_VISIT_PAIRING_COMPLETENESS_STATUS.md).
+- Next-only and bounded certificates: [bounded certificate status](docs/BOUNDED_NEXT_CERTIFICATE_STATUS.md).
+- Finite candidates, a single-candidate checker, and representation bounds: [finite certificate status](docs/FINITE_CERTIFICATE_STATUS.md), [input-size module](LeanCompletion/UAV/LocalVisitPairingInputSize.lean).
+
+Each stage retains its own verification record. The general certificate checker and fixed-lift profile checker should not be confused with a tree-matrix search algorithm.
+
+## Next research directions
+
+1. **Row-type compression:** represent repeated matrix rows by a row type and multiplicity; prove preservation of fleet size, edge totals, and budgets.
+2. **Executable verification and construction:** develop a tree-matrix checker and route generator with explicit correctness statements.
+3. **Structured search:** identify sufficient states for restricted-tree dynamic programs and prove transition completeness before claiming an algorithmic bound.
+
+Encoding matters: a matrix with `m(|V| - 1)` natural-number entries is not automatically polynomial-size in a binary-encoded fleet size. See [Issue #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15) for the research roadmap and [Issue #14](https://github.com/huam54925-cpu/uav-routing-certification/issues/14) for input representation and verification-cost work.
+
+## Historical application and repository materials
+
+<details>
+<summary>Original UAV benchmark, Case1 baseline, papers, and archived programs</summary>
+
+The project originated in a multi-UAV inspection benchmark. The original paper, the repeated-visit correction, the formal lower-bound proof, and the independently checked feasible witness are separate evidence layers. They remain available as historical material; current research concentrates on general route-decomposition theory.
+
+For the fixed historical Case1 model, the lower bound is formalized in Lean and the four-UAV witness was checked by a separate Python verifier. The combined minimum-fleet conclusion is mixed verification, not a Lean theorem of four-UAV feasibility or globally optimal completion time. Its scope and historical validation are documented below.
+
+| Material | Location |
+| --- | --- |
+| Original paper, appendices, and figures | [paper/original](paper/original/README.md) |
+| Repeated-visit correction | [paper/revised](paper/revised/README.md) |
+| Historical Case1 proof and model boundary | [Kernel closure record](docs/CASE1_KERNEL_CLOSURE_STATUS.md), [model correspondence](docs/MODEL_CORRESPONDENCE.md) |
+| Problem statements and input tables | [source_materials/problem_A](source_materials/problem_A/README.md) |
+| Question 1–3 programs and published attachments | [submission_package](submission_package/README.md) |
+| ALNS research and selected certificates | [research](research/README.md) |
+| Historical Lean module index | [LeanCompletion/UAV](LeanCompletion/UAV/README.md) |
+| Provenance and reproduction notes | [Sources](docs/SOURCES.md), [reproducibility](docs/REPRODUCIBILITY.md), [timeline](docs/RESEARCH_TIMELINE.md) |
+
+Historical PASS records refer to their original environments and dates. They are not new validation runs performed by this branch-homepage update.
+
+</details>
+
+## License and attribution
+
+The repository retains its [Apache-2.0 license](LICENSE). Problem statements and third-party materials retain their original sources and attribution; provenance notes do not relicense those materials.
