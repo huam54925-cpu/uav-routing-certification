@@ -4,8 +4,12 @@
 承接 [1418ac7](https://github.com/huam54925-cpu/uav-routing-certification/commit/1418ac7ab6df7db034004e9b1ede40864503583b)
 的有限模式接口。
 
-状态：本文给出完整数学证明、接口规格与边界算例；新增定理尚未写入 Lean，
+数学稿初版状态：本文给出完整数学证明、接口规格与边界算例；当时新增定理尚未写入 Lean，
 本文不构成 Lean 构建或公理审计通过记录。既有构建记录仍只属于原来的证明批次。
+
+后续实现已完成本地 Lean 构建与边界验证，详见
+[Lean 实现与验证状态](TREE_BUDGET_ROOT_FACTORIZATION_STATUS.md)。
+下文保留初版证明规格和任务次序；当前完成范围以状态文档及 Lean 源码为准。
 
 ## 1. 评价、范围及既有接口
 
