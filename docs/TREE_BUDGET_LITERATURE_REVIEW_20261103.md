@@ -1,17 +1,17 @@
 # Tree-budget route decomposition: literature comparison and research directions
 
 **Date:** 2026-11-03  
-**Research branch:** \`research/structural-service-cuts-20261023\`  
-**Code baseline reviewed:** \`2466e0b4b91744045618c78fdb61ecc986863b39\`  
+**Research branch:** `research/structural-service-cuts-20261023`  
+**Code baseline reviewed:** `2466e0b4b91744045618c78fdb61ecc986863b39`  
 **Scope:** Selective, source-linked literature review and model comparison, **not** a claim of novelty, priority, exhaustive bibliographic coverage, or a new Lean verification.
 
 > **Attribution rule:** Machine checking a theorem does not mean its mathematical content was first discovered here. Separate (i) established mathematical methods, (ii) model-specific theorems and proof engineering, (iii) executable kernel-checked interfaces, and (iv) speculative research proposals. Do not advertise any of the items below as a first result without an exhaustive related-work analysis, exact reduction/model correspondence, and independent assessment.
 
 ## 1. Exact model being compared
 
-Our current tree-budget modules use a finite rooted tree with depot \`o\`, natural-number visit demand at non-depot vertices, an exact number \`m\` of depot-to-depot walks, no internal depot visit, no consecutive equal vertices, and repeated visits allowed. **Every** non-depot visit contributes to demand and service cost. Service fees \`s(v)\` and route budget \`T\` are rational, including signed values. The predicate \`BudgetRoutes\` excludes travel distance, edge weights, timing windows, recharging, and time-dependent costs. A root-subtree is a structural restriction on available tree edges, not a tree metric on a complete graph. The original application model's different repeated-visit counting rule is not covered by an automatic equivalence.
+Our current tree-budget modules use a finite rooted tree with depot `o`, natural-number visit demand at non-depot vertices, an exact number `m` of depot-to-depot walks, no internal depot visit, no consecutive equal vertices, and repeated visits allowed. **Every** non-depot visit contributes to demand and service cost. Service fees `s(v)` and route budget `T` are rational, including signed values. The predicate `BudgetRoutes` excludes travel distance, edge weights, timing windows, recharging, and time-dependent costs. A root-subtree is a structural restriction on available tree edges, not a tree metric on a complete graph. The original application model's different repeated-visit counting rule is not covered by an automatic equivalence.
 
-The project proves an exact connection between legal routes, a parent-edge multiplicity matrix, legal per-route patterns, certificates, and complete finite search. The corrected parent-edge demands satisfy \`h(v) = d(v) - Σ_{w child of v} h(w)\` at non-root nodes when compatible. The route multiplicity pattern \`p\` has root-child sum one and ancestor-closed positive support, and per-visit service cost is computed using the derived visit counts \`p(v) + Σ_{w child of v} p(w)\`. A valid grouped certificate has weights \`z_p ≥ 0\` with \`Σ_p z_p p(v)=h(v)\`, total routes \`Σ_p z_p=m\`. For exact source theorems see:
+The project proves an exact connection between legal routes, a parent-edge multiplicity matrix, legal per-route patterns, certificates, and complete finite search. The corrected parent-edge demands satisfy `h(v) = d(v) - Σ_{w child of v} h(w)` at non-root nodes when compatible. The route multiplicity pattern `p` has root-child sum one and ancestor-closed positive support, and per-visit service cost is computed using the derived visit counts `p(v) + Σ_{w child of v} p(w)`. A valid grouped certificate has weights `z_p ≥ 0` with `Σ_p z_p p(v)=h(v)`, total routes `Σ_p z_p=m`. For exact source theorems see:
 
 - [TreeBudgetCriterion.lean](../LeanCompletion/UAV/TreeBudgetCriterion.lean)
 - [TreeBudgetRootFactorization.lean](../LeanCompletion/UAV/TreeBudgetRootFactorization.lean)
@@ -68,14 +68,14 @@ These are targeted representative primary sources, **not** a systematic proof th
 
 ## 5. Research direction B — verified memoization and precise complexity
 
-**Prior art:** Ordinary DP, bin-packing pattern enumeration, classical memoization; tree VRP PTAS and parameterized algorithms are substantially more advanced in other models. Do not call caching or \`(k,r)\` recursion original.
+**Prior art:** Ordinary DP, bin-packing pattern enumeration, classical memoization; tree VRP PTAS and parameterized algorithms are substantially more advanced in other models. Do not call caching or `(k,r)` recursion original.
 
 **Immediate baseline:** [Issue #18](https://github.com/huam54925-cpu/uav-routing-certification/issues/18) already contains executable associative-list cache specification. Do **not** open duplicate implementation issue.
 
-1. Prove \`AnswerValid\` and \`CacheValid\`, including the distinctions cache miss / cached infeasible / cached valid empty rows.
+1. Prove `AnswerValid` and `CacheValid`, including the distinctions cache miss / cached infeasible / cached valid empty rows.
 2. Prove memoized recursion preserves cache validity, returns a valid residual witness or justified infeasibility, with fully scanned candidate lists.
 3. Connect original matrix/demand input, root branches, compressed successful output; preserve no-extraneous-axioms checks.
-4. Bound *reachable* residual vectors by \`S(H)=∏_{v≠o}(H(v)+1)\`; \`k=rootCount(r)\` only for states reached from compatible initial states, while general \`(k,r)\` API must retain \`k\`. Analyze candidate-generation, arithmetic bit costs, association-list lookup, and witness storage separately. \`O(|P|·|V|·S(H))\` is an **idealized candidate-scan count**, not a proved runtime for current code.
+4. Bound *reachable* residual vectors by `S(H)=∏_{v≠o}(H(v)+1)`; `k=rootCount(r)` only for states reached from compatible initial states, while general `(k,r)` API must retain `k`. Analyze candidate-generation, arithmetic bit costs, association-list lookup, and witness storage separately. `O(|P|·|V|·S(H))` is an **idealized candidate-scan count**, not a proved runtime for current code.
 5. Cold-cache comparisons, state expansion/hit counts, and sound instrumentation; do not claim real speedups before measurements.
 
 **Hardness caution:** Tree CVRP NP-hardness predates this project (Labbé et al. 1991); Döring et al. 2025 explicitly derive tree hardness from bin packing. A height-2 tree / 3-PARTITION reduction in our exact visit-service model is a **candidate model-correspondence and hardness proof**, not an original discovered hardness phenomenon. If developed, verify hub demand equals parent multiplicity plus children multiplicities, route feasibility in *both* directions, exact fleet count, signed/nonnegative restrictions, binary encoding, and strong-NP-hardness conditions before claiming any theorem. Distinguish our model from load and edge-distance capacity. Check whether standard 3-PARTITION yields a reduction and characterize its strength precisely.
@@ -90,7 +90,7 @@ These are targeted representative primary sources, **not** a systematic proof th
 - identify information erased (visit ordering, route IDs, pairings, signed fee coordination);
 - a strict separation/counterexample when moving from aggregate flow to budget decomposition in general graphs;
 - compare representation lengths and verifier costs, without assuming all maps are bijections or efficiently executable.
-- For stable compression, distinguish \`Valid(C) → Valid(compress(C))\` from false general \`check(C)=check(compress(C))\`, because an invalid zero-count row can disappear.
+- For stable compression, distinguish `Valid(C) → Valid(compress(C))` from false general `check(C)=check(compress(C))`, because an invalid zero-count row can disappear.
 
 **Distinctive if achieved:** A compositional, kernel-checked *map of exact abstraction/refinement interfaces and counterexamples*, rather than a new multiset trick.
 
