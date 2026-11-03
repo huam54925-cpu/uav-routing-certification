@@ -4,7 +4,9 @@
 
 This research branch studies when an integer edge flow can be realized by legal depot routes with exact visit demands and individual service budgets. The current focus is tree-supported routing: explicit flow existence, exact decomposition, and a complete edge-count matrix characterization of budget feasibility.
 
-**Research snapshot: November 1, 2026** · Branch: `research/structural-service-cuts-20261023` · Latest proof batch: [`e04db4c`](https://github.com/huam54925-cpu/uav-routing-certification/commit/e04db4c37376e65d252553e241f23f2d1b74453b)
+**Research snapshot: November 3, 2026** · Branch: `research/structural-service-cuts-20261023`
+
+The latest batch adds a verified full-state cache contract for [Issue #18](https://github.com/huam54925-cpu/uav-routing-certification/issues/18), a reachable-state separation example, and an exact encoding of rational service plus directional travel costs into the existing service-budget checker. Complete memoized recursion remains the next step. See [cache contract and validation](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) and [cost encoding, state limits, and comparison with Xu, Döring, and Dias](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md).
 
 [Budget matrix results](docs/TREE_BUDGET_MATRIX.md) · [Tree existence and decomposition](docs/TREE_FLOW_EXISTENCE.md) · [Tree uniqueness and hub packing](docs/TREE_HUB_FORMALIZATION.md) · [Research roadmap](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)
 
@@ -18,6 +20,9 @@ This research branch studies when an integer edge flow can be realized by legal 
 | When are individual budgets feasible on a tree? | Exactly when flow compatibility and a four-constraint edge-count matrix hold: column sums, one depot departure per row, ancestor closure, and row budgets. |
 | Can the one-departure condition be relaxed? | For nonnegative non-depot fees, rows can be split and normalized without changing feasibility. A signed-fee counterexample shows why nonnegativity matters. |
 | Is there a closed-form special case? | For a non-depot hub with one satellite, nonnegative task fees and a nonempty fleet, feasibility is determined by a ceiling-allocation formula. |
+| Can service and travel budgets reuse the checker? | Rational directional edge costs have an exact signed virtual-service encoding, preserving route costs and matrix/certificate feasibility. |
+| Can a few aggregate totals replace the residual vector? | Two states of the same input have the same route count, total cost, visit totals, and positive support, but opposite feasibility. This particular summary is insufficient. |
+| What is proved for caching? | Full `(k,r)` lookup and replacement preserve a fixed-input answer-validity contract and key uniqueness; misses, failures, and successful empty witnesses remain distinct. |
 
 The public theorem [`exists_tree_budget_routes_iff`](LeanCompletion/UAV/TreeBudgetCriterion.lean) accepts a finite tree, depot, demands, fleet size, service fees, and budget. It derives flow compatibility in the forward direction and constructs the rooted representation internally. No preselected route ordering or additional unproved rooted-tree data is required.
 
@@ -25,11 +30,11 @@ The public theorem [`exists_tree_budget_routes_iff`](LeanCompletion/UAV/TreeBudg
 
 Routes start and end at the depot, have a nonempty internal visit list, never visit the depot internally, and have distinct consecutive vertices. Repeated task visits are allowed and each incurs its service fee. Demands count visits exactly; the depot's demand and service fee are ignored. Support means containment, so some tree edges may carry zero flow.
 
-The tree matrix equivalence allows arbitrary rational service fees and budgets. Splitting normalization assumes nonnegative fees only at non-depot vertices. These results concern **service costs**; flight distances and time windows are outside this model.
+The tree matrix equivalence allows arbitrary rational service fees and budgets. Splitting normalization assumes nonnegative fees only at non-depot vertices. The new cost bridge covers additive rational service and directional travel costs on tree edges. Its virtual fees may be negative even for nonnegative physical costs, so nonnegative-service pruning needs separate justification. Time windows, waiting, order-dependent costs, and exact irrational distances remain outside this bridge.
 
 ## Illustrated mathematical overview
 
-The three pages below explain the definitions, proof ideas, matrix constraints, normalization, and verification boundary. Click a page to open the full-resolution image.
+The three historical November 1 pages below explain the definitions, proof ideas, matrix constraints, normalization, and that batch's verification boundary. Later executable search and cost/cache results are described in the linked status documents above. Click a page to open the full-resolution image.
 
 [![Page 1: model, tree-flow uniqueness, integer existence criterion, and positive-flow connectivity](docs/images/tree-routing-20261101/page-01.png)](docs/images/tree-routing-20261101/page-01.png)
 
@@ -49,10 +54,14 @@ The three pages below explain the definitions, proof ideas, matrix constraints, 
 | Nonnegative splitting normalization | [TreeBudgetNormalization](LeanCompletion/UAV/TreeBudgetNormalization.lean) | [Splitting](docs/TREE_BUDGET_MATRIX.md#nonnegative-splitting-normalization) |
 | Hub packing and the single-satellite formula | [HubSpokePacking](LeanCompletion/UAV/HubSpokePacking.lean), [SingleSatelliteClosed](LeanCompletion/UAV/SingleSatelliteClosed.lean) | [Single satellite](docs/TREE_BUDGET_MATRIX.md#single-satellite) |
 | Boundary and regression proofs | [TreeFlowExamples](LeanCompletion/UAV/TreeFlowExamples.lean), [TreeBudgetExamples](LeanCompletion/UAV/TreeBudgetExamples.lean) | Nine tree-flow checks and ten budget regression proofs |
+| Residual cache contract and regression proofs | [TreeBudgetMemoState](LeanCompletion/UAV/TreeBudgetMemoState.lean), [TreeBudgetMemoStateExamples](LeanCompletion/UAV/TreeBudgetMemoStateExamples.lean) | [Issue #18 first package](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) |
+| State separation and travel-cost encoding | [TreeBudgetStateSeparationExamples](LeanCompletion/UAV/TreeBudgetStateSeparationExamples.lean), [TreeBudgetLinearCost](LeanCompletion/UAV/TreeBudgetLinearCost.lean), [TreeBudgetLinearCostExamples](LeanCompletion/UAV/TreeBudgetLinearCostExamples.lean) | [Results and literature comparison](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) |
 
 The decomposition layer also proves a more general result for **symmetric, loop-free integer flows**: with prescribed degrees, depot connectivity of positive flow is equivalent to exact budget-free decomposition. Its proof uses a bounded maximal partial route family and an excursion-insertion argument.
 
 ## Verification status
+
+November 3: the new cache contract and examples are checked in the existing local development project; the [cache status](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) records commands, axiom reports, and publication-source comparison. The accompanying [cost/state report](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) retains its separate validation record. These are local cached checks, with no claim of a clean rebuild or of running a complete memoized solver.
 
 The November 1 proof batches add **18 Lean modules and three explanatory documents**:
 
@@ -60,16 +69,17 @@ The November 1 proof batches add **18 Lean modules and three explanatory documen
 - [`674120e`](https://github.com/huam54925-cpu/uav-routing-certification/commit/674120ef954dbddef40acbf315f8b461e2b24fe0): tree-flow existence, connectivity, insertion, decomposition, and alternating sums.
 - [`e04db4c`](https://github.com/huam54925-cpu/uav-routing-certification/commit/e04db4c37376e65d252553e241f23f2d1b74453b): tree budget matrices, splitting normalization, and the single-satellite formula.
 
-**Recorded validation: local cached builds passed in the original development project. No independent clean rebuild or standalone publication-package rebuild is claimed.** The latest batch records exit code 0 and main-theorem/regression axiom reports containing only `propext`, `Classical.choice`, and `Quot.sound`, with no `sorryAx`. Non-fatal linter warnings remain. This README update does not constitute a new Lean build or axiom audit.
+**November 1 recorded validation: local cached builds passed in the original development project. No independent clean rebuild or standalone publication-package rebuild is claimed.** That batch records exit code 0 and main-theorem/regression axiom reports containing only `propext`, `Classical.choice`, and `Quot.sound`, with no `sorryAx`. Non-fatal linter warnings remain. Editing this README does not constitute a new Lean build or axiom audit.
 
 Toolchain: Lean `4.30.0-rc2`, with dependency revisions pinned in [lake-manifest.json](lake-manifest.json). Targeted commands from the project root:
 
 ```powershell
 lake build LeanCompletion.UAV.TreeFlowCriterion LeanCompletion.UAV.TreeFlowExamples
 lake build LeanCompletion.UAV.TreeBudgetExamples
+lake build LeanCompletion.UAV.TreeBudgetMemoStateExamples LeanCompletion.UAV.TreeBudgetLinearCostExamples
 ```
 
-These are existence and equivalence theorems. The tree-budget batch does **not** deliver a compiled route generator, matrix-search algorithm, general-tree dynamic program, or polynomial-time guarantee. Raw build logs and build products remain local.
+The earlier November 1 batch supplied existence and equivalence theorems. Subsequent modules now provide complete finite and uncached residual search, root-branch integration, and stable certificate compression. This cache batch provides the verified storage layer; complete memoized recursion, performance measurements, and a polynomial-time guarantee are not supplied. Raw build logs and build products remain local.
 
 ## Earlier general certificate framework
 
@@ -85,9 +95,9 @@ Each stage retains its own verification record. The general certificate checker 
 
 ## Next research directions
 
-1. **Row-type compression:** represent repeated matrix rows by a row type and multiplicity; prove preservation of fleet size, edge totals, and budgets.
-2. **Executable verification and construction:** develop a tree-matrix checker and route generator with explicit correctness statements.
-3. **Structured search:** identify sufficient states for restricted-tree dynamic programs and prove transition completeness before claiming an algorithmic bound.
+1. **Verified memoized recursion:** build on the completed [Issue #18 first package](docs/TREE_BUDGET_MEMO_STATE_STATUS.md), preserving cache validity on success and failure before connecting initial certificates and root branches.
+2. **Internal-subtree interfaces:** use the [literature comparison](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) to specify sufficient endpoint, resource, multiplicity, and pairing information; prove extraction and reconstruction before compression.
+3. **Model correspondence and measurement:** formalize the depot-splitting bridge to weighted source-to-sink walks, then measure candidate generation, cache lookup, state expansion, and witness storage separately. General DP, memoization, and weighted flow decomposition already have established prior work.
 
 Encoding matters: a matrix with `m(|V| - 1)` natural-number entries is not automatically polynomial-size in a binary-encoded fleet size. See [Issue #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15) for the research roadmap and [Issue #14](https://github.com/huam54925-cpu/uav-routing-certification/issues/14) for input representation and verification-cost work.
 
