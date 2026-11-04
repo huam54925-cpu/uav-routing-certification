@@ -24,7 +24,8 @@ The small-scale measurement package now includes proved statistics erasure and c
 | Is there a closed-form special case? | For a non-depot hub with one satellite, nonnegative task fees and a nonempty fleet, feasibility is determined by a ceiling-allocation formula. |
 | Can service and travel budgets reuse the checker? | Rational directional edge costs have an exact signed virtual-service encoding, preserving route costs and matrix/certificate feasibility. |
 | Can a few aggregate totals replace the residual vector? | Two states of the same input have the same route count, total cost, visit totals, and positive support, but opposite feasibility. This particular summary is insufficient. |
-| What is proved for caching? | Full `(k,r)` lookup and replacement preserve a fixed-input answer-validity contract and key uniqueness; misses, failures, and successful empty witnesses remain distinct. |
+| What is proved for caching? | Complete memoized recursion preserves the fixed-input answer contract, returns a witness iff the residual problem is feasible, and integrates with the original checker and root-branch interfaces. Reachable-key and actual cache-entry bounds are proved; the executable key remains full `(k,r)`. |
+| Do statistics describe the same search? | Erasing counters preserves the exact answer and cache of the memoized executor and the exact answer of the uncached executor. Controlled small-instance measurements are complete; general operation-count and bit-cost bounds remain open. |
 
 The public theorem [`exists_tree_budget_routes_iff`](LeanCompletion/UAV/TreeBudgetCriterion.lean) accepts a finite tree, depot, demands, fleet size, service fees, and budget. It derives flow compatibility in the forward direction and constructs the rooted representation internally. No preselected route ordering or additional unproved rooted-tree data is required.
 
@@ -57,6 +58,8 @@ The three historical November 1 pages below explain the definitions, proof ideas
 | Hub packing and the single-satellite formula | [HubSpokePacking](LeanCompletion/UAV/HubSpokePacking.lean), [SingleSatelliteClosed](LeanCompletion/UAV/SingleSatelliteClosed.lean) | [Single satellite](docs/TREE_BUDGET_MATRIX.md#single-satellite) |
 | Boundary and regression proofs | [TreeFlowExamples](LeanCompletion/UAV/TreeFlowExamples.lean), [TreeBudgetExamples](LeanCompletion/UAV/TreeBudgetExamples.lean) | Nine tree-flow checks and ten budget regression proofs |
 | Residual cache contract and regression proofs | [TreeBudgetMemoState](LeanCompletion/UAV/TreeBudgetMemoState.lean), [TreeBudgetMemoStateExamples](LeanCompletion/UAV/TreeBudgetMemoStateExamples.lean) | [Issue #18 first package](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) |
+| Complete memoized search, interfaces, and state bounds | [TreeBudgetMemoSearch](LeanCompletion/UAV/TreeBudgetMemoSearch.lean), [TreeBudgetMemoIntegration](LeanCompletion/UAV/TreeBudgetMemoIntegration.lean), [TreeBudgetMemoReachability](LeanCompletion/UAV/TreeBudgetMemoReachability.lean), [TreeBudgetMemoBounds](LeanCompletion/UAV/TreeBudgetMemoBounds.lean), [TreeBudgetMemoExamples](LeanCompletion/UAV/TreeBudgetMemoExamples.lean) | [Recursion and validation](docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md) |
+| Verified statistics and controlled measurements | [TreeBudgetSearchStats](LeanCompletion/UAV/TreeBudgetSearchStats.lean), [TreeBudgetBenchCases](LeanCompletion/UAV/TreeBudgetBenchCases.lean), [TreeBudgetBench](LeanCompletion/UAV/TreeBudgetBench.lean), [bounded runner](LeanCompletion/UAV/run_tree_budget_bench.py) | [Performance report and reproduction](docs/TREE_BUDGET_MEMO_PERFORMANCE.md) |
 | State separation and travel-cost encoding | [TreeBudgetStateSeparationExamples](LeanCompletion/UAV/TreeBudgetStateSeparationExamples.lean), [TreeBudgetLinearCost](LeanCompletion/UAV/TreeBudgetLinearCost.lean), [TreeBudgetLinearCostExamples](LeanCompletion/UAV/TreeBudgetLinearCostExamples.lean) | [Results and literature comparison](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) |
 
 The decomposition layer also proves a more general result for **symmetric, loop-free integer flows**: with prescribed degrees, depot connectivity of positive flow is equivalent to exact budget-free decomposition. Its proof uses a bounded maximal partial route family and an excursion-insertion argument.
@@ -79,9 +82,15 @@ Toolchain: Lean `4.30.0-rc2`, with dependency revisions pinned in [lake-manifest
 lake build LeanCompletion.UAV.TreeFlowCriterion LeanCompletion.UAV.TreeFlowExamples
 lake build LeanCompletion.UAV.TreeBudgetExamples
 lake build LeanCompletion.UAV.TreeBudgetMemoStateExamples LeanCompletion.UAV.TreeBudgetLinearCostExamples
+lake build LeanCompletion.UAV.TreeBudgetMemoExamples LeanCompletion.UAV.TreeBudgetMemoBounds
+lake build LeanCompletion.UAV.TreeBudgetBenchCases LeanCompletion.UAV.TreeBudgetBench
 ```
 
-The earlier November 1 batch supplied existence and equivalence theorems. Subsequent modules now provide complete finite and uncached residual search, root-branch integration, and stable certificate compression. The November 4 extension completes verified memoized recursion and its public interfaces. Its local build passed for five new modules, with 30 kernel regressions and 89 theorem axiom reports. Performance measurements and a polynomial-time guarantee are not supplied. Raw build logs and build products remain local.
+The earlier November 1 batch supplied existence and equivalence theorems. Subsequent modules provide complete finite and uncached residual search, root-branch integration, and stable certificate compression. The November 4 recursion batch (`c4f9dfe`) records five new modules, 30 kernel regressions, and 89 theorem axiom reports; the 30 regressions are included in the 89 theorems.
+
+The subsequent [measurement batch (`612b075`)](https://github.com/huam54925-cpu/uav-routing-certification/commit/612b07505ce9a4850a11400b128d69751cf88c39) completes Issue #18's agreed small-scale package. Its separate local validation records three new Lean modules and 19 theorem axiom reports (9 statistics-erasure theorems plus 10 case theorems), with no `sorryAx`. The controlled run used 65 timing phases and 1,365 recorded timing samples; the process took 51.94 seconds including startup/loading, not the whole development or build effort. In the two shared-state examples, cold memoization reduced expansions by 33.3% and 40.7%, but search-only median times were 3.59 and 3.06 times the uncached times. Pre-generated warm hits and full-entry repeated calls were measured separately. These are observations for the documented tiny inputs and execution environment, not a general speedup claim.
+
+The measurements and builds came from the existing local development environment; publication and this status synchronization did not rerun them. Raw samples, logs, and build products remain local. General operation-count bounds, memory-bit bounds, and polynomial-time/FPT/XP guarantees are not supplied; follow-up cost analysis is tracked in [Issue #20](https://github.com/huam54925-cpu/uav-routing-certification/issues/20).
 
 ## Earlier general certificate framework
 
@@ -97,9 +106,9 @@ Each stage retains its own verification record. The general certificate checker 
 
 ## Next research directions
 
-1. **Memoized-search measurement:** build on the [completed recursion and interfaces](docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md); measure cold runs, cache hits, candidate checks, lookup costs, and witness storage separately.
+1. **General execution-cost bounds:** Issue #18's [verified statistics and small-scale measurements](docs/TREE_BUDGET_MEMO_PERFORMANCE.md) are complete. In [Issue #20](https://github.com/huam54925-cpu/uav-routing-certification/issues/20), relate the defined counters to returned-cache size and prove general expansion, candidate-check, and association-list maintenance bounds before analyzing bit costs. Small-instance equalities are evidence for targets, not general theorems.
 2. **Internal-subtree interfaces:** use the [literature comparison](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) to specify sufficient endpoint, resource, multiplicity, and pairing information; prove extraction and reconstruction before compression.
-3. **Model correspondence and measurement:** formalize the depot-splitting bridge to weighted source-to-sink walks, then measure candidate generation, cache lookup, state expansion, and witness storage separately. General DP, memoization, and weighted flow decomposition already have established prior work.
+3. **Model correspondence:** formalize the depot-splitting bridge to weighted source-to-sink walks, preserving exact visits, edge flow, and per-route cost. Representation refinement remains a separate direction. Further performance experiments should answer a specific open question; the completed measurement package need not be rerun to close Issue #18. General DP, memoization, and weighted flow decomposition already have established prior work.
 
 Encoding matters: a matrix with `m(|V| - 1)` natural-number entries is not automatically polynomial-size in a binary-encoded fleet size. See [Issue #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15) for the research roadmap and [Issue #14](https://github.com/huam54925-cpu/uav-routing-certification/issues/14) for input representation and verification-cost work.
 
