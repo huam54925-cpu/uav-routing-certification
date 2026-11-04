@@ -4,9 +4,9 @@
 
 This research branch studies when an integer edge flow can be realized by legal depot routes with exact visit demands and individual service budgets. The current focus is tree-supported routing: explicit flow existence, exact decomposition, and a complete edge-count matrix characterization of budget feasibility.
 
-**Research snapshot: November 3, 2026** · Branch: `research/structural-service-cuts-20261023`
+**Research snapshot: November 4, 2026** · Branch: `research/structural-service-cuts-20261023`
 
-The latest batch adds a verified full-state cache contract for [Issue #18](https://github.com/huam54925-cpu/uav-routing-certification/issues/18), a reachable-state separation example, and an exact encoding of rational service plus directional travel costs into the existing service-budget checker. Complete memoized recursion remains the next step. See [cache contract and validation](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) and [cost encoding, state limits, and comparison with Xu, Döring, and Dias](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md).
+The November 3 batch adds a verified full-state cache contract for [Issue #18](https://github.com/huam54925-cpu/uav-routing-certification/issues/18), a reachable-state separation example, and an exact encoding of rational service plus directional travel costs into the existing service-budget checker. The November 4 batch completes memoized recursion, certificate and root-branch integration, and reachable-state/cache-entry bounds; see [implementation and validation](docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md). See [cache contract and validation](docs/TREE_BUDGET_MEMO_STATE_STATUS.md) and [cost encoding, state limits, and comparison with Xu, Döring, and Dias](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md).
 
 [Budget matrix results](docs/TREE_BUDGET_MATRIX.md) · [Tree existence and decomposition](docs/TREE_FLOW_EXISTENCE.md) · [Tree uniqueness and hub packing](docs/TREE_HUB_FORMALIZATION.md) · [Research roadmap](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)
 
@@ -79,7 +79,7 @@ lake build LeanCompletion.UAV.TreeBudgetExamples
 lake build LeanCompletion.UAV.TreeBudgetMemoStateExamples LeanCompletion.UAV.TreeBudgetLinearCostExamples
 ```
 
-The earlier November 1 batch supplied existence and equivalence theorems. Subsequent modules now provide complete finite and uncached residual search, root-branch integration, and stable certificate compression. This cache batch provides the verified storage layer; complete memoized recursion, performance measurements, and a polynomial-time guarantee are not supplied. Raw build logs and build products remain local.
+The earlier November 1 batch supplied existence and equivalence theorems. Subsequent modules now provide complete finite and uncached residual search, root-branch integration, and stable certificate compression. The November 4 extension completes verified memoized recursion and its public interfaces. Its local build passed for five new modules, with 30 kernel regressions and 89 theorem axiom reports. Performance measurements and a polynomial-time guarantee are not supplied. Raw build logs and build products remain local.
 
 ## Earlier general certificate framework
 
@@ -95,7 +95,7 @@ Each stage retains its own verification record. The general certificate checker 
 
 ## Next research directions
 
-1. **Verified memoized recursion:** build on the completed [Issue #18 first package](docs/TREE_BUDGET_MEMO_STATE_STATUS.md), preserving cache validity on success and failure before connecting initial certificates and root branches.
+1. **Memoized-search measurement:** build on the [completed recursion and interfaces](docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md); measure cold runs, cache hits, candidate checks, lookup costs, and witness storage separately.
 2. **Internal-subtree interfaces:** use the [literature comparison](docs/TREE_BUDGET_STATE_AND_LINEAR_COST_20261103.md) to specify sufficient endpoint, resource, multiplicity, and pairing information; prove extraction and reconstruction before compression.
 3. **Model correspondence and measurement:** formalize the depot-splitting bridge to weighted source-to-sink walks, then measure candidate generation, cache lookup, state expansion, and witness storage separately. General DP, memoization, and weighted flow decomposition already have established prior work.
 
