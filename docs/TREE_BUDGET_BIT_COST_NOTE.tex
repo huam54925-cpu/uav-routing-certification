@@ -1,0 +1,431 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=26mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\NN}{\mathbb N}
+\newcommand{\QQ}{\mathbb Q}
+\newcommand{\bits}{\operatorname{bits}}
+\newcommand{\Time}{\operatorname{Time}}
+\newcommand{\pa}{\operatorname{par}}
+\newcommand{\RC}{\operatorname{rc}}
+\title{Tree-budget search: parameter corollaries and a paper proof of bit-cost bounds}
+\author{UAV routing certification project}
+\date{5 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We specify a binary-encoded matrix decision and explicit-witness task, and
+give a paper construction of an explicit-vector implementation of the existing
+ordered, association-list memoized search. Including candidate enumeration,
+legality tests, both lookup and insertion key comparisons, arithmetic, and
+witness construction, its bit-cost RAM time is
+\(O(S^3(M+1)(\ell+1)^5)\).
+Here \(S=\prod_{v\ne o}(H_v+1)\), \(M=\sum_{v\ne o}H_v\), and \(\ell\)
+is the total input encoding length. This gives paper-level FPT upper bounds
+for \(M\) and for the pair \((t,U)\). The representation simulation and the
+bit-cost theorem in this note are not Lean theorems and are not a time bound
+for the current compiled Lean program. Existing Lean results certify the
+search semantics and logical operation counts used as premises.
+\end{abstract}
+
+\section{Status and scope}
+The source baseline is the research commit
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/1f4774cfcb59c554893d37a9e4d476b0d2c8fa78}{\texttt{1f4774c}}.
+Its modules \texttt{TreeBudgetSearchStatsBounds},
+\texttt{TreeBudgetCandidateCount}, \texttt{TreeBudgetSearchCostBounds}, and
+\texttt{TreeBudgetStateParameters} supply the logical bounds below.
+The accompanying \texttt{TreeBudgetParameterizedBounds} module closes the
+logical parameter corollaries; its exact build and audit status is recorded
+separately in the repository status document.
+
+Sections~\ref{sec:task}--\ref{sec:time} are mathematical proofs about an
+explicit representation specified here, not claims of a completed Lean
+refinement or compiler-cost proof. No performance measurements are used.
+In particular, an arbitrary value of type \texttt{Fin n -> Nat} is not
+assumed to have constant-time evaluation. The task starts from multiplicities
+\(H\); converting a different demand encoding into \(H\), expanding rows
+into physical tours, and compressing certificates are outside this task.
+
+\section{Logical parameter corollaries}
+Let \(V=\{0,\ldots,n-1\}\), where \(n\ge1\), be the vertices of a rooted
+tree with root \(o\) and parent map \(\pa\). Set
+\[
+ S=\prod_{v\ne o}(H_v+1),\quad M=\sum_{v\ne o}H_v,\quad
+ t=|\{v\ne o:H_v>0\}|,\quad
+ U=\max(\{H_v:v\ne o\}\cup\{0\}).
+\]
+Write \(k_0=\RC(H)=\sum_{v\ne o,\,\pa(v)=o}H_v\).
+For the formal cold entry, let \(P,E,Q,C,I,L\) denote the candidate-list
+length, expansions, candidate checks, state calls, insertion scans, and lookup
+key comparisons, respectively. The established bounds are
+\begin{equation}\label{eq:logical}
+ P,E\le S,\quad Q\le S^2,\quad C\le1+S^2,\quad
+ I\le\frac{S(S-1)}2,\quad L\le S+S^3.
+\end{equation}
+The final cache has exactly \(E\) entries. These initial-entry bounds do not
+apply to an arbitrary hot cache or arbitrary candidate list.
+
+\begin{lemma}\label{lem:parameters}
+We have \(k_0\le M\le tU\), \(S\le2^M\), and \(S\le(U+1)^t\).
+A successful cold-entry row witness has exactly \(k_0\) rows, hence at most
+\(M\) rows.
+\end{lemma}
+\begin{proof}
+The root children form a subset of the nonroot vertices, and all summands
+are nonnegative, giving \(k_0\le M\). Delete zero summands from \(M\) and
+bound each of the remaining \(t\) summands by \(U\).
+Induction gives \(h+1\le2^h\) for every \(h\in\NN\): the successor step
+uses \(h+2\le2(h+1)\). Multiplication over nonroot vertices gives
+\(S\le2^{\sum H_v}\). Removing unit factors from \(S\) leaves \(t\)
+factors, each at most \(U+1\). Finally, the residual-witness specification
+at remaining count \(k\) requires a list of length exactly \(k\).
+Apply soundness at \(k=k_0\). Empty products equal one, so the argument
+also covers \(M=t=U=k_0=0\).
+\end{proof}
+
+\begin{corollary}\label{cor:envelope}
+For either \(A=2^M\) or \(A=(U+1)^t\),
+\[
+ P,E\le A,\quad Q\le A^2,\quad C\le1+A^2,\quad
+ I\le\frac{A(A-1)}2,\quad L\le A+A^3.
+\]
+\end{corollary}
+\begin{proof}
+Substitute \(S\le A\) in \eqref{eq:logical}. For the insertion bound,
+use monotonicity of \(\sum_{j=0}^{a-1}j=a(a-1)/2\) on natural numbers.
+This avoids treating truncated subtraction as an independently monotone
+expression. These are logical-count conclusions, without a time claim.
+\end{proof}
+
+\section{A fixed encoded task}\label{sec:task}
+\begin{definition}[Input and output]\label{def:task}
+The input consists of an explicitly listed parent array on \(V\), a root
+index \(o\), a list of nonnegative binary integers \(H_v\), signed rational
+service fees \(s_v=a_v/b_v\), and a rational budget \(T=a_T/b_T\), where
+all denominators are positive integers. Fractions need not be reduced.
+Let \(\ell\ge n\) be the total length of this encoding, including delimiters
+and signs. The parent array is required to describe a rooted tree:
+\(\pa(o)=o\), and every other vertex reaches \(o\) by following parents.
+Malformed encodings may be rejected before search.
+
+Replace \(H_o\) by zero after reading the input, and call the normalized
+vector \(H\). The task is to decide whether there exists a list of
+\(k_0=\RC(H)\) rows \(p\in\NN^n\), each satisfying
+\begin{align}
+ &p_o=0,\qquad 0\le p_v\le H_v\quad(v\ne o),\qquad\RC(p)=1,
+       \label{eq:rowa}\\
+ &v\ne o,\ p_v>0,\ \pa(v)\ne o\ \Longrightarrow\ p_{\pa(v)}>0,
+       \label{eq:rowb}\\
+ &\sum_{v\ne o}\bigl(s_v+\mathbf1_{\pa(v)\ne o}s_{\pa(v)}\bigr)p_v\le T,
+       \label{eq:rowc}
+\end{align}
+whose nonroot column sums are \(H_v\). On success the witness task outputs
+that explicit row matrix in binary; on failure it outputs \textsc{no}.
+The decision task may run the same algorithm and discard the witness.
+\end{definition}
+
+These conditions are exactly \texttt{RowValid} and the initial matrix
+condition, using \texttt{cost\_eq} for the linear service cost. Condition
+\eqref{eq:rowb} is a local parent test, not an enumeration of ancestor paths
+or subsets. No sign restriction on \(s_v\) or \(T\) is needed.
+An optional binary row-count input \(m\) can be handled by rejecting
+\(m\ne k_0\): summing \(\RC(p)=1\) over rows and using the column sums
+forces \(m=k_0\). This note does not analyze the separate demand-to-flow
+wrapper or root-branch decomposition.
+
+\begin{remark}[Why normalization matters]
+The low-level logical count theorems allow an arbitrary root coordinate.
+Matrix feasibility, however, ignores that coordinate whereas the residual
+base test checks \(r=0\) at every coordinate. The mathematical entry here
+uses \(H_o=0\), exactly as \texttt{searchMemo} normalizes its input. Without
+this step, a nonzero root coordinate could incorrectly force failure for
+the intended matrix task. The values \(S,M,t,U,k_0\) are unchanged by
+normalization.
+\end{remark}
+
+\section{Representation and semantic correspondence}\label{sec:representation}
+Use materialized length-\(n\) binary vectors, not unevaluated function
+closures. Enumerate all vectors with \(p_o=0\) and \(0\le p_v\le H_v\)
+in the coordinate order of \texttt{boundedVectors}, then stably filter by
+\eqref{eq:rowa}--\eqref{eq:rowc}. Store the resulting ordered list once,
+and reuse that same list in every recursive call.
+
+The cache is an ordered association list of keys \((k,r)\) and answers.
+An answer is either failure or a successful row list; a cache miss is a
+third, distinct outcome. In particular, a cached failure is a hit and a
+successful empty list is not a failure. Use these operations:
+\begin{enumerate}
+\item Search the cache from its head, comparing full keys, and return the
+      first matching answer if present.
+\item On a miss with \(k=0\), return success with the empty list exactly
+      when every coordinate of \(r\) is zero.
+\item On a miss with \(k>0\), scan the full candidate list in order.
+      For each \(p\le r\), materialize \(r-p\) and call the solver with
+      \(k-1\). A failing child passes its updated cache to the next
+      candidate. A successful child returns \(p\) prepended to its rows
+      immediately, without visiting the unused suffix.
+\item After the miss has been evaluated, filter the entire returned cache
+      to remove matching keys, then prepend the new key and answer.
+      The filter is still executed when the parent key is known to be absent.
+\end{enumerate}
+Start with \((k,r)=(k_0,H)\) and the empty cache. Immutable vectors and
+row lists may be shared by references, or copied; the conservative bound
+below allows copying an entire answer whenever an answer is transferred.
+
+\begin{lemma}[Paper simulation]\label{lem:simulation}
+Interpret a stored vector \(x\) as the function \(v\mapsto x_v\).
+Under this interpretation, the algorithm just specified returns the same
+answer and ordered cache as \texttt{memoRows}, and its logical events
+\(C,E,Q,L,I\) coincide with \texttt{memoRowsStat}.
+\end{lemma}
+\begin{proof}
+First induct on the number of coordinates. The nested coordinate loops
+produce precisely the list obtained by the range, flat-map and cons steps
+of \texttt{boundedVectors}, in the same order. Array tests for
+\eqref{eq:rowa}--\eqref{eq:rowc} express exactly \texttt{RowValid}; stable
+filtering therefore gives the identical candidate list.
+
+Next, array equality is extensional function equality on the finite domain.
+Coordinatewise guarded subtraction agrees with natural-number subtraction,
+and the all-zero array test agrees with function equality to zero.
+Induct on \(k\), with a subsidiary induction on the scanned suffix.
+Lookup visits identical entries and gives the same first hit or miss.
+At zero depth both programs make the same zero test. At positive depth,
+a rejected guard moves to the same suffix; an accepted guard invokes the
+induction hypothesis on the same child state and input cache. On failure
+the suffix induction starts with the child's returned cache. On success
+both prepend the same row and stop. Finally the full-key filter and
+prepending operation agree entry by entry.
+
+Counting a state call, a miss, a candidate test, each visited lookup entry,
+and each visited insertion-filter entry in these matching branches gives
+the stated equality of events. This proves a mathematical simulation;
+the explicit-vector implementation and this refinement have not been
+encoded or checked in Lean in this package.
+\end{proof}
+
+\section{Bits, arithmetic, and the complete cost ledger}\label{sec:ledger}
+Use a bit-cost RAM with binary storage and exact integer arithmetic.
+Reading or writing a \(w\)-bit value or address is charged \(O(w)\),
+not unit cost for unbounded words. Schoolbook addition, subtraction,
+comparison, multiplication, and long division give \(O(w^2)\) upper bounds
+for operands of at most \(w\) bits. Arrays are addressed by binary indices;
+their address costs are included. Let
+\[
+ B=\ell+\lceil\log_2(M+2)\rceil+2.
+\]
+All constants in the following bounds are absolute and independent of
+the parameters. We deliberately use loose polynomial bounds.
+
+\begin{lemma}[Value and rational size]\label{lem:bits}
+Every residual coordinate is between zero and \(H_v\), and every reachable
+remaining count is at most \(k_0\le M\). All arithmetic needed for candidate
+legality can be performed with \(O(B)\)-bit integers after polynomial-time
+preprocessing.
+\end{lemma}
+\begin{proof}
+The residual assertion follows by induction on guarded subtraction;
+\(k\) only decreases. Nonroot coordinates are at most \(M\).
+To avoid any repeated-denominator-growth assumption, set
+\[
+ D=b_T\prod_{v\in V}b_v>0,\quad
+ A_v=a_v(D/b_v),\quad A_T=a_T(D/b_T),\quad
+ c_v=A_v+\mathbf1_{\pa(v)\ne o}A_{\pa(v)}.
+\]
+The quotients are exact integers. The sum of the bit lengths of all input
+denominators is at most \(\ell\), so \(D\) has \(O(\ell)\) bits. The
+integers \(A_v,A_T,c_v\) have \(O(\ell)\) bits as well. Multiplication
+by the positive \(D\) changes \eqref{eq:rowc} into exactly
+\(\sum_{v\ne o}c_vp_v\le A_T\). For every partial sum, its absolute
+value is at most \(\max_v|c_v|\,M\), hence its length is \(O(B)\).
+This also handles negative fees, cancellations, and \(M=0\).
+Forming the products and exact quotients uses \(O((n+1)B^2)\) bit work
+under schoolbook algorithms. There is no rational arithmetic in the search
+after candidates have been filtered.
+\end{proof}
+
+\begin{lemma}[Representation and address size]\label{lem:space}
+An implementation as above can use addresses of \(O(B)\) bits throughout,
+even if discarded allocations are never reclaimed. A key requires
+\(O((n+1)B)\) bits, and any successful answer requires
+\(O((M+1)(n+1)B)\) bits when copied explicitly.
+\end{lemma}
+\begin{proof}
+The key claim follows from Lemma~\ref{lem:bits}. Soundness of cached
+answers and \(k\le k_0\) bound their list lengths by \(M\); each row
+has \(n\) coordinates of \(O(B)\) bits. Candidate storage has \(P\le S\)
+rows. Along the depth-first evaluation there are at most \(M+1\) state
+frames; scans and cache traversals may instead be implemented by loops.
+
+A finite implementation uses at most a fixed polynomial in
+\(S,M+1,n+1,B\) elementary allocations: enumerate at most \(O((n+1)S)\)
+partial vectors, perform at most \(C+Q+L+I+E+1=O(S^3)\) search events,
+and permit a copy of at most \(M\) rows, a key, and constant bookkeeping
+per event. Rebuilding filtered cache lists costs one such copy per
+insertion scan. Even allocating a fresh binary cell for every arithmetic
+temporary multiplies this quantity only by a polynomial in \(B\).
+First count abstract records and scalar slots, treating each reference as one
+slot independently of its eventual bit width. Give these slots consecutive
+integer identifiers. Allocation indices therefore have length
+\(O(\log S+\log(M+2)+\log(n+1)+\log(B+1))\).
+But \(\log_2 S=\sum_{v\ne o}\log_2(H_v+1)=O(\ell)\),
+and \(n\le\ell\), so this is \(O(B)\). Encoding each reference with that
+width multiplies bit storage by only \(O(B)\), whose logarithm is still
+\(O(B)\). This argument bounds the number
+of allocations before charging their address lengths; it does not assume
+the time bound it will be used to prove.
+\end{proof}
+
+\begin{lemma}[Cost ledger]\label{lem:ledger}
+The following conservative bounds include bit arithmetic and addressing:
+\begin{center}
+\small
+\begin{tabular}{@{}p{.48\linewidth}p{.40\linewidth}@{}}
+\toprule
+Work & Bit-cost upper bound\\
+\midrule
+Parse and validate the explicit parent tree; normalize; compute \(k_0\);
+clear rational denominators & \(O((n+1)^2B^3)\)\\
+Enumerate all bounded vectors and test legality & \(O(S(n+1)^2B^3)\)\\
+Lookup and insertion full-key comparisons, including list reconstruction
+and possible copied answers & \(O((L+I)(M+1)(n+1)^2B^3)\)\\
+Guards, residual subtraction, zero tests, calls, expansion and answer handling
+& \(O((Q+C+E+1)(M+1)(n+1)^2B^3)\)\\
+Serialize an explicit successful matrix & \(O((M+1)(n+1)^2B^3)\)\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{lemma}
+\begin{proof}
+Following parent pointers for at most \(n\) steps from every vertex checks
+the rooted-tree condition in polynomial bit time, with rejection on an
+invalid index or a cycle. Finite summation computes \(k_0\), and
+Lemma~\ref{lem:bits} handles rational preprocessing.
+
+The product of coordinate range sizes is exactly \(S\); fixing the root
+to zero contributes one. In nested-loop enumeration, each prefix level
+contains at most \(S\) nodes, since all remaining range sizes are at least
+one. There are at most \((n+1)S\) nodes in total, including in the all-zero
+case. Incrementing counters and materializing vectors costs polynomial
+work in \(n,B\) per output. Each legality test checks bounds, a sum over
+root children, and at most one parent condition per vertex. The scaled
+cost uses at most \(n\) products and additions on \(O(B)\)-bit integers.
+These give the stated (loose) enumeration and filtering bound.
+
+Every full-key equality inspects the count and at most \(n\) residual
+coordinates. It costs \(O((n+1)B^2)\) including accesses, with early
+termination only reducing the cost. Both lookup and insertion filtering
+perform this operation: their combined number is \(L+I\), not \(L\).
+Insertion also traverses and rebuilds the filtered list. Charge each
+visited/rebuilt entry to its insertion scan; charge the prepended entry
+to the expansion. Even copying the stored answer per rebuilt entry is
+covered by the \(M+1\) factor.
+
+There is one coordinatewise guard per candidate check, at most one
+materialized subtraction per accepted guard, and at most one all-zero
+test per zero-depth expansion. Branch overhead, decrementing \(k\),
+and empty-list tests are charged to calls and scans. A hit may copy an
+answer of at most \(M\) rows, and a successful child may build one new
+row list; allowing a full answer copy per such event is still within
+the displayed bound. Lemma~\ref{lem:space} accounts for address lengths.
+Finally output has at most \(M\) rows with \(n\) binary coordinates.
+Neither physical-tour expansion nor optional certificate compression is
+performed. All phases of the specified task have now been charged.
+\end{proof}
+
+\section{The resulting paper time theorem}\label{sec:time}
+\begin{theorem}[Explicit-vector bit-cost implementation]\label{thm:time}
+For the task in Definition~\ref{def:task}, there exists a deterministic
+explicit-vector implementation of the ordered memoized search, with the
+semantic correspondence of Lemma~\ref{lem:simulation}, whose time satisfies
+\[
+ \Time=O\bigl(S^3(M+1)(n+1)^2B^3\bigr)
+      =O\bigl(S^3(M+1)(\ell+1)^5\bigr)
+\]
+in the specified bit-cost RAM model, for decision and explicit matrix output.
+This is a paper theorem for that implementation, not a newly machine-checked
+time theorem for the Lean executable.
+\end{theorem}
+\begin{proof}
+Sum Lemma~\ref{lem:ledger} and apply \eqref{eq:logical}. Since \(S\ge1\),
+\[
+ 1+S+C+Q+E+L+I=O(S^3).
+\]
+For example \(I\le S^2/2\), while the only cubic term is the lookup
+bound. This gives the first estimate, including preprocessing and output.
+Each input coordinate has at most \(\ell\) bits and \(n\le\ell\), so
+\(M<n2^\ell\) when \(M>0\), and
+\(\log_2(M+2)=O(\ell+1)\) also when \(M=0\).
+Thus \(B=O(\ell+1)\), proving the second estimate.
+\end{proof}
+
+\begin{corollary}[Parameter classifications at the paper level]
+The encoded decision and explicit matrix-witness tasks admit bit-cost RAM
+upper bounds
+\[
+ O\bigl(2^{3M}(M+1)(\ell+1)^5\bigr)
+       =2^{O(M)}(\ell+1)^{O(1)}
+\]
+and
+\[
+ O\bigl((U+1)^{3t}(tU+1)(\ell+1)^5\bigr).
+\]
+Consequently these tasks are FPT for \(M\) and for the joint parameter
+\((t,U)\), for the paper implementation and representation specified here.
+\end{corollary}
+\begin{proof}
+Use Lemma~\ref{lem:parameters} in Theorem~\ref{thm:time}.
+The exponent of \(\ell+1\) is the fixed constant five. All other factors
+depend only on the indicated parameter. In particular, \(M+1\le2^M\)
+for natural \(M\), including zero. No XP intermediate result is needed.
+\end{proof}
+
+\begin{remark}[Other standard models]
+These parameter classifications do not rely on free unbounded addressing.
+For example, a deliberately naive multitape Turing-machine simulation has
+polynomial overhead. If the charged RAM time is \(F\ge2\), at most \(F\)
+memory operations occur and no written value or address has more than
+\(O(F)\) bits. Store the touched cells as a sequential list of address-value
+records, of total size \(O(F^2)\). Scanning it for each operation gives
+\(O(F^3)\) time, with the already charged arithmetic performed on tapes.
+This coarse simulation suffices for \(2^{O(M)}\ell^{O(1)}\) and FPT\((t,U)\)
+on a standard tape model as well; it does not preserve the sharper cubic
+power of \(S\) in Theorem~\ref{thm:time}.
+\end{remark}
+
+\begin{remark}[Limits of the conclusion]
+No binary-input polynomial bound or XP bound for \(t\) alone follows.
+On the one-edge tree, let \(H_v=U\), \(s=0\), and \(T=1\). Every legal
+row has \(p_v=1\), so the explicit output has \(U=k_0\) rows although
+\(t=1\) and the input length is \(O(\log(U+2))\). This output task already
+requires \(\Omega(U)\) output symbols. It says nothing against a faster
+decision algorithm or a directly constructed compressed certificate.
+If the multiplicities are instead given in unary, \(M,U\le\ell\);
+the displayed bound then gives an XP form in \(t\). None of these
+statements yields a classification by tree height, treewidth, or vehicle
+count alone, or a hardness reduction. Nor is \(2^{O(M)}\) a polynomial
+in the numeric value \(M\).
+\end{remark}
+
+\section{What remains to formalize}
+The paper proof fixes the computational task and discharges its mathematical
+cost ledger. A future Lean package should define the finite-vector and
+integer-scaled legality representation, prove its simulation of the ordered
+search, attach a bit-cost semantics to its primitive operations, and then
+derive Theorem~\ref{thm:time}. The existing function-valued Lean definitions
+have not been replaced in this package. The current verified contribution
+is still the logical-count and parameter layer; the additional time and
+FPT statements above have paper-proof status only.
+
+\end{document}

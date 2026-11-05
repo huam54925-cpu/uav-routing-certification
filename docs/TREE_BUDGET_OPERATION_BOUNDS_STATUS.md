@@ -1,6 +1,6 @@
 # Issue #20：执行次数证明进度
 
-日期：2026-11-05（Asia/Tokyo）。**状态界参数小包已通过本地定向构建和公理审计，完成后在此暂停。** 在既有 A、B 包之上，本轮新增 `S(H) ≤ 2^M`、`S(H) ≤ (U+1)^t` 及边界回归。各证明阶段完成时仅作本地编辑，未提交或推送；本次按用户要求将成果整理为研究分支提交，不修改远端 Issue。下文保留 A1、A2、B 各自的历史验证记录，不将其计为参数小包的新运行；Issue #20 继续保持开放。
+日期：2026-11-05（Asia/Tokyo）。**参数化逻辑推论已通过本地定向构建与公理审计；编码任务和完整位成本推导已整理为独立 LaTeX 纸面证明。** 新增 `TreeBudgetParameterizedBounds.lean` 将已有界接到 `2^M` 和 `(U+1)^t`，补齐 `k₀ ≤ M ≤ tU` 与成功见证行数界。纸面时间与 FPT 推论针对文稿指定的显式表示实现，尚未在 Lean 中形式化，也不宣称现有编译程序的机器时间界。按用户要求上传到既有研究分支，不修改远端 Issue；#20 继续保持开放。下文各阶段保留各自的历史验证记录，最新阶段见文末。
 
 ## A1 已完成：缓存增长与展开次数
 
@@ -260,7 +260,7 @@ lake build LeanCompletion.UAV.TreeBudgetStateParameters LeanCompletion.UAV.TreeB
 
 核验摘要为同目录的 `final-checks.txt`。本轮原始输出与核验快照仅保存于 ignored `verification/runs/issue20-state-parameters-20261105/`。**本参数小包通过本地验证，在此暂停；表示与位成本留到下一部分，Issue #20 继续保持开放。**
 
-## 当前结论边界与下一小包计划
+## 状态界参数小包结束时的结论边界与后续计划（历史）
 
 A、B 包得到的是所定义计数器的操作次数界；本参数小包进一步约束同一个有限状态数 `S(H)`。候选生成、完整键比较的坐标和位成本、自然数及有理数运算、见证存储与实际运行时间仍未包括在内；不能将 `L ≤ S(H)+S(H)³` 或本阶段的指数表达式直接表述为已证明的程序时间复杂度。
 
@@ -272,8 +272,69 @@ A、B 包得到的是所定义计数器的操作次数界；本参数小包进�
 
 这些表示与位成本目标尚未形式化。本阶段不宣称完整输入位复杂度、FPT/XP 分类或困难性结论；模型归约仍属于后续 D 包。
 
-## 发布核对（2026-11-05）
+## 前次发布核对（2026-11-05，提交 1f4774c）
 
 本次发布包含上述七个 Lean 模块与本说明，基于研究分支的 `028adf57`。七个源码文件与各阶段最终验证快照逐字节一致；本说明仅补充发布状态。目标仓库的 Lean 工具链、Mathlib 及其锁定依赖版本、Lean 编译选项与验证环境一致；相关 LeanCompletion 导入闭包在忽略换行格式及文件末尾空白后相同。目标仓库保留原有直接依赖 Mathlib 的配置，本地验证工程还包含这些模块未使用的 Prim 等依赖。
 
 本次发布核对没有重新执行 Lake 构建或远端 CI，以上 PASS 均来自各阶段明确记录的实际本地运行。原始日志、审计输出和快照不纳入提交。
+
+## 参数推论收口：本轮已形式化
+
+新增 [TreeBudgetParameterizedBounds.lean](../LeanCompletion/UAV/TreeBudgetParameterizedBounds.lean)，不修改已有执行器、计数器或证明模块。
+
+`ParameterBounds R H s T B` 有七个字段：候选列表长度、展开次数、最终缓存长度均不超过 `B`，候选检查数不超过 `B²`，调用数不超过 `1+B²`，插入扫描数不超过 `B(B−1)/2`，查表比较数不超过 `B+B³`。两个专用入口分别取 `B=2^M`、`B=(U+1)^t`；需要单项结果时直接取结构字段。
+
+| 新定理 | 结论 |
+| --- | --- |
+| `rootCount_le_totalMultiplicity` | `k₀ ≤ M` |
+| `totalMultiplicity_eq_sum_positiveCoordinates` | 零坐标不改变总重数 |
+| `totalMultiplicity_le_positiveCount_mul_maxMultiplicity` | `M ≤ tU`，包含空正坐标集合 |
+| `initial_bounds_of_stateBound_le` | 任意 `S(H) ≤ B` 导出全部七项逻辑界 |
+| `initial_bounds_two_pow_totalMultiplicity` | 七项界取 `B=2^M` |
+| `initial_bounds_maxMultiplicity_pow_positiveCount` | 七项界取 `B=(U+1)^t` |
+| `initial_success_length_eq_rootCount` | 正式统计入口成功返回的行表长度恰为 `k₀` |
+| `initial_success_length_le_totalMultiplicity` | 成功行表长度不超过 `M` |
+
+本轮实际执行：
+
+```powershell
+lake build LeanCompletion.UAV.TreeBudgetParameterizedBounds
+```
+
+最终退出码 0，`Build completed successfully (8348 jobs)`；新模块在这次命令中实际编译，既有依赖缓存复用。全部 **8 个新增定理**均有 `#print axioms` 输出，公理依赖仅为 `propext`、`Classical.choice`、`Quot.sound`，没有 `sorryAx`。新模块没有警告，也没有 `sorry`、`admit`、新增 `axiom` 或 `native_decide`。首轮未通过的构建不计为 PASS；最终记录在 ignored `verification/runs/issue20-parameter-corollaries-20261105/build-02.log`，摘要和源码哈希同目录。未重复已有回归或性能实验，未运行远端 CI 或全新环境构建。
+
+发布核对：新 Lean 源码与本次构建快照逐字节一致；目标研究工作区内相关的 36 个 `LeanCompletion` 导入模块，在忽略换行格式与末尾空白后，与本地构建源码一致。保留目标仓库现有配置，不将上述核对写成目标工作区的新构建。
+
+## 编码任务与位成本：本轮纸面证明
+
+完整可编辑源码：[TREE_BUDGET_BIT_COST_NOTE.tex](TREE_BUDGET_BIT_COST_NOTE.tex)。这是独立英文 LaTeX 文档，使用 `article`、AMS 数学宏包等，无图片、外部数据或参考文献文件依赖。上传到 Overleaf，设为主文件，选择 **pdfLaTeX** 即可尝试编译。按用户最新要求，不进行本地 LaTeX 编译；早先启动的便携工具下载／编译尝试已停止，不把它记为编译通过。只完成源文件结构、公式和独立数学推导审阅，没有 PDF 版式验证。
+
+源文件静态检查通过：环境与大括号配对、标签唯一性和全部内部交叉引用；这些检查不等价于 TeX 编译。
+
+文稿固定以下任务与表示：
+
+- 显式编号根树、二进制父边重数、有理服务费用和预算（正分母，费用可负）；先将根坐标归零。
+- `k₀=rootCount H`，空缓存，输出可行性判断或显式行矩阵；不包括需求到重数的预处理、实际路线展开、证书压缩和分支求解包装器。
+- 物化有限向量，保持现有候选枚举顺序、稳定过滤、完整键 `(k,r)`、失败缓存传递、成功提前停止和插入全表过滤；纸面对解码后的答案和缓存给出归纳对应证明。
+- 位成本 RAM：按位长收费的整数运算与内存地址，采用朴素乘除法；并给出到多带图灵机的保守多项式模拟说明。
+
+纸面证明通过公共正分母将有理费用判定改写为精确整数线性比较，控制全部中间整数位长；逐项覆盖候选生成与 `RowValid`、守卫、减法、零测试、**`L+I` 两类完整键比较**、缓存过滤重建、答案处理及最终矩阵输出。得到
+
+```text
+Time_RAM = O(S(H)^3 (M+1) (ell+1)^5).
+```
+
+因此，对于文稿明确构造的表示实现，纸面上推出
+
+```text
+Time_RAM = 2^{O(M)} (ell+1)^{O(1)},
+Time_RAM = O((U+1)^{3t} (tU+1) (ell+1)^5).
+```
+
+这是关于 `M` 和联合参数 `(t,U)` 的 **纸面 FPT 上界**；没有把 FPT 形式降称为 XP，也没有声称现有 Lean 可执行文件已获形式化时间定理。二进制输入下仅参数 `t` 的 XP 不由这些界推出；文稿用单边树的显式输出规模说明该见证任务的障碍，不据此否定更快的判定或压缩证书算法。
+
+## 本轮暂停点与下一小包
+
+第一项已完成形式化与本地验证，第二、三项已完成纸面任务定义、表示对应和成本清单证明。本轮止于上传这些成果。
+
+下一小包建议仅形式化**显式向量与整数化 `RowValid` 的语义对应**：定义向量解码，证明公共分母整数比较等价于原有理费用判定，证明物化比较与减法对应现有函数语义。通过后再单独引入位成本语义和搜索模拟；不把整个运行时间定理一次性混入此包。路线展开、需求输入包装器、压缩输出与困难性归约继续独立安排。
