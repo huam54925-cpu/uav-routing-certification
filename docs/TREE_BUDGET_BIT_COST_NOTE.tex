@@ -5,6 +5,7 @@
 \usepackage[margin=26mm]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs,array}
+\usepackage{needspace}
 \usepackage[hidelinks]{hyperref}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -42,12 +43,19 @@ search semantics and logical operation counts used as premises.
 \section{Status and scope}
 The source baseline is the research commit
 \href{https://github.com/huam54925-cpu/uav-routing-certification/commit/1f4774cfcb59c554893d37a9e4d476b0d2c8fa78}{\texttt{1f4774c}}.
-Its modules \texttt{TreeBudgetSearchStatsBounds},
-\texttt{TreeBudgetCandidateCount}, \texttt{TreeBudgetSearchCostBounds}, and
-\texttt{TreeBudgetStateParameters} supply the logical bounds below.
-The accompanying \texttt{TreeBudgetParameterizedBounds} module closes the
+Its modules \texttt{TreeBudget\allowbreak SearchStatsBounds},
+\texttt{TreeBudget\allowbreak CandidateCount}, \texttt{TreeBudget\allowbreak SearchCostBounds}, and
+\texttt{TreeBudget\allowbreak StateParameters} supply the logical bounds below.
+The accompanying \texttt{TreeBudget\allowbreak ParameterizedBounds} module closes the
 logical parameter corollaries; its exact build and audit status is recorded
 separately in the repository status document.
+
+The subsequent representation package verifies array-backed vector operations,
+signed integer scaling (including unreduced raw fractions), Boolean row-check
+equivalence, and bounds on every successful entry of a valid, duplicate-free,
+reachable cache. These are component correspondences. Ordered candidate-list
+correspondence, full search simulation, and a bit-cost semantics remain outside
+the Lean results in this package.
 
 Sections~\ref{sec:task}--\ref{sec:time} are mathematical proofs about an
 explicit representation specified here, not claims of a completed Lean
@@ -211,7 +219,7 @@ prepending operation agree entry by entry.
 Counting a state call, a miss, a candidate test, each visited lookup entry,
 and each visited insertion-filter entry in these matching branches gives
 the stated equality of events. This proves a mathematical simulation;
-the explicit-vector implementation and this refinement have not been
+the complete explicit-vector search and this refinement have not been
 encoded or checked in Lean in this package.
 \end{proof}
 
@@ -262,8 +270,12 @@ even if discarded allocations are never reclaimed. A key requires
 \(O((M+1)(n+1)B)\) bits when copied explicitly.
 \end{lemma}
 \begin{proof}
-The key claim follows from Lemma~\ref{lem:bits}. Soundness of cached
-answers and \(k\le k_0\) bound their list lengths by \(M\); each row
+The key claim follows from Lemma~\ref{lem:bits}. The cold execution preserves
+cache validity, absence of duplicate keys, and reachability of every key.
+Absence of duplicates makes each stored entry the answer visible to lookup;
+lookup validity alone would not constrain answers hidden by duplicate keys.
+Combining these three invariants gives \(|\mathrm{rows}|=k\le k_0\le M\)
+for every stored successful answer, not merely the final result; each row
 has \(n\) coordinates of \(O(B)\) bits. Candidate storage has \(P\le S\)
 rows. Along the depth-first evaluation there are at most \(M+1\) state
 frames; scans and cache traversals may instead be implemented by loops.
@@ -287,6 +299,7 @@ of allocations before charging their address lengths; it does not assume
 the time bound it will be used to prove.
 \end{proof}
 
+\Needspace{22\baselineskip}
 \begin{lemma}[Cost ledger]\label{lem:ledger}
 The following conservative bounds include bit arithmetic and addressing:
 \begin{center}
@@ -420,12 +433,13 @@ in the numeric value \(M\).
 
 \section{What remains to formalize}
 The paper proof fixes the computational task and discharges its mathematical
-cost ledger. A future Lean package should define the finite-vector and
-integer-scaled legality representation, prove its simulation of the ordered
-search, attach a bit-cost semantics to its primitive operations, and then
-derive Theorem~\ref{thm:time}. The existing function-valued Lean definitions
-have not been replaced in this package. The current verified contribution
-is still the logical-count and parameter layer; the additional time and
-FPT statements above have paper-proof status only.
+cost ledger. Following the verified component correspondences described above,
+the next Lean package should prove exact ordered candidate-list correspondence,
+then simulate the ordered search, attach a bit-cost semantics to its primitive
+operations, and derive Theorem~\ref{thm:time}. The existing function-valued
+search definitions have not been replaced in this package. The verified
+contribution includes logical counts, parameters, representation components,
+and successful-cache-entry bounds; the additional time and FPT statements
+above still have paper-proof status only.
 
 \end{document}

@@ -1,6 +1,6 @@
 # Issue #20：执行次数证明进度
 
-日期：2026-11-05（Asia/Tokyo）。**参数化逻辑推论已通过本地定向构建与公理审计；编码任务和完整位成本推导已整理为独立 LaTeX 纸面证明。** 新增 `TreeBudgetParameterizedBounds.lean` 将已有界接到 `2^M` 和 `(U+1)^t`，补齐 `k₀ ≤ M ≤ tU` 与成功见证行数界。纸面时间与 FPT 推论针对文稿指定的显式表示实现，尚未在 Lean 中形式化，也不宣称现有编译程序的机器时间界。按用户要求上传到既有研究分支，不修改远端 Issue；#20 继续保持开放。下文各阶段保留各自的历史验证记录，最新阶段见文末。
+日期：2026-11-05（Asia/Tokyo）。**本轮完成物化向量、整数化 `rowValidB` 的语义对应，以及每个成功缓存条目的长度与坐标界。** 保留已验证的逻辑操作次数与参数界；指定表示实现的完整位成本和两组 FPT 上界仍为纸面证明。候选列表保序对应、完整搜索模拟与位成本语义尚未形式化，也不宣称现有 Lean 编译程序的运行时间保证。按用户要求上传到既有研究分支，不修改远端 Issue；#20 继续保持开放。各阶段保留各自的历史验证记录，最新阶段见文末。
 
 ## A1 已完成：缓存增长与展开次数
 
@@ -278,7 +278,7 @@ A、B 包得到的是所定义计数器的操作次数界；本参数小包进�
 
 本次发布核对没有重新执行 Lake 构建或远端 CI，以上 PASS 均来自各阶段明确记录的实际本地运行。原始日志、审计输出和快照不纳入提交。
 
-## 参数推论收口：本轮已形式化
+## 参数推论收口（历史：cafae97）
 
 新增 [TreeBudgetParameterizedBounds.lean](../LeanCompletion/UAV/TreeBudgetParameterizedBounds.lean)，不修改已有执行器、计数器或证明模块。
 
@@ -305,7 +305,7 @@ lake build LeanCompletion.UAV.TreeBudgetParameterizedBounds
 
 发布核对：新 Lean 源码与本次构建快照逐字节一致；目标研究工作区内相关的 36 个 `LeanCompletion` 导入模块，在忽略换行格式与末尾空白后，与本地构建源码一致。保留目标仓库现有配置，不将上述核对写成目标工作区的新构建。
 
-## 编码任务与位成本：本轮纸面证明
+## 编码任务与位成本（历史：cafae97 的纸面证明）
 
 完整可编辑源码：[TREE_BUDGET_BIT_COST_NOTE.tex](TREE_BUDGET_BIT_COST_NOTE.tex)。这是独立英文 LaTeX 文档，使用 `article`、AMS 数学宏包等，无图片、外部数据或参考文献文件依赖。上传到 Overleaf，设为主文件，选择 **pdfLaTeX** 即可尝试编译。按用户最新要求，不进行本地 LaTeX 编译；早先启动的便携工具下载／编译尝试已停止，不把它记为编译通过。只完成源文件结构、公式和独立数学推导审阅，没有 PDF 版式验证。
 
@@ -333,8 +333,75 @@ Time_RAM = O((U+1)^{3t} (tU+1) (ell+1)^5).
 
 这是关于 `M` 和联合参数 `(t,U)` 的 **纸面 FPT 上界**；没有把 FPT 形式降称为 XP，也没有声称现有 Lean 可执行文件已获形式化时间定理。二进制输入下仅参数 `t` 的 XP 不由这些界推出；文稿用单边树的显式输出规模说明该见证任务的障碍，不据此否定更快的判定或压缩证书算法。
 
-## 本轮暂停点与下一小包
+## cafae97 发布时的暂停点与计划（历史）
 
 第一项已完成形式化与本地验证，第二、三项已完成纸面任务定义、表示对应和成本清单证明。本轮止于上传这些成果。
 
 下一小包建议仅形式化**显式向量与整数化 `RowValid` 的语义对应**：定义向量解码，证明公共分母整数比较等价于原有理费用判定，证明物化比较与减法对应现有函数语义。通过后再单独引入位成本语义和搜索模拟；不把整个运行时间定理一次性混入此包。路线展开、需求输入包装器、压缩输出与困难性归约继续独立安排。
+
+## 表示对应小包：物化向量与整数检查
+
+新增 [TreeBudgetVector.lean](../LeanCompletion/UAV/TreeBudgetVector.lean) 使用 Lean 核心的 **Array-backed `Vector ℕ n`**，不是函数类型别名。`encode` 物化全部坐标，`decode` 读取数组；相等和逐坐标比较由 `zipWith` 先生成布尔向量再 `all`，零测试由数组 `all`，减法由 `zipWith Nat.sub`，根坐标规范化由 `Vector.set`。不对 `zipWith` 作提前停止的性能承诺。
+
+八项向量定理为 `decode_encode`、`encode_decode`、`decode_injective`、`eqB_eq_true`、`leB_eq_true`、`isZero_eq_true`、`decode_sub`、`decode_normalize`。减法语义是自然数截断减法，无需先假设守卫成立；它们仅证明表示对应，不给任意函数求值成本作假设。
+
+新增 [TreeBudgetIntegerCost.lean](../LeanCompletion/UAV/TreeBudgetIntegerCost.lean) 定义有符号整数费用 `intCost`。先证明一般比例因子下的
+
+```text
+(intCost R A p : ℚ) = D * cost R p s,
+D > 0 → (intCost R A p ≤ AT ↔ cost R p s ≤ T),
+```
+
+再对原始有符号分子 `a, aT` 与正自然数分母 `b, bT`，实际构造 `D=bT*∏v,b(v)` 和 `scaledNumerator D a b = a*(D/b)`，证明正性、整除、精确整数解释和 `raw_intCost_le_iff`。**不要求分数约分、分母互素、费用或预算非负**。七项整数模块定理均不依赖行是否合法；原始输入版本的比较等价要求所有分母为正。
+
+新增 [TreeBudgetVectorChecker.lean](../LeanCompletion/UAV/TreeBudgetVectorChecker.lean) 使用物化的自然数向量 `H,p`、有符号整数费用向量 `A` 和整数预算 `AT`。结构检查遍历固定有限索引列表，可提前停止；费用比较只用整数。`scaleFees` 在数组生成之前计算公共分母，产出可供多个行检查复用的整数向量；`scaleBudget` 构造整数预算。
+
+| 检查器出口 | 结论 |
+| --- | --- |
+| `rowValidB_eq_true_iff` | 任意正比例因子与正确缩放的费用、预算下，`rowValidB = true ↔ RowValid` |
+| `rowValidB_scaled_eq_true_iff` | 用公共分母构造实例化到未约分原始分数，最终得到原有理数 `RowValid` 的精确等价 |
+
+这仍沿用现有 `RootedTree` 接口。完整有限树输入解析、候选枚举器和搜索器的表示转换不在本包内；没有更换缓存或修改现有执行器。
+
+## 表示对应小包：所有成功缓存条目的界
+
+新增 [TreeBudgetCacheEntryBounds.lean](../LeanCompletion/UAV/TreeBudgetCacheEntryBounds.lean)。`CacheReady` 明确捆绑 `CacheValid`、`KeysNodup`、`AllKeysReachable`；先由 `lookup_eq_some_of_mem` 证明无重复键时每个成员就是可见查询结果，再应用缓存语义有效性与可达性。
+
+对每个成员 `((k,r), some rows)`，`SuccessEntryBounds` 给出
+
+```text
+rows.length = k ≤ rootCount R H ≤ totalMultiplicity R H,
+∀ p ∈ rows, p(root) = 0 ∧ p ≤ H.
+```
+
+这里坐标界覆盖根坐标，即使原始 `H(root)` 非零也成立。`cache_success_entry_bounds` 和 `cache_success_length_le_totalMultiplicity` 适用于任意满足三项不变量的缓存，不仅最终输出。`memoRows_cacheReady` 与 `scanCandidates_cacheReady` 保持这三项不变量；后者的候选后缀独立于子调用的完整候选表，因此覆盖失败后继续扫描。一般输出缓存、正式初始入口和统计入口均有成功成员界出口。
+
+[TreeBudgetCacheEntryBoundsExamples.lean](../LeanCompletion/UAV/TreeBudgetCacheEntryBoundsExamples.lean) 的两项结构回归证明：重复键后可隐藏任意行表，同时 `CacheValid` 和 `AllKeysReachable` 仍成立；具体可隐藏一个长度大于其键层数零的成功答案。因此没有把这些成员界无条件推广到任意重复键原始缓存。
+
+[TreeBudgetRepresentationExamples.lean](../LeanCompletion/UAV/TreeBudgetRepresentationExamples.lean) 针对空向量、截断减法、较大根坐标规范化、负预算边界、未约分有符号分数，以及根／坐标上界／父支持条件的拒绝情形作回归。
+
+## 表示对应小包：本轮实际验证
+
+本轮新增 **27 个主定理、8 个回归定理**，分布为向量 8、整数费用 7、检查器 2、缓存成员界 10、表示回归 6、缓存遮挡回归 2。六个模块均在本轮开发过程中实际成功编译；最终联合核验执行：
+
+```powershell
+lake build LeanCompletion.UAV.TreeBudgetVector LeanCompletion.UAV.TreeBudgetIntegerCost LeanCompletion.UAV.TreeBudgetVectorChecker LeanCompletion.UAV.TreeBudgetCacheEntryBounds LeanCompletion.UAV.TreeBudgetRepresentationExamples LeanCompletion.UAV.TreeBudgetCacheEntryBoundsExamples
+```
+
+最终退出码 0，`Build completed successfully (8355 jobs)`。该联合命令复用了本轮已成功且源码未变的六个目标模块及既有依赖缓存，没有重新编译六个目标。最终日志为 ignored `verification/runs/issue20-representation-20261105/final-build.log`；检查器和六项表示回归实际编译成功记录为 `checker-build-04.log`，缓存主模块为 `cache-build-01.log`、缓存回归为 `cache-build-03.log`，整数模块为 `integer-build-02.log`。向量初版在 `vector-build-01.log` 成功，随后仅修正注释，并在 `checker-build-01.log` 中实际重新编译成功；后一个整体构建当时因检查器未完成而失败，不计为整体 PASS。所有开发期间失败构建均不计为 PASS。
+
+35 个定理的 `#print axioms` 输出全部核对，无遗漏；依赖仅为 `propext`、`Classical.choice`、`Quot.sound` 的子集，没有 `sorryAx`。新增源码没有 `sorry`、`admit`、新增 `axiom` 或 `native_decide`；六个新模块没有警告，已有依赖重放的警告不计作本轮新增。六项具体表示回归使用 `decide +kernel`，两个缓存回归是对任意输入成立的结构证明。
+
+本轮开始时的 **104 个既有 UAV 源文件**和 **5 个根导入／工具链／依赖／验证配置文件**经 SHA-256 核对未改变。目标发布工作区相关的 **43 个 `LeanCompletion` 导入模块**与本地构建源码在忽略换行格式、文件末尾空白后相同；六个新增源码逐字节复制。保留目标仓库已有配置，没有独立环境重建、性能实验或远端 CI。摘要和最终文件快照仅保存在同一 ignored run 目录。
+
+## 表示对应小包的边界与下一步
+
+本包收口于 `rowValidB` 的精确等价与缓存成功成员界。下一小包只做实际物化候选枚举的列表对应：
+
+```text
+map decode (candidatesV ...) = TreeBudgetFiniteSearch.candidates ...
+```
+
+需要逐项保持顺序和重数，不能只证明集合等价；本包尚未定义或证明这个接口。之后再分包进行完整搜索模拟、位成本形式化。当前完整时间界及关于 `M`、`(t,U)` 的 FPT 上界仍明确标为指定表示实现的纸面结论。
+
+LaTeX 文稿仅同步组件形式化进度、补齐缓存三不变量说明，并按审阅意见给长模块名添加可断行点、给成本表前增加预留空间。**未进行本地 LaTeX 编译或 PDF 版式检查**；版式效果需由 Overleaf 验证，主时间界和两组纸面 FPT 结论不变。
