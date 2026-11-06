@@ -230,9 +230,12 @@ The finite-candidate replacement remains the paper-level composition of the alre
 \begin{proposition}[Exact scope of the sign assumptions]
 For the same tree data satisfying \eqref{eq:degrees}, arbitrary $s,T\in\Q$ still admit
 \[
- \EF(o,E_R(H),d,m,s,T)
- \ \Longleftrightarrow\ \MF(R,H,m,s,T)
- \ \Longleftrightarrow\ \exists C,\ \CC(R,H,m,s,T,C)=\mathrm{true}.
+ \begin{aligned}
+ &\EF(o,E_R(H),d,m,s,T)\\
+ &\quad\Longleftrightarrow\ \MF(R,H,m,s,T)\\
+ &\quad\Longleftrightarrow\
+   \exists C,\ \CC(R,H,m,s,T,C)=\mathrm{true}.
+ \end{aligned}
 \]
 Moreover, each of these statements implies $\NC(o,d,E_R(H),s,T)$.
 \end{proposition}
@@ -458,7 +461,7 @@ The existence and witness-validity bridges here do not require all future algori
 \section{Interfaces Implemented in the First Lean Package}
 
 The companion module is
-\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/research/structural-service-cuts-20261023/LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}{\code{LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}},
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/e5769113868b75a38016a30c2f6a8a016a14060e/LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}{\code{LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}},
 in namespace \code{UAVProof.TreeBudgetRepresentationBridge}.
 The following map identifies source declarations; execution and audit outcomes belong to the separate validation record.
 \begin{enumerate}
@@ -478,7 +481,7 @@ The following map identifies source declarations; execution and audit outcomes b
  the root outdegree and no-loop facts are derived internally.
  \item \textbf{Regression examples and information loss.}
  The companion
- \href{https://github.com/huam54925-cpu/uav-routing-certification/blob/research/structural-service-cuts-20261023/LeanCompletion/UAV/TreeBudgetRepresentationBridgeExamples.lean}{\code{TreeBudgetRepresentationBridgeExamples.lean}}
+ \href{https://github.com/huam54925-cpu/uav-routing-certification/blob/e5769113868b75a38016a30c2f6a8a016a14060e/LeanCompletion/UAV/TreeBudgetRepresentationBridgeExamples.lean}{\code{TreeBudgetRepresentationBridgeExamples.lean}}
  supplies \code{order_information_loss} and \code{order_cost_equal};
  \code{allocation_common_flow}, \code{allocation_common_visits},
  \code{allocation_costs_and_budgets}, and \code{aggregate_does_not_determine_witness_budget};
@@ -497,14 +500,18 @@ This package does not claim to recover route indices, visit order, copy labels, 
 This revision starts from the English source supplied by the user and preserves its model and evidence boundaries while updating the implementation map.
 Links to reused results are pinned to the pre-package research baseline
 \href{https://github.com/huam54925-cpu/uav-routing-certification/commit/1bc992475a9bd515d77245e2bc0471e5ecab2fd5}{
-\code{1bc9924}}; the new bridge and examples use explicitly unpinned research-branch links because they are not present in that older commit.
+\code{1bc9924}}; the new bridge and examples are pinned separately to their implementation commit
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/e5769113868b75a38016a30c2f6a8a016a14060e}{\code{e576911}}.
 Source declarations, paper proofs, and newly executed validation are distinct evidence categories.
 The related issues are
 \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/21}{Issue \#21}
 and \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/22}{Issue \#22}.
 
-This note provides only standalone \code{.tex} source for Overleaf. The English version uses the standard \code{article} class and can be compiled with pdfLaTeX or XeLaTeX.
-LaTeX has not been compiled locally and no PDF has been generated. Lean build, axiom-audit, and regression results for the companion modules are recorded separately; no historical result is relabeled as a new execution here.
+This repository publishes standalone \code{.tex} source for Overleaf. The English version uses the standard \code{article} class and can be compiled with pdfLaTeX or XeLaTeX.
+At the initial package publication on 6 November 2026 (\code{e576911}), no LaTeX compiler was run as part of that publication or its recorded local validation.
+A separately supplied nine-page PDF was subsequently reviewed on the same date. Proposition 3.2 overflowed the page in that PDF; this source revision splits its equivalence chain across lines.
+The revised source has not been recompiled or visually verified after that correction, and the supplied PDF is therefore a pre-correction snapshot.
+Lean build, axiom-audit, and regression results for the companion modules remain those recorded separately for the implementation package; the PDF review and documentation revision are not new Lean checks.
 The companion \code{TREE_BUDGET_ALLOCATION_BOUNDARIES.tex} provides the paper-only strict-hub three-partition correspondence and internal-subtree gluing test for Issues \#23 and \#19.
 This note makes no assessment of novelty in the literature and establishes neither strong NP-hardness, optimal compression, nor a complete runtime bound.
 

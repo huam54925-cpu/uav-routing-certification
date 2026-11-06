@@ -1,5 +1,7 @@
 # Issue #22 候选列表小包：本地验收与发布核对
 
+> 历史记录范围：下文记录 [1bc9924](https://github.com/huam54925-cpu/uav-routing-certification/commit/1bc992475a9bd515d77245e2bc0471e5ecab2fd5) 的候选列表包及其当时交付。随后 [e576911](https://github.com/huam54925-cpu/uav-routing-certification/commit/e5769113868b75a38016a30c2f6a8a016a14060e) 已实现 #21 第一包，并将表示契约更新为英文；其构建与后续 PDF 审阅见 [表示桥接状态](TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md)。下文关于中文 LaTeX、#21 尚无新 Lean 模块及未修改议题的陈述仅描述原包，不代表当前状态。本次状态同步没有重复原验证。
+
 日期：2026-11-06（Asia/Tokyo）。本轮完成候选生成的精确列表对应，并交付 #21 第一包的数学规格。以下记录开发阶段实际执行的本地验收，发布核对见文末；未修改远端议题。
 
 ## 交付与范围
