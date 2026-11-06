@@ -1,6 +1,10 @@
-% Standalone source for Overleaf. Select XeLaTeX; no local compilation was run.
-% This is a mathematical specification, not a new Lean verification report.
-\documentclass[UTF8,fontset=fandol,11pt]{ctexart}
+% Standalone English source for Overleaf. No local compilation was run.
+% Mathematical exposition and a map to the accompanying Lean implementation.
+% Validation evidence is recorded separately from these paper proofs.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
 \usepackage[a4paper,margin=25mm]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs,longtable,array,tabularx}
@@ -11,11 +15,11 @@
 \hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
 \setlength{\emergencystretch}{3em}
 \setlist{itemsep=3pt,topsep=5pt}
-\newtheorem{proposition}{命题}[section]
-\newtheorem{definition}[proposition]{定义}
-\newtheorem{example}[proposition]{例}
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{definition}[proposition]{Definition}
+\newtheorem{example}[proposition]{Example}
 \theoremstyle{remark}
-\newtheorem{remark}[proposition]{说明}
+\newtheorem{remark}[proposition]{Remark}
 \newcommand{\N}{\mathbb N}
 \newcommand{\Q}{\mathbb Q}
 \newcommand{\pa}{\operatorname{par}}
@@ -29,448 +33,479 @@
 \newcommand{\CC}{\operatorname{checkCertificate}}
 \newcommand{\CheckNext}{\operatorname{checkCandidate}}
 \newcommand{\code}[1]{\nolinkurl{#1}}
-\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/5114dc8efc5b5082aefd4640b403285d129db2b2/LeanCompletion/UAV/#1.lean}{#2}}
-\title{精确路由的表示、信息保留与重建契约\\
-  \large Issue \#21 第一包：数学声明与假设表}
-\author{项目研究说明}
-\date{2026 年 11 月 6 日}
+\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/1bc992475a9bd515d77245e2bc0471e5ecab2fd5/LeanCompletion/UAV/#1.lean}{#2}}
+\title{Representations, Information Preservation, and Reconstruction Contracts for Exact Routing\\
+  \large Issue \#21, First Package: Mathematical Statements and Assumptions}
+\author{Project Research Note}
+\date{6 November 2026}
 \begin{document}
 \maketitle
 
 \begin{abstract}
-本文把访问副本／next 证书、显式路线族、树父边重数矩阵和带重数的模式证书接到同一模型上。
-在现有公开定理的共同假设下，给出存在性等价的纸面组合；在允许有符号费用与预算的树模型中，
-给出规范化单行的见证级契约 $\pi(r)=p$ 及其证明。
-路线内部顺序可以在这一投影下省略，而逐路线分组不能在检查一个给定见证时被简单加总掉。
-本稿的交付是数学规格与证明文本；引用的既有 Lean 定理与本文新组合的纸面命题分别标注。
-本稿不宣称 Issue \#21 已完成，也不宣称已经新增、编译或审计相应 Lean 桥接模块。
+This note connects visit-copy/next certificates, explicit route families, tree parent-edge multiplicity matrices, and pattern certificates with multiplicities within a common model.
+Under the shared assumptions of the existing public theorems, it explains the composition of existence equivalences. For the tree model with signed fees and budgets, it states and proves the witness-level contract $\pi(r)=p$ for a normalized row.
+Within-route order can be omitted under this projection, whereas per-route grouping cannot simply be aggregated away when checking a given witness.
+This revision uses the supplied English manuscript as its base and adds a direction-specific assumption table and a map to the accompanying Lean interfaces.
+The first package implements the row reconstruction and unbounded-next bridges in \code{TreeBudgetRepresentationBridge.lean} and \code{TreeBudgetRepresentationBridgeExamples.lean}.
+The main bridge module has passed its targeted local build and its fifteen theorem axiom checks; the written proofs below explain the mathematics, while execution details are recorded separately.
+This first package does not complete all of Issue \#21: executable reconstruction, full certificate round trips, and weaker assumptions for reverse next conversion remain separate tasks.
 \end{abstract}
 
-\section{固定模型和记号}
+\section{Fixed Model and Notation}
 
-设 $V$ 为有限、具有可判定相等性的顶点类型，$o\in V$ 为基地，
-$d:V\to\N$ 为访问需求，$m\in\N$ 为路线数，$s:V\to\Q$ 为每次访问的服务费，
-$T\in\Q$ 为每条路线的预算。基地需求 $d(o)$ 不参与覆盖条件，基地不计服务费。
-费用按\emph{每次出现}计入，经过并再次访问某个内部顶点也会再次计费；
-这里不采用每个不同顶点只收费一次的语义。
+Let $V$ be a finite vertex type with decidable equality, $o\in V$ the depot,
+$d:V\to\N$ the visit demand, $m\in\N$ the number of routes, $s:V\to\Q$ the service fee per visit,
+and $T\in\Q$ the budget for each route. The depot demand $d(o)$ is excluded from the coverage condition, and no service fee is charged at the depot.
+Fees are charged for \emph{each occurrence}: traversing and revisiting an internal vertex incurs its fee again.
+The model does not charge each distinct vertex only once.
 
-\src{RouteToFlow}{\code{LegalRoute}} 以非空访问序列
-$[v_1,\ldots,v_k]$ 表示路线，$k\geq1$，其中没有基地，完整顶点序列为
-$[o,v_1,\ldots,v_k,o]$，相邻顶点不同。因此，每条路线从基地出发一次、最后返回一次，
-途中不返回基地。允许重复访问非基地顶点，也允许不同路线的完整访问序列相同。
-该类型本身不包含给定图的邻接约束；图支持需由流支持条件另外保证。
+\src{RouteToFlow}{\code{LegalRoute}} represents a route by a nonempty visit sequence
+$[v_1,\ldots,v_k]$, with $k\geq1$, containing no depot. The full vertex sequence is
+$[o,v_1,\ldots,v_k,o]$, with distinct consecutive vertices. Thus each route departs from the depot once and returns once at the end,
+without an intermediate depot visit. Repeated visits to non-depot vertices are allowed, and different routes may have identical complete visit sequences.
+The type itself does not impose adjacency in a specified graph; graph support must be enforced separately through flow-support conditions.
 
-记 $F_r(u,v)$ 为路线 $r$ 在有向边 $(u,v)$ 上的使用次数，
-$N_r(v)$ 为 $v$ 在访问序列中的出现次数，
+Write $F_r(u,v)$ for the number of times route $r$ uses directed edge $(u,v)$,
+and $N_r(v)$ for the number of occurrences of $v$ in its visit sequence. Set
 \[
   C_s(r)=\sum_{v\in V}s(v)N_r(v).
 \]
-路线族是带索引的函数 $\rho:\operatorname{Fin}(m)\to\operatorname{LegalRoute}(o)$。
-对指定有向整数流 $x:V\times V\to\N$，
-\src{SupportExactFeasibility}{\code{ExactFeasible}} 的含义为
+A route family is an indexed function $\rho:\operatorname{Fin}(m)\to\operatorname{LegalRoute}(o)$.
+For a prescribed directed integer flow $x:V\times V\to\N$,
+\src{SupportExactFeasibility}{\code{ExactFeasible}} means
 \begin{equation}\label{eq:exact}
  \exists\rho:\quad
  \begin{cases}
   \sum_i N_{\rho_i}(v)=d(v),&v\neq o,\\
-  C_s(\rho_i)\leq T,&\text{每个 }i,\\
-  \sum_i F_{\rho_i}(u,v)=x(u,v),&\text{每对 }u,v.
+  C_s(\rho_i)\leq T,&\text{for every }i,\\
+  \sum_i F_{\rho_i}(u,v)=x(u,v),&\text{for every }u,v.
  \end{cases}
 \end{equation}
-第三行是\emph{每条边的重数相等}，不是仅有相同支持或边使用上界。
-$m=0$ 合法，量词为空时不要求凭空补一条路线。
+The third line requires \emph{equality of the multiplicity of every edge}, rather than merely equal support or upper bounds on edge use.
+The case $m=0$ is allowed; empty quantification does not require an additional route.
 
-树侧固定 \src{TreeFlowExistence}{\code{RootedTree}} $R$：其底图为有限无向简单树，
-根为 $o$，父函数为 $\pa$，且 $\pa(o)=o$。
-对非根父边重数 $H:V\to\N$，定义 $E_R(H)$ 为每条父子边两个方向都使用 $H(v)$ 次的流：
+On the tree side, fix a \src{TreeFlowExistence}{\code{RootedTree}} $R$: its underlying graph is a finite undirected simple tree,
+its root is $o$, and its parent map $\pa$ satisfies $\pa(o)=o$.
+For nonroot parent-edge multiplicities $H:V\to\N$, define $E_R(H)$ as the flow that uses each parent-child edge $H(v)$ times in each direction:
 \[
  E_R(H)(u,v)=
  \boldsymbol 1_{v\neq o,\,\pa(v)=u}H(v)
  +\boldsymbol 1_{u\neq o,\,\pa(u)=v}H(u).
 \]
-根坐标 $H(o)$ 任意且被忽略；它不是一条自环的重数。
-令
+The root coordinate $H(o)$ is arbitrary and ignored; it is not the multiplicity of a self-loop.
+Let
 \begin{align}
  k_R(p)&=\sum_{w\in\ch(o)}p(w),\label{eq:rootcount}\\
  D_R(p)(v)&=
  \begin{cases}0,&v=o,\\p(v)+\sum_{w\in\ch(v)}p(w),&v\neq o,\end{cases}\label{eq:visits}\\
  c_R(p)&=\sum_{v\in V}s(v)D_R(p)(v).\label{eq:cost}
 \end{align}
-其中 $\ch(v)=\{w\neq o:\pa(w)=v\}$。
-需求／路线数兼容条件写作
+Here $\ch(v)=\{w\neq o:\pa(w)=v\}$.
+Compatibility of the demands and route count is expressed by
 \begin{equation}\label{eq:degrees}
  \operatorname{HasDegrees}(o,d,m,E_R(H)),
- \qquad\text{等价于}\qquad
+ \qquad\text{equivalently}\qquad
  \begin{cases}k_R(H)=m,\\D_R(H)(v)=d(v)&(v\neq o).\end{cases}
 \end{equation}
-这一步不能从任意矩阵或任意 $H,d,m$ 自动略去。
+This condition cannot be silently omitted for an arbitrary matrix or arbitrary data $H,d,m$.
 
-\section{四种表示的类型与假设}
+\section{Representations and Direction-Specific Assumptions}
 
-下表中的“存在性桥接”专指目前可直接复用的公开定理，
-不把接口中的符号假设解释为数学上必然不可放宽。
+The four types are: a next certificate on the copy set
+$\mathcal C=\{\bot\}\sqcup\bigsqcup_{v\neq o}\{v\}\times\operatorname{Fin}(d(v))$;
+an indexed explicit route family; a matrix of natural-valued parent-edge rows;
+and a finite pattern table $[(p_j,z_j)]$ with natural multiplicities.
+A valid matrix has nonroot column sums $H$, one root departure per row,
+ancestor-closed positive support, and a budget bound for every row.
+A valid pattern table additionally stores normalized bounded rows,
+requires $\sum_jz_j=m$ and weighted column sums $H$, and checks every stored row even when $z_j=0$.
 
+The assumption table is organized by conversion direction. Sign conditions inherited from an existing public theorem are not asserted to be mathematically necessary.
 \small
-\begin{longtable}{@{}p{.17\textwidth}p{.35\textwidth}p{.42\textwidth}@{}}
+\begin{longtable}{@{}p{.31\textwidth}p{.37\textwidth}p{.26\textwidth}@{}}
 \toprule
-表示 & 数据和有效性 & 支持、符号与边界条件\\
+Conversion or conclusion & Structural and other conditions & Fees and budgets\\
 \midrule
 \endfirsthead
-\toprule 表示 & 数据和有效性 & 支持、符号与边界条件\\\midrule
+\toprule Conversion or conclusion & Structural and other conditions & Fees and budgets\\\midrule
 \endhead
-访问副本／next &
-$\mathcal C=\{\bot\}\sqcup\bigsqcup_{v\neq o}\{v\}\times\operatorname{Fin}(d(v))$。
-每个副本有后继，任务目标的任务前驱唯一；另存严格下降的自然数秩、预算势，
-并要求投影流逐边等于 $x$。 &
-不要求树。后继／局部配对的表示等价本身无费用符号假设。
-当前公开的双向可行性桥接要求 $x(v,v)=0$、$s(v)\geq0$、$T>0$。
-指定 $m$ 时必须保留 $m=\operatorname{outFlow}(x,o)$。\\[4pt]
-显式路线族 &
-$\rho:\operatorname{Fin}(m)\to\operatorname{LegalRoute}(o)$，满足式 \eqref{eq:exact}。
-每次访问单独计数和收费。 &
-可以用于一般图；精确流 $x$ 约束其支持。
-定义允许任意 $s,T\in\Q$。可含重复路线，$m=0$ 允许；单条路线的任务序列非空。\\[4pt]
-树父边矩阵 &
-$p_i:V\to\N$，非根列和为 $H$，每行根出发次数为 $1$，正支撑向根闭合，
-且 $c_R(p_i)\leq T$。 &
-要求树支持。矩阵定义忽略每行根坐标；与路线的逆向存在性对应需式 \eqref{eq:degrees}。
-服务费与预算均可有符号。单行见证往返要先规定 $p_i(o)=0$。\\[4pt]
-模式／重数证书 &
-有限表 $[(p_j,z_j)]$，$z_j\in\N$，每个存储行满足 $\RV$，
-$\sum_jz_j=m$ 且非根加权列和为 $H$。 &
-树模型；每行根坐标为零且 $p_j(v)\leq H(v)$。
-允许重复行和零重数，但检查器仍检查零重数行。
-费用、预算允许有符号。删除零重数行的压缩对任意输入仅有单向接受保持。\\
+Tree-supported route $\longrightarrow$ normalized parent-edge row &
+A legal route and separate tree support; projection itself has no budget hypothesis. &
+Arbitrary signed fees; additive cost equality holds for every $s$.\\[4pt]
+Structural row $\longrightarrow$ one route &
+Root departure count $1$ and ancestor-closed positive support; recovery of the identical row also requires root coordinate zero. &
+No fee condition for structural reconstruction; any signed budget follows from the row's cost bound.\\[4pt]
+Exact route feasibility $\longleftrightarrow$ tree matrix feasibility &
+Tree structure and \eqref{eq:degrees}. The latter is needed by matrix-to-routes reconstruction; route-to-matrix projection derives its own column conditions. &
+Arbitrary $s,T\in\Q$.\\[4pt]
+Matrix feasibility $\longleftrightarrow$ existence of an accepted pattern certificate &
+The same $R,H,m,s,T$; normalization removes ignored root coordinates. &
+Arbitrary $s,T\in\Q$.\\[4pt]
+Exact feasible family $\longrightarrow$ unbounded next certificate &
+An existing exact feasible route family. No tree assumption is needed in the underlying construction. &
+Arbitrary $s,T\in\Q$.\\[4pt]
+Unbounded next certificate $\longrightarrow$ exact family of size $m$ &
+No physical self-loops and $m=\operatorname{outFlow}(x,o)$. For tree flow both follow from tree/degree data as applicable. &
+The current public reconstruction requires $s(v)\geq0$ for all $v$ and $T>0$.\\[4pt]
+Next certificate $\longleftrightarrow$ local pairing certificate &
+The same copy set, exact physical flow, rank and potential; depot entries are ignored or normalized. &
+No fee-sign, budget-positivity, or physical no-loop hypothesis.\\
 \bottomrule
 \end{longtable}
 \normalsize
+All family-level statements allow $m=0$; each individual legal route still has a nonempty task sequence.
+Neither row-coordinate normalization nor an existential choice of routes restores visit order or copy labels.
 
-\subsection{next 证书中哪些信息不可省}
-记副本到物理顶点的映射为 $\sigma$，$\sigma(\bot)=o$。
-后继 $q$ 只要求对任务目标的任务前驱唯一，多个任务可以同时返回基地；
-存储的 $q(\bot)$ 不用于生成路线边。
-每个没有任务前驱的任务副本增加一条基地出发边。
-严格下降秩满足
+\subsection{Indispensable Information in a Next Certificate}
+Let $\sigma$ map copies to physical vertices, with $\sigma(\bot)=o$.
+The successor map $q$ imposes uniqueness of task predecessors for task targets; multiple tasks may return to the depot.
+The stored value $q(\bot)$ is not used to generate route edges.
+Each task copy with no task predecessor contributes one depot-departure edge.
+The strictly decreasing rank satisfies
 \[
  \operatorname{rank}(q(c))<\operatorname{rank}(c)\quad(c\neq\bot),
 \]
-以排除脱离基地的任务环。预算势满足
+excluding task cycles disconnected from the depot. The budget potential satisfies
 \[
  P(\bot)=0,\qquad
  \operatorname{fee}(c)+P(q(c))\leq P(c),\qquad
- P(c)\leq T\quad\text{若 $c$ 没有任务前驱}.
+ P(c)\leq T\quad\text{if $c$ has no task predecessor}.
 \]
-未加界的 \code{NextBudgetPotential} 不要求势本身非负。
-预算势不能替代下降秩：零费用的任务环可以满足全部预算不等式。
+The unbounded \code{NextBudgetPotential} does not require the potential itself to be nonnegative.
+Budget potentials cannot replace decreasing ranks: a zero-fee task cycle can satisfy all budget inequalities.
 
-\subsection{不能把无界 next 证书与有限检查候选混为一谈}
-已有 \src{LocalVisitPairingFiniteChecker}{有限 next 检查器}
-\code{checkCandidate}，不调用经典前驱恢复算法，直接枚举有限副本并计算投影流。
-\code{checkCandidate_eq_true_iff} 对所给候选的检查与
-\code{ValidFiniteCertificate} 的等价没有额外符号假设。
-但有限有效性定义本身含有 $T\geq0$ 的守卫和有限秩／势网格。
-因此，不能据此把它扩展为任意有符号预算下的可行性判定器。
-例如，零任务、零流、$m=0,T<0$ 时，空路线族与无界 next 证书仍存在，
-该有限检查器却拒绝所有候选。
-当前 \code{exactFeasible_iff_count_and_exists_checkedCandidate}
-仍要求无自环、$s\geq0,T>0$。
+\subsection{Unbounded Next Certificates and Finite Checker Candidates Are Distinct}
+The existing \src{LocalVisitPairingFiniteChecker}{finite next checker}
+\code{checkCandidate} does not invoke classical predecessor reconstruction; it enumerates the finite copies and computes the projected flow directly.
+The theorem \code{checkCandidate_eq_true_iff} equating acceptance of a supplied candidate with
+\code{ValidFiniteCertificate} has no additional sign assumptions.
+However, finite validity itself includes a $T\geq0$ guard and finite rank/potential grids.
+It therefore cannot be used as a feasibility decision procedure for arbitrary signed budgets.
+For example, with zero tasks, zero flow, and $m=0,T<0$, both an empty route family and an unbounded next certificate exist,
+yet this finite checker rejects every candidate.
+The current \code{exactFeasible_iff_count_and_exists_checkedCandidate}
+still requires no self-loops, $s\geq0$, and $T>0$.
 
-\section{共同假设下的存在性组合}
+\section{Composing Existence Equivalences under Shared Assumptions}
 
-\begin{proposition}[共同范围的四表示桥接；纸面组合]\label{prop:bridge}
-固定 $R,H,d,m,s,T$，令 $x=E_R(H)$。
-假设式 \eqref{eq:degrees} 成立，且
+\begin{proposition}[Four-representation bridge on the shared domain]\label{prop:bridge}
+Fix $R,H,d,m,s,T$, and let $x=E_R(H)$.
+Assume \eqref{eq:degrees} and
 \[
  \forall v\in V,\quad 0\leq s(v),\qquad 0<T.
 \]
-则下列命题等价：
+Then the following statements are equivalent:
 \begin{align*}
  &\NC(o,d,x,s,T),\\
  &\EF(o,x,d,m,s,T),\\
  &\MF(R,H,m,s,T),\\
  &\exists C,\quad \CC(R,H,m,s,T,C)=\mathrm{true}.
 \end{align*}
-也可将第一项换成“存在被有限 next 检查器接受的候选”。
+The first statement may also be replaced by the existence of a candidate accepted by the finite next checker.
 \end{proposition}
 
 \begin{proof}
-树无自环，\code{edgeFlow_supported} 给出 $x(v,v)=0$。
-由 \code{HasDegrees} 在根的出度等式得到
-$m=\operatorname{outFlow}(x,o)$，所以
+The tree has no self-loops, and \code{edgeFlow_supported} gives $x(v,v)=0$.
+The root outdegree equation in \code{HasDegrees} yields
+$m=\operatorname{outFlow}(x,o)$. Thus the route-count condition on the right-hand side of
 \src{LocalVisitPairingNextCertificate}{
 \code{exactFeasible_iff_count_and_hasNextCertificate}}
-右侧的路线数条件已经满足，得到前两项等价。
-\src{TreeBudgetMatrix}{\code{exact_iff_matrix}} 在式 \eqref{eq:degrees} 下给出第二、三项等价。
+is already satisfied, proving the equivalence of the first two statements.
+Under \eqref{eq:degrees},
+\src{TreeBudgetMatrix}{\code{exact_iff_matrix}} gives the equivalence of the second and third statements.
 \src{TreeBudgetCertificate}{\code{matrix_iff_exists_certificate}}
-给出第三、四项等价，不另加符号假设。
-有限候选版本使用
+gives the equivalence of the third and fourth without additional sign assumptions.
+For the finite-candidate version, use
 \src{LocalVisitPairingFiniteChecker}{
-\code{exactFeasible_iff_count_and_exists_checkedCandidate}}，
-其路线数条件由同一出度等式消去。
+\code{exactFeasible_iff_count_and_exists_checkedCandidate}};
+the same outdegree equation discharges its route-count condition.
 \end{proof}
 
-这里组合的是\emph{存在性命题}。尚未因此得到一对可执行、互逆的证书转换程序，
-也没有证明任意输入证书在所有转换后具有逐字段相等的检查结果。
-把该命题写入 Lean 可作为 \#21 后续的短桥接模块；本稿没有把纸面组合标为新的内核定理。
+This composition concerns \emph{existence propositions}. It does not by itself provide executable, mutually inverse certificate-conversion programs,
+or prove field-by-field equality of checker results for arbitrary input certificates under every transformation.
+The accompanying bridge module packages the unbounded-next chain as
+\code{next_iff_exact}, \code{next_iff_matrix}, and \code{next_iff_checked_certificate}.
+The finite-candidate replacement remains the paper-level composition of the already existing finite checker theorem described above.
 
-\begin{proposition}[符号假设的精确边界；纸面组合]
-在相同树数据与式 \eqref{eq:degrees} 下，允许任意 $s,T\in\Q$，仍有
+\begin{proposition}[Exact scope of the sign assumptions]
+For the same tree data satisfying \eqref{eq:degrees}, arbitrary $s,T\in\Q$ still admit
 \[
  \EF(o,E_R(H),d,m,s,T)
  \ \Longleftrightarrow\ \MF(R,H,m,s,T)
  \ \Longleftrightarrow\ \exists C,\ \CC(R,H,m,s,T,C)=\mathrm{true}.
 \]
-并且这些命题中的任一项都推出 $\NC(o,d,E_R(H),s,T)$。
+Moreover, each of these statements implies $\NC(o,d,E_R(H),s,T)$.
 \end{proposition}
 \begin{proof}
-前两个等价直接使用上述树定理。
+The two equivalences follow directly from the tree theorems above.
 \src{LocalVisitPairingCompleteness}{\code{hasLocalCertificate_of_exactFeasible}}
-从路线族构造局部证书时不要求费用非负或预算为正；再使用
+constructs a local certificate from a route family without requiring nonnegative fees or a positive budget. Applying
 \src{LocalVisitPairingNextCertificate}{\code{hasNextCertificate_iff_hasLocalCertificate}}
-即可获得 next 证书。
+then gives a next certificate.
 \end{proof}
-现有公开接口中的非负费用和正预算假设出现在\emph{从 next／局部证书重建可行路线族}
-的方向。这里不把未复用到的有符号逆向定理说成不可能，也不提前声称它已经形式化。
-若使用 \code{PatternCountsFeasible} 的函数式计数版本，则还需显式使用
-$m=k_R(H)$：该定义省略了独立路线数参数，
-\code{pattern_count_total} 从列等式推导总模式重数为 $k_R(H)$。
+In the existing public interfaces, the nonnegative-fee and positive-budget assumptions occur in the direction
+\emph{from a next/local certificate to a feasible route family}.
+The signed reverse direction not reused here is neither declared impossible nor claimed to have already been formalized.
+For the function-valued count representation \code{PatternCountsFeasible}, one must also use
+$m=k_R(H)$ explicitly: its definition omits a separate route-count parameter,
+and \code{pattern_count_total} derives total pattern multiplicity $k_R(H)$ from the column equations.
 
-\section{单行的投影和重建契约}
+\section{Projection and Reconstruction Contracts for a Single Row}
 
-\begin{definition}[规范化行与投影]
-设 $\norm(p)(o)=0$，$\norm(p)(v)=p(v)$（$v\neq o$）。
-对任意合法路线 $r$ 定义
+\begin{definition}[Normalized row and projection]
+Define $\norm(p)(o)=0$ and $\norm(p)(v)=p(v)$ for $v\neq o$.
+For any legal route $r$, define
 \[
  \pi_R(r)(v)=
  \begin{cases}0,&v=o,\\F_r(\pa(v),v),&v\neq o.\end{cases}
 \]
-这等于对现有 \code{TreeBudgetRow.routeRow} 再应用
-\code{TreeBudgetPatterns.normalize}。
-对树支持的路线，因 $\pa(o)=o$ 且无自环，原 \code{routeRow} 的根坐标也已为零。
-显式写规范化能避免将矩阵定义中本来任意的根坐标带入往返等式。
+This is the existing \code{TreeBudgetRow.routeRow} followed by
+\code{TreeBudgetPatterns.normalize}.
+For a tree-supported route, the root coordinate of the original \code{routeRow} is already zero, since $\pa(o)=o$ and there are no self-loops.
+Explicit normalization prevents the arbitrary root coordinate allowed by the matrix definition from entering the round-trip equation.
 \end{definition}
 
-正支撑向根闭合是
+Closure of positive support toward the root means
 \begin{equation}\label{eq:ancestor}
  v\neq o,\quad p(v)>0,\quad\pa(v)\neq o
  \quad\Longrightarrow\quad p(\pa(v))>0.
 \end{equation}
-现有行谓词 $\RV(R,H,s,T,p)$ 的五项条件依次为
+The existing row predicate $\RV(R,H,s,T,p)$ consists of five conditions:
 \begin{equation}\label{eq:rowvalid}
  p(o)=0,\qquad p(v)\leq H(v)\ (v\neq o),\qquad
  k_R(p)=1,\qquad\eqref{eq:ancestor},\qquad c_R(p)\leq T.
 \end{equation}
-现有可执行 \code{cost} 与 $c_R$ 相等，且有线性形式
+The existing executable \code{cost} equals $c_R$ and has the linear form
 \begin{equation}\label{eq:linear}
  c_R(p)=\sum_{v\neq o}
  \bigl(s(v)+\boldsymbol 1_{\pa(v)\neq o}s(\pa(v))\bigr)p(v).
 \end{equation}
-式 \eqref{eq:visits} 和 \eqref{eq:linear} 已由
-\src{TreeBudgetRow}{\code{routeRow_counts}、\code{rowCost_linear}}
-等定理支持，不把它们重复计为本包的新成果。
+Equations \eqref{eq:visits} and \eqref{eq:linear} are already supported by theorems including
+\src{TreeBudgetRow}{\code{routeRow_counts} and \code{rowCost_linear}};
+they are not counted again as new results of this package.
 
-\begin{proposition}[规范化单行的见证级重建；纸面推论]\label{prop:section}
-若 $p:V\to\N$ 满足 $p(o)=0$、$k_R(p)=1$ 和式 \eqref{eq:ancestor}，
-则存在合法路线 $r$，满足
+\begin{proposition}[Witness-level reconstruction of a normalized row]\label{prop:section}
+Suppose $p:V\to\N$ satisfies $p(o)=0$, $k_R(p)=1$, and \eqref{eq:ancestor}.
+Then there exists a legal route $r$ such that
 \begin{equation}\label{eq:section}
  F_r=E_R(p),\qquad \pi_R(r)=p,\qquad
  N_r(v)=D_R(p)(v)\ (v\in V),\qquad C_s(r)=c_R(p).
 \end{equation}
-此处 $s:V\to\Q$ 任意。若进一步有 $\RV(R,H,s,T,p)$，则所构造的路线满足预算 $T$。
+Here $s:V\to\Q$ is arbitrary. If $\RV(R,H,s,T,p)$ also holds, the constructed route satisfies budget $T$.
 \end{proposition}
 \begin{proof}
-将 $k_R(p)=1$ 通过 \code{rootCount_eq} 换成 \code{rootDegree R p = 1}。
+Use \code{rootCount_eq} to express $k_R(p)=1$ as \code{rootDegree R p = 1}.
 \src{TreeBudgetRow}{\code{single_row_realization}}
-给出 $r$，其逐边流恰为 $E_R(p)$，访问数恰为 $D_R(p)$。
-对 $v\neq o$，\code{edgeFlow_parent} 给出
+provides a route $r$ whose edge flow is exactly $E_R(p)$ and whose visit counts are exactly $D_R(p)$.
+For $v\neq o$, \code{edgeFlow_parent} gives
 \[
  \pi_R(r)(v)=F_r(\pa(v),v)=E_R(p)(\pa(v),v)=p(v).
 \]
-根坐标由 $p(o)=0$ 恢复，故函数外延相等成立。
-逐顶点计费并求和，由 \code{service_of_counts} 得到成本等式。
-预算来自 $c_R(p)\leq T$。
+The root coordinate is recovered using $p(o)=0$, establishing extensional equality.
+Summing the vertex-wise service charges and applying \code{service_of_counts} gives the cost equality.
+The budget follows from $c_R(p)\leq T$.
 \end{proof}
 
-这说明可对每个满足条件的 $p$ \emph{选取}一个实现，记作
-$\operatorname{realize}_R(p)$，并满足
+Thus one may \emph{choose} a realization for each admissible $p$, denoted
+$\operatorname{realize}_R(p)$, satisfying
 \[
  \boxed{\ \pi_R\bigl(\operatorname{realize}_R(p)\bigr)=p\ }.
 \]
-这是投影的右逆／一个截面，而非双向逆。
-现有 \code{single_row_realization} 给出存在性证明，
-用选择公理选取见证是非计算性的；本文没有指定可执行遍历顺序，也没有实现命名为
-\code{realize} 的 Lean 函数。
-若去掉 $p(o)=0$，同一证明只能得到 $\pi_R(r)=\norm(p)$。
-列上界 $p\leq H$ 和预算不是结构性重建的必要前提；它们用于接入具体输入的行检查器。
+This is a right inverse, or section, of the projection, not a two-sided inverse.
+The existing \code{single_row_realization} is an existence proof;
+selecting its witness using choice is noncomputational. This note specifies no executable traversal order and does not implement a Lean function named
+\code{realize}.
+Without $p(o)=0$, the same proof yields only $\pi_R(r)=\norm(p)$.
+The coordinate bound $p\leq H$ and the budget are not necessary assumptions for structural reconstruction; they connect the result to the row checker for a particular input.
 
-\subsection{从单行契约到矩阵与模式}
-先看投影方向。若 $\rho$ 满足式 \eqref{eq:exact} 且 $x=E_R(H)$，
-由于所有路线流非负，任何非树边在总流中为零时，每条路线在该边上的流也为零。
-因此各条路线均有树支持。现有 \code{routeRow_root}、\code{routeRow_ancestor}
-与 \code{routeRow_counts} 给出根出发一次、祖先闭合及访问数／成本的对应。
-父边精确流等式给出 $\sum_i\pi_R(\rho_i)(v)=H(v)$（$v\neq o$），
-由非负性再得每行坐标界 $\pi_R(\rho_i)(v)\leq H(v)$。
-所以规范化投影同时得到合法矩阵和逐行的 $\RV$；这一步也允许有符号费用与预算。
+\subsection{From the Single-Row Contract to Matrices and Patterns}
+First consider projection. Suppose $\rho$ satisfies \eqref{eq:exact} with $x=E_R(H)$.
+All route flows are nonnegative, so if the total flow on a non-tree edge is zero, every route has zero flow on that edge.
+Each route therefore has tree support. The existing \code{routeRow_root}, \code{routeRow_ancestor},
+and \code{routeRow_counts} establish one root departure, ancestor closure, and the correspondence of visit counts and costs.
+Exact parent-edge flow gives $\sum_i\pi_R(\rho_i)(v)=H(v)$ for $v\neq o$;
+nonnegativity then yields the row bound $\pi_R(\rho_i)(v)\leq H(v)$.
+Normalized projection thus produces both a valid matrix and a row-wise $\RV$ proof. This direction also permits signed fees and budgets.
 
-对满足矩阵条件的 $p_0,\ldots,p_{m-1}$，先逐行规范化，再用命题
-\ref{prop:section} 选取 $r_i$。非根列和不变，且
+For rows $p_0,\ldots,p_{m-1}$ satisfying the matrix conditions, normalize each row and apply Proposition
+\ref{prop:section} to choose $r_i$. The nonroot column sums are unchanged, and
 \[
  \sum_iF_{r_i}=\sum_iE_R(p_i)=E_R(H).
 \]
-由式 \eqref{eq:degrees} 和 \code{exactFlow_implies_coverage} 得到精确需求覆盖；
-每行成本等式给出逐路线预算。选取顺序不影响上述等式。
-这也是现有 \code{matrix_implies_exact} 的组合方式，新增数学规格明确的是其单行往返接口。
+Equation \eqref{eq:degrees} and \code{exactFlow_implies_coverage} give exact demand coverage;
+the row cost equalities give the individual route budgets. The choices of realizations do not affect these equations.
+This is also how the existing \code{matrix_implies_exact} is composed; the additional mathematical specification makes its single-row round-trip interface explicit.
 
-若把规范化矩阵行按完整向量相等分组，
-$z(p)=\#\{i:p_i=p\}$，则
+Group normalized matrix rows by equality of their complete vectors, setting
+$z(p)=\#\{i:p_i=p\}$. Then
 \[
  \sum_pz(p)=m,\qquad \sum_pz(p)p(v)=H(v)\quad(v\neq o).
 \]
-反向可把 $p$ 重复 $z(p)$ 次，从而恢复一个矩阵；
-这只确定一个行多重集，不恢复原路线索引。
-\code{family_iff_counts} 和 \code{matrix_iff_pattern_counts}
-已证明相应存在性结论。
-其中使用有限类型基数等价恢复 $\operatorname{Fin}(m)$ 的证明，不能直接当成保留原索引的执行算法。
+Conversely, repeating $p$ exactly $z(p)$ times recovers a matrix.
+This determines a row multiset, not the original route indices.
+\code{family_iff_counts} and \code{matrix_iff_pattern_counts}
+already establish the corresponding existence results.
+Their use of finite-type cardinality equivalences to recover $\operatorname{Fin}(m)$ should not be treated as an executable algorithm preserving the original indexing.
 
-\section{两种严格的信息损失}
+\section{Two Strict Forms of Information Loss}
 
-\begin{example}[不同访问顺序投影到同一行]
-取树边 $\{o,h\},\{h,a\},\{h,b\}$，完整路线为
+\begin{example}[Different visit orders project to the same row]
+Take tree edges $\{o,h\}$, $\{h,a\}$, and $\{h,b\}$, and full routes
 \[
  r=[o,h,a,h,b,h,o],\qquad r'=[o,h,b,h,a,h,o].
 \]
-二者都是合法树支持路线，且 $r\neq r'$，但在坐标顺序 $(o,h,a,b)$ 下
+Both are legal tree-supported routes, and $r\neq r'$. Nevertheless, in coordinate order $(o,h,a,b)$,
 \[
  \pi_R(r)=\pi_R(r')=(0,1,1,1),\qquad
  N_r=N_{r'}=(0,3,1,1),\qquad
  C_s(r)=C_s(r')=3s(h)+s(a)+s(b).
 \]
-因此投影不是单射。允许忽略访问顺序，恰恰因为当前约束只读取流、访问次数与可加费用；
-若增加时间窗、访问先后或随历史变化的费用，就必须另行验证是否仍可丢弃顺序。
+The projection is therefore not injective. Visit order may be ignored precisely because the current constraints depend only on flow, visit counts, and additive fees.
+If time windows, precedence constraints, or history-dependent costs are added, the validity of discarding order must be checked again.
 \end{example}
 
-\begin{example}[总流不能检查一个给定分解的逐路线预算]\label{ex:aggregate}
-取树边 $\{o,h\}$ 和 $\{h,a\},\{h,b\},\{h,c\},\{h,e\}$。
-令 $s(h)=s(o)=0$，$s(a)=s(b)=2$，$s(c)=s(e)=1$，$m=2,T=3$。
-每条路线依次访问分给它的两个叶子，每次在叶子之间经过 $h$。
-在坐标顺序 $(o,h,a,b,c,e)$ 下，两种逐路线矩阵为
+\begin{example}[Aggregate flow cannot check the individual budgets of a given decomposition]\label{ex:aggregate}
+Take tree edges $\{o,h\}$ and $\{h,a\},\{h,b\},\{h,c\},\{h,e\}$.
+Let $s(h)=s(o)=0$, $s(a)=s(b)=2$, $s(c)=s(e)=1$, and $m=2,T=3$.
+Each route visits its two assigned leaves in sequence, passing through $h$ between leaves.
+In coordinate order $(o,h,a,b,c,e)$, consider the two per-route matrices
 \[
  P_{\mathrm{good}}=
  \begin{pmatrix}0&1&1&0&1&0\\0&1&0&1&0&1\end{pmatrix},\qquad
  P_{\mathrm{bad}}=
  \begin{pmatrix}0&1&1&1&0&0\\0&1&0&0&1&1\end{pmatrix}.
 \]
-每行都满足根出发一次与祖先闭合；两矩阵列和均为
-$H=(0,2,1,1,1,1)$，故总流均为 $E_R(H)$。
-两种分解都使每个叶子访问一次，$h$ 总共访问 $2+4=6$ 次；
-不是把 $h$ 的需求误写成 $2$ 或 $4$。
-两种分解总成本均为 $6$，但逐路线成本分别为
+Every row has one root departure and ancestor-closed support. Both matrices have column sum
+$H=(0,2,1,1,1,1)$, hence aggregate flow $E_R(H)$.
+Both decompositions visit each leaf once and visit $h$ a total of $2+4=6$ times;
+the hub demand is neither $2$ nor $4$.
+Both decompositions have total cost $6$, but their per-route costs are respectively
 \[
- (3,3)\quad\text{与}\quad(4,2).
+ (3,3)\quad\text{and}\quad(4,2).
 \]
-只有前者满足逐路线预算。
+Only the former satisfies every route budget.
 \end{example}
 
-令 $\mathcal D$ 为满足结构、精确列和的这类行矩阵集合，
-$A(P)=\sum_i p_i$ 为加总映射，$B(P)$ 表示所有行都满足预算。
-例 \ref{ex:aggregate} 严格证明：不存在只依赖 $A(P)$ 的谓词 $b$，
-使 $B(P)\leftrightarrow b(A(P))$ 对这里所有给定分解 $P\in\mathcal D$ 成立。
-这是\emph{见证有效性}的信息损失。
+Let $\mathcal D$ be the set of such row matrices satisfying the structural conditions and exact column sums.
+Let $A(P)=\sum_i p_i$ be the aggregation map, and let $B(P)$ mean that every row meets its budget.
+Example \ref{ex:aggregate} proves that no predicate $b$ depending only on $A(P)$ can satisfy
+$B(P)\leftrightarrow b(A(P))$ for every given decomposition $P\in\mathcal D$.
+This is information loss concerning \emph{witness validity}.
 
-它不证明固定输入 $(H,s,T,m)$ 的\emph{存在性可行性}不能判定。
-该输入事实上可行，因为 $P_{\mathrm{good}}$ 已给出见证；
-现有完整搜索就是从同一输入寻找合法分组。
-因此不要把“有好分解也有坏分解”误写为“同一实例既可行又不可行”。
+It does not prove that \emph{existential feasibility} of a fixed input $(H,s,T,m)$ is undecidable or cannot be determined.
+Indeed, this input is feasible because $P_{\mathrm{good}}$ is a witness;
+the existing complete search seeks a valid grouping from that same input.
+Thus ``there are both good and bad decompositions'' must not be restated as ``the same instance is both feasible and infeasible.''
 
-更强的既有分离结果位于
+Stronger existing separation results appear in
 \src{FixedFlowObstruction}{\code{packing_feasible_but_fixed_flow_infeasible}}
-和 \src{CopyLiftObstruction}{\code{physical_cuts_pass_but_copy_cuts_obstruct}}：
-前者区分可行访问装箱与指定物理流的可实现性，后者区分物理聚合切割与副本容量切割。
-它们使用各自的具体模型，不能直接当作上面这棵树的另一种分解结论。
-本文仅引用既有源码中的结果，不将其历史验证状态重新表述为本次新运行。
+and \src{CopyLiftObstruction}{\code{physical_cuts_pass_but_copy_cuts_obstruct}}.
+The former distinguishes feasible visit packing from realizability of a prescribed physical flow; the latter distinguishes physical aggregate cuts from copy-capacity cuts.
+They use their own specific models and cannot be substituted for a statement about another decomposition of the tree above.
+This note cites those existing source results without recasting their historical validation as a new run.
 
-\section{检查器契约与实现边界}
+\section{Checker Contracts and Implementation Boundaries}
 
-\subsection{模式压缩只有已声明的接受保持}
-已有稳定压缩按\emph{完整行向量相等}合并重数，删除零重数行，
-保留首次正重数出现的行顺序。\src{TreeBudgetCertificateCompression}{
-\code{compress_checked}} 证明
+\subsection{Pattern Compression Preserves Acceptance in the Stated Direction}
+The existing stable compression merges multiplicities by \emph{equality of complete row vectors}, deletes zero-multiplicity rows,
+and preserves the order of first positive-multiplicity occurrences.
+\src{TreeBudgetCertificateCompression}{\code{compress_checked}} proves
 \[
  \CC(C)=\mathrm{true}\quad\Longrightarrow\quad
  \CC(\operatorname{compress}(C))=\mathrm{true}.
 \]
-同时已有重数、加权列和、无重复性、幂等性和长度不增结论。
-不能对任意 $C$ 改写为布尔值恒等式：原检查器会检查一个重数为零的不合法行，
-压缩后该行消失，可能从拒绝变为接受。
-源码回归
+Multiplicity preservation, weighted column-sum preservation, absence of duplicate rows, idempotence, and nonincreasing length are also established.
+For arbitrary $C$, this cannot be strengthened to equality of the Boolean results: the original checker examines an invalid row even when its multiplicity is zero.
+Compression removes that row, potentially changing rejection to acceptance.
+The source regression
 \src{TreeBudgetCertificateCompressionExamples}{
 \code{checker_equality_is_not_unconditional}}
-已经明确展示此边界。
+explicitly demonstrates this boundary.
 
-一个合法矩阵经规范化、转成全为重数 $1$ 的证书，再压缩，必定仍被接受；
-但反向展开只保证可获得合法矩阵，不保证回到原始条目表。
-完整向量相等还包括根坐标；任意输入若根坐标不同，现有压缩不会擅自先归零后合并。
-合法行本来已满足根坐标为零。
+A valid matrix, after normalization, conversion to a certificate with all multiplicities equal to $1$, and compression, is still accepted.
+Reverse expansion guarantees a valid matrix but does not recover the original entry list.
+Complete-vector equality includes the root coordinate. On arbitrary inputs with different root coordinates, existing compression does not first normalize and merge them.
+Valid rows already have root coordinate zero.
 
-\subsection{哪些对象可以执行}
+\subsection{Which Objects Are Executable?}
 \small
 \begin{longtable}{@{}p{.40\textwidth}p{.54\textwidth}@{}}
-\toprule 组件 & 当前接口与本稿的边界\\\midrule
+\toprule Component & Current interface and scope of this note\\\midrule
 \endfirsthead
-\toprule 组件 & 当前接口与本稿的边界\\\midrule
+\toprule Component & Current interface and scope of this note\\\midrule
 \endhead
-\code{routeRow}、\code{normalize}、可执行 \code{cost} &
-有限路线计数、根归零与有限和有明确计算定义；不因此得到编译程序的时间界。\\[4pt]
-\code{single_row_realization}、\code{matrix_implies_exact} &
-已存在的见证存在性证明；矩阵重建使用选择。
-本文的 \code{realize} 是数学选取，不是已经提取的算法。\\[4pt]
-\code{prevOfNext}、\code{toPairing}、\code{pairingOfRoutes} &
-现有恢复定义使用 \code{noncomputable}／经典选择。
-任务前驱唯一不等于源码已提供可执行前驱恢复程序。\\[4pt]
-有限 next \code{checkCandidate} &
-已有可执行检查器，通过直接副本流计算绕过经典恢复；检查给定候选，不搜索所有候选。
-保留有限有效性定义的预算守卫与网格限制。\\[4pt]
-模式 \code{checkCertificate}、\code{compressCertificate} &
-已有有限检查和稳定压缩；接受保持及大小界已有证明。
-函数式类型与有限求和的可执行性不等于已完成所有向量／位表示的成本分析。\\[4pt]
-\#22 候选列表对应 &
-属于另一实现接口：要求元素、顺序、出现次数的列表等号。
-本稿的存在性和见证合法性桥接不要求所有未来算法返回同一个首见证。\\
+\code{routeRow}, \code{normalize}, executable \code{cost} &
+Finite route counting, root normalization, and finite summation have explicit computational definitions; this does not establish a time bound for the compiled program.\\[4pt]
+\code{single_row_realization}, \code{matrix_implies_exact} &
+Existing witness-existence proofs; matrix reconstruction uses choice.
+The \code{realize} in this note is a mathematical selection, not an extracted algorithm.\\[4pt]
+\code{prevOfNext}, \code{toPairing}, \code{pairingOfRoutes} &
+Existing reconstruction definitions use \code{noncomputable}/classical choice.
+Uniqueness of task predecessors does not mean that the source already provides executable predecessor reconstruction.\\[4pt]
+Finite next \code{checkCandidate} &
+An existing executable checker that bypasses classical reconstruction through direct copy-flow computation. It checks a supplied candidate rather than searching all candidates.
+The budget guard and grid restrictions of finite validity remain in force.\\[4pt]
+Pattern \code{checkCertificate}, \code{compressCertificate} &
+Existing finite checking and stable compression, with proved acceptance preservation and size bounds.
+Executability of function-valued types and finite sums does not imply completed cost analysis for all vector/bit representations.\\[4pt]
+Issue \#22 candidate-list correspondence &
+A separate implementation interface requiring list equality of elements, order, and multiplicities.
+The existence and witness-validity bridges here do not require all future algorithms to return the same first witness.\\
 \bottomrule
 \end{longtable}
 \normalsize
 
-\section{后续 Lean 第一包的具体声明}
+\section{Interfaces Implemented in the First Lean Package}
 
-建议把下列三个小目标作为下一次形式化的边界，先不构造覆盖所有表示的大框架。
-以下为\emph{规格}，不是本次新增定理清单。
+The companion module is
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/research/structural-service-cuts-20261023/LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}{\code{LeanCompletion/UAV/TreeBudgetRepresentationBridge.lean}},
+in namespace \code{UAVProof.TreeBudgetRepresentationBridge}.
+The following map identifies source declarations; execution and audit outcomes belong to the separate validation record.
 \begin{enumerate}
- \item \textbf{共同范围桥接。}
- 在命题 \ref{prop:bridge} 的完整假设下，组合 next、精确路线、矩阵与模式检查器的存在性等价。
- 根出度等式和无自环应由树／度数条件推导，不作为重复且可能矛盾的输入。
- \item \textbf{见证级单行截面。}
- 对满足 $\RV$ 的规范化行，证明存在 $r$ 使式 \eqref{eq:section} 成立。
- 优先以“存在 $r$ 且投影等于 $p$”表达；若引入选择函数，名称和文档需注明非计算性。
- 另给不要求规范化的版本 $\pi_R(r)=\norm(p)$，固定根坐标的边界。
- \item \textbf{严格信息损失。}
- 形式化两条不同路线具有同一投影的小例；将其与给定分解的预算不能由总流检查的小例并列。
- 保留已有压缩反例，避免把接受保持升级为任意输入的检查结果相等。
+ \item \textbf{Projection and single-row reconstruction.}
+ \code{projectRow}, \code{projectRow_of_flow}, \code{projectRow_flow}, and
+ \code{projectRow_sound} express normalized projection, exact edge-flow preservation,
+ structural validity, visit counts, and equality of all signed additive costs.
+ \code{exists_route_project_normalize} recovers the normalized input row;
+ \code{exists_route_project} recovers the identical row when its root is zero.
+ \code{rowValid_exists_route} adds the supplied signed budget bound to the same witness.
+ \item \textbf{Signed and common-domain bridges.}
+ \code{exact_iff_checked_certificate} preserves the full signed tree-side scope.
+ \code{exact_implies_next}, \code{matrix_implies_next}, and
+ \code{checked_certificate_implies_next} do not add sign conditions.
+ \code{next_iff_exact}, \code{next_iff_matrix}, and \code{next_iff_checked_certificate}
+ use nonnegative fees and a positive budget only for the existing reverse next interface;
+ the root outdegree and no-loop facts are derived internally.
+ \item \textbf{Regression examples and information loss.}
+ The companion
+ \href{https://github.com/huam54925-cpu/uav-routing-certification/blob/research/structural-service-cuts-20261023/LeanCompletion/UAV/TreeBudgetRepresentationBridgeExamples.lean}{\code{TreeBudgetRepresentationBridgeExamples.lean}}
+ supplies \code{order_information_loss} and \code{order_cost_equal};
+ \code{allocation_common_flow}, \code{allocation_common_visits},
+ \code{allocation_costs_and_budgets}, and \code{aggregate_does_not_determine_witness_budget};
+ and \code{good_instance_feasible}, which confirms that the shared input still has a valid decomposition.
+ The order example is embedded in a six-vertex tree, adding two unused zero coordinates to the four-vertex illustration above.
+ Boundary regressions are \code{nonzero_root_reconstruction},
+ \code{signed_negative_budget_reconstruction}, and \code{empty_fleet_signed_bridges}.
+ They distinguish an empty family from a hypothetical empty individual route.
+ The existing compression counterexample remains unchanged.
 \end{enumerate}
-单行重建不依赖服务费非负，共同 next 桥接仍按现有公开定理采用 $s\geq0,T>0$。
-全矩阵与压缩表的反向展开可在后续见证级接口中规定具体索引与枚举顺序；
-本包不提前声称编号、路线访问顺序、副本标号或缓存顺序恢复。
+Single-row reconstruction does not require nonnegative fees; the common next-certificate bridge still uses $s\geq0,T>0$ as required by the current public theorems.
+Specific indexing and enumeration orders for reverse expansion of full matrices and compressed lists may be specified in later witness-level interfaces.
+This package does not claim to recover route indices, visit order, copy labels, or cache order.
 
-\section*{源码依据与状态说明}
-全部定理名在本文读取的本地 UAV 源码中核对，引用链接固定到
-\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/5114dc8efc5b5082aefd4640b403285d129db2b2}{
-\code{5114dc8}} 的研究代码基线。
-\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/06077788fc4a211126de98db7c75b88c9ef20db7}{
-\code{0607778}} 是之后的状态文档更新；本稿没有把它当作新的证明构建。
-相关议题为
+\section*{Source Basis and Status}
+This revision starts from the English source supplied by the user and preserves its model and evidence boundaries while updating the implementation map.
+Links to reused results are pinned to the pre-package research baseline
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/1bc992475a9bd515d77245e2bc0471e5ecab2fd5}{
+\code{1bc9924}}; the new bridge and examples use explicitly unpinned research-branch links because they are not present in that older commit.
+Source declarations, paper proofs, and newly executed validation are distinct evidence categories.
+The related issues are
 \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/21}{Issue \#21}
-与 \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/22}{Issue \#22}。
+and \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/22}{Issue \#22}.
 
-本稿只提供可独立放入 Overleaf 的 \code{.tex} 源码，建议选择 XeLaTeX。
-未在本地编译 LaTeX，未生成 PDF；纸面命题的后续 Lean 编译、公理审计和回归结果须另行记录。
-本稿没有进行文献新颖性判断，也没有推出强 NP 困难性、最优压缩或完整运行时间界。
+This note provides only standalone \code{.tex} source for Overleaf. The English version uses the standard \code{article} class and can be compiled with pdfLaTeX or XeLaTeX.
+LaTeX has not been compiled locally and no PDF has been generated. Lean build, axiom-audit, and regression results for the companion modules are recorded separately; no historical result is relabeled as a new execution here.
+The companion \code{TREE_BUDGET_ALLOCATION_BOUNDARIES.tex} provides the paper-only strict-hub three-partition correspondence and internal-subtree gluing test for Issues \#23 and \#19.
+This note makes no assessment of novelty in the literature and establishes neither strong NP-hardness, optimal compression, nor a complete runtime bound.
 
 \end{document}

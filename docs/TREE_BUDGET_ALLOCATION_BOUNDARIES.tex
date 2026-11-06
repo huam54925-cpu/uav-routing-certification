@@ -1,0 +1,355 @@
+% Standalone English source for Overleaf; no local LaTeX compilation.
+% The new statements in this note are paper proofs, not new Lean theorems.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\setlength{\emergencystretch}{3em}
+\setlist{itemsep=3pt,topsep=5pt}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\EF}{\operatorname{ExactFeasible}}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/1bc992475a9bd515d77245e2bc0471e5ecab2fd5/LeanCompletion/UAV/#1.lean}{#2}}
+\title{Allocation Boundaries in Exact Tree Routing\\
+  \large A Strict-Hub Three-Partition Correspondence and an Internal-Subtree Gluing Test}
+\author{Project Research Note}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note supplies two bounded paper results requested alongside the first representation-bridge package.
+For Issue \#23 it proves that a specified strict-hub exact-routing instance is feasible if and only if the source item instance has a three-partition.
+For Issue \#19 it gives two explicit partial route families with the same aggregate subtree flow and identical per-route boundary crossing counts, but different compatibility with one fixed exterior context.
+Both arguments preserve per-occurrence service charges and the prohibition on intermediate depot visits.
+They are mathematical proofs, not new Lean results or complexity-classification claims.
+\end{abstract}
+
+\section{Common Routing Semantics}
+
+A legal route has a nonempty task sequence, starts and ends at the depot $o$, has no intermediate occurrence of $o$, and has distinct consecutive vertices.
+Repeated non-depot visits are allowed and each occurrence is charged its service fee.
+For a route $r$, let $F_r(u,v)$ be its directed edge multiplicity, $N_r(v)$ its task-visit count, and
+\[
+ C_s(r)=\sum_v s(v)N_r(v).
+\]
+An exact feasible family of size $m$ has exactly the prescribed total visit counts at non-depot vertices, exactly the prescribed total directed flow $x$, and $C_s(r)\leq T$ for every route.
+These are the existing \src{RouteToFlow}{\code{LegalRoute}} and
+\src{SupportExactFeasibility}{\code{ExactFeasible}} semantics.
+Graph support is imposed separately; it is not a field of \code{LegalRoute}.
+
+For a rooted tree $R$ and nonroot parent-edge multiplicities $H$, let $E_R(H)$ use each parent-child edge $H(v)$ times in each direction.
+The required non-depot visit count is
+\begin{equation}\label{eq:demand}
+ d(v)=H(v)+\sum_{w:\operatorname{par}(w)=v,\,w\neq o}H(w),\qquad v\neq o,
+\end{equation}
+and the route count equals the sum of $H$ over root children.
+The coordinate $H(o)$ is ignored; it may be set to zero for notation.
+There are no travel charges in either construction below.
+
+\section{Issue \#23: Strict-Hub Feasibility and Three-Partition}
+
+\subsection{Source instance and target construction}
+
+Let $m\in\N$, let $B$ be a positive integer, and let the item set be
+$I=\{1,\ldots,3m\}$, equivalently $\operatorname{Fin}(3m)$ with shifted labels.
+For each $i\in I$, fix an integer $a_i$ satisfying
+\begin{equation}\label{eq:3p-assumptions}
+ \frac{B}{4}<a_i<\frac{B}{2},\qquad
+ \sum_{i\in I}a_i=mB.
+\end{equation}
+In particular every $a_i$ is positive. The inequalities are interpreted in $\Q$; the source weights and $B$ are integers.
+
+\begin{definition}[Three-partition]
+A three-partition is an indexed family $(P_r)_{r=1}^m$ of pairwise disjoint subsets of $I$ whose union is $I$, with
+\[
+ |P_r|=3,\qquad \sum_{i\in P_r}a_i=B\quad\text{for every }r.
+\]
+For $m=0$, the item set and family are empty, and the empty family is the unique partition in this convention.
+\end{definition}
+The usual nonempty problem is the restriction $m\geq1$; explicitly including $m=0$ lets the semantic statement match the existing hub theorem's zero-family boundary.
+
+Construct a tree with distinct vertices $o$ (depot), $h$ (non-depot hub), and a leaf $\ell_i$ for every $i\in I$.
+Its only edges are $\{o,h\}$ and $\{h,\ell_i\}$.
+Fix
+\begin{equation}\label{eq:hub-input}
+ H(h)=m,\quad H(\ell_i)=1,\qquad
+ s(o)=s(h)=0,\quad s(\ell_i)=a_i,\qquad T=B,
+\end{equation}
+and prescribe $x=E_R(H)$ and exactly $m$ routes.
+Thus $x(o,h)=x(h,o)=m$, each spoke is used once in each direction, and all other flow entries vanish.
+By \eqref{eq:demand}, the demands are
+\begin{equation}\label{eq:hub-demands}
+ d(h)=m+3m=4m,\qquad d(\ell_i)=1.
+\end{equation}
+The hub demand is essential: every satellite visit is followed by another hub visit, in addition to the first hub visit on each route.
+The depot demand is immaterial; take $d(o)=0$.
+
+\subsection{Exact interface to the existing hub-packing theorem}
+
+The module \src{HubSpokeSupportExact}{\code{HubSpokeSupportExact}} uses the vertex type
+\code{Node I = Option (Option I)}, with depot \code{none}, hub \code{some none},
+and satellite $i$ equal to \code{some (some i)}.
+Its \code{canonicalFlow m d} and \code{required m d} specialize to
+\eqref{eq:hub-input}--\eqref{eq:hub-demands} when the satellite-demand function is identically $1$.
+No separate root-tree adapter is needed to apply the existing hub theorem.
+
+The reused result
+\src{HubSpokePacking}{\code{HubSpokePacking.exact_iff_matrix}}
+specializes exactly to
+\begin{equation}\label{eq:hub-packing}
+ \EF(o,x,d,m,s,B)\quad\Longleftrightarrow\quad
+ \exists n\in\N^{m\times I},\quad
+ \begin{cases}
+  \sum_{r=1}^m n_{ri}=1,& i\in I,\\
+  \sum_{i\in I}a_i n_{ri}\leq B,&r=1,\ldots,m.
+ \end{cases}
+\end{equation}
+The general theorem permits signed service fees and budgets, but this specialization has positive item fees and a positive budget.
+It also permits a row with zero satellite visits: that row is a legitimate hub-only route $[o,h,o]$.
+Such rows must not be ruled out by definition; the saturation argument below rules them out for our nonempty source instances.
+
+\begin{lemma}[Unit columns determine a partition]\label{lem:partition}
+Every natural matrix $n$ in \eqref{eq:hub-packing} determines a unique assignment of each item to one route: each column has exactly one entry equal to $1$ and all other entries equal to $0$.
+\end{lemma}
+\begin{proof}
+Every entry is at most the column sum $1$. Because the sum is $1$, at least one entry is positive, hence equal to $1$; two positive entries would make the sum at least $2$.
+Set $P_r=\{i:n_{ri}=1\}$. These sets are disjoint and cover $I$.
+When $I$ is empty, all these assertions about items are vacuous.
+\end{proof}
+
+\begin{lemma}[Every route saturates its budget]\label{lem:saturation}
+Under \eqref{eq:3p-assumptions}, every matrix in \eqref{eq:hub-packing} satisfies
+\[
+ \sum_i a_i n_{ri}=B\quad\text{for every }r.
+\]
+\end{lemma}
+\begin{proof}
+Write $L_r=\sum_i a_i n_{ri}$. Each slack $B-L_r$ is nonnegative, while finite sum interchange and the unit column sums give
+\[
+ \sum_r L_r=\sum_i a_i\sum_r n_{ri}=\sum_i a_i=mB.
+\]
+Consequently $\sum_r(B-L_r)=0$, so every nonnegative slack is zero.
+For $m=0$ there is no row and the conclusion is vacuous.
+For $m>0$, $B>0$ then excludes every empty row.
+\end{proof}
+
+\begin{lemma}[Saturated groups contain exactly three items]\label{lem:three}
+If $P\subseteq I$ and $\sum_{i\in P}a_i=B$, then $|P|=3$.
+\end{lemma}
+\begin{proof}
+Since $B>0$, $P$ is nonempty. If $|P|\leq2$, strict upper bounds give
+\[
+ B=\sum_{i\in P}a_i<|P|\frac B2\leq B,
+\]
+a contradiction. If $|P|\geq4$, strict lower bounds give
+\[
+ B=\sum_{i\in P}a_i>|P|\frac B4\geq B,
+\]
+also a contradiction. Thus the natural number $|P|$ is $3$.
+\end{proof}
+
+\begin{theorem}[Semantic strict-hub correspondence; paper proof]\label{thm:hub}
+For the construction \eqref{eq:hub-input}--\eqref{eq:hub-demands} and assumptions \eqref{eq:3p-assumptions},
+\[
+ \boxed{\begin{gathered}
+   \EF(o,E_R(H),d,m,s,B)\\
+   \Longleftrightarrow\\
+   (a_i)_{i\in I}\text{ admits a three-partition}.
+ \end{gathered}}
+\]
+\end{theorem}
+\begin{proof}
+For the forward direction, \eqref{eq:hub-packing} supplies a natural matrix.
+Lemma \ref{lem:partition} supplies its partition $P_r$.
+Lemma \ref{lem:saturation} gives each group sum $B$, and Lemma \ref{lem:three} gives each group cardinality $3$.
+No arbitrary route ordering is assumed: satellite visit counts are extracted from the exact route family by the existing theorem.
+
+For the reverse direction, given a three-partition, define $n_{ri}=1$ if $i\in P_r$ and $n_{ri}=0$ otherwise.
+Disjoint coverage gives unit column sums and every row has cost exactly $B$, so \eqref{eq:hub-packing} yields exact feasibility.
+Equivalently, order each triple as $(i,j,k)$ and use the full route
+\[
+ [o,h,\ell_i,h,\ell_j,h,\ell_k,h,o].
+\]
+Its four hub visits explain $d(h)=4m$; it uses the depot-hub edge once in each direction and each assigned spoke once in each direction.
+It costs $a_i+a_j+a_k=B$ and has no intermediate depot visit.
+The family covers every leaf exactly once, so all prescribed edge multiplicities and demands are exact.
+For $m=0$, both constructions give the empty family, zero flow, and zero non-depot demands; no hub-only route is inserted.
+\end{proof}
+
+\begin{remark}[Support and exact multiplicities]
+The additional existing theorem
+\src{HubSpokeSupportExact}{\code{strict_hub_support_iff_exact}}
+equates support-feasible and exact-feasible families for this canonical hub instance with the same demands and route count.
+The statement above is deliberately made for exact flow, so it does not depend on silently replacing an arbitrary support condition by multiplicity equality.
+\end{remark}
+
+\subsection{What the correspondence establishes and what remains}
+
+Theorem \ref{thm:hub} isolates route allocation on a simple tree after total flow is fixed.
+It is a semantic equivalence for the explicitly defined inputs, reusing an existing Lean hub-packing equivalence but supplying new steps only as paper proofs.
+It does not, by itself, constitute a formal polynomial-time reduction, strong NP-hardness theorem, or NP-membership proof.
+It also supplies no optimality claim for a particular search upper bound.
+
+A subsequent formalization can separate four tasks:
+\begin{enumerate}
+ \item encode the finite item set and positive integer hypotheses, then formalize the three elementary lemmas and the composition with \code{HubSpokePacking.exact_iff_matrix};
+ \item specify the binary input/output representation, including tree, demands, flow or implicit multiplicities, weights, and fleet size;
+ \item prove the size and construction-time bounds for that representation before using a complexity reduction;
+ \item treat strong-hardness and NP-membership claims with their own source theorems and certificate-size hypotheses, especially when numeric counts are binary encoded.
+\end{enumerate}
+Only the first task's mathematical content is provided here. No further complexity classification is claimed in this package.
+
+\section{Issue \#19: A Fixed Exterior Distinguishes Equal Subtree Totals}
+
+\subsection{An actual tree and two-route boundary}
+
+Use the rooted tree with vertices $o,x,h,a,b,c_1,c_2$ and edges
+\[
+ \{o,x\},\quad\{x,h\},\quad\{h,a\},\quad\{h,b\},\quad
+ \{x,c_1\},\quad\{x,c_2\}.
+\]
+The internal subtree is $S=\{h,a,b\}$, separated from the exterior by edge $\{x,h\}$.
+Set
+\[
+ s(a)=s(b)=3,\qquad s(c_1)=s(c_2)=4,\qquad
+ s(o)=s(x)=s(h)=0,\qquad m=2,\quad T=7.
+\]
+Each of the two labeled routes crosses from $x$ to $h$ exactly once and returns from $h$ to $x$ exactly once.
+Thus each route has one matched boundary excursion; neither boundary counts nor the association of the two ends with a route are being changed between the examples.
+
+Write partial excursions as full vertex lists including their external endpoint $x$:
+\begin{align*}
+ Q_{ab}&=[x,h,a,h,b,h,x],& Q_0&=[x,h,x],\\
+ Q_a&=[x,h,a,h,x],& Q_b&=[x,h,b,h,x].
+\end{align*}
+Consider the two ordered partial families
+\[
+ P_{\mathrm{bad}}=(Q_{ab},Q_0),\qquad
+ P_{\mathrm{good}}=(Q_a,Q_b).
+\]
+The excursion $Q_0$ contains a hub visit and no leaf visit; it is not an empty global route, nor a forbidden intermediate return to the global depot $o$.
+These excursions are partial walks in the original tree, not \code{LegalRoute h} objects with an artificially introduced depot.
+
+Both partial families have the same aggregate directed flow:
+\begin{equation}\label{eq:inside-flow}
+ F(x,h)=F(h,x)=2,\quad F(h,a)=F(a,h)=1,\quad
+ F(h,b)=F(b,h)=1,
+\end{equation}
+and zero on every other edge. They also have equal total visits in $S$: four at $h$, one at $a$, and one at $b$.
+Both have total internal cost $6$, but their cost contributions per route are
+\begin{equation}\label{eq:inside-cost}
+ (6,0)\quad\text{and}\quad(3,3).
+\end{equation}
+The boundary-crossing vector of \emph{each} route is $(1,1)$ in both partial families.
+
+\subsection{One fixed exterior and exact full routes}
+
+For route $i$, fix the exterior walk that starts at $o$, visits $c_i$ through $x$, then attaches the subtree excursion at $x$ and finally returns to $o$.
+For an excursion list $Q$ above, the resulting full route is
+\[
+ \mathcal E_i(Q)=[o,x,c_i]\mathbin{+\!+}Q\mathbin{+\!+}[o],
+\]
+where $+\!+$ is list concatenation. The endpoint $x$ is not duplicated at either join: $Q$ begins at $x$ after $c_i$ and ends at $x$ before $o$.
+The exterior service contribution is always $4$.
+
+The two completed families are explicitly
+\begin{align*}
+ \rho^{\mathrm{bad}}_1&=[o,x,c_1,x,h,a,h,b,h,x,o],\\
+ \rho^{\mathrm{bad}}_2&=[o,x,c_2,x,h,x,o],\\
+ \rho^{\mathrm{good}}_1&=[o,x,c_1,x,h,a,h,x,o],\\
+ \rho^{\mathrm{good}}_2&=[o,x,c_2,x,h,b,h,x,o].
+\end{align*}
+Every consecutive pair is a tree edge. Every route has a nonempty task sequence and no intermediate depot visit.
+For both families the nonroot parent-edge multiplicities are
+\begin{equation}\label{eq:glue-h}
+ H(x)=2,\qquad H(h)=2,\qquad
+ H(a)=H(b)=H(c_1)=H(c_2)=1.
+\end{equation}
+Their aggregate directed flows are exactly $E_R(H)$, not just equal on the separator.
+Formula \eqref{eq:demand}, or direct counting in the displayed lists, gives the same demands
+\[
+ d(x)=6,\qquad d(h)=4,\qquad d(a)=d(b)=d(c_1)=d(c_2)=1.
+\]
+In particular each complete route visits $x$ three times. Omitting visits caused by returning from an excursion would give an incorrect demand vector.
+
+\begin{theorem}[Distinguishability by a fixed exterior; paper proof]\label{thm:glue}
+The two partial families have equal aggregate internal flow, equal total internal cost, equal aggregate internal visits, and the same per-route boundary crossing counts and endpoint matching.
+Nevertheless $P_{\mathrm{good}}$ can be attached to the fixed exterior within budget $7$, while $P_{\mathrm{bad}}$ cannot, even if its two excursions may be permuted between the exterior routes.
+\end{theorem}
+\begin{proof}
+The asserted equalities follow by counting the four displayed excursions, as in
+\eqref{eq:inside-flow}--\eqref{eq:inside-cost}.
+Attaching $P_{\mathrm{good}}$ gives costs $(4+3,4+3)=(7,7)$.
+Attaching $P_{\mathrm{bad}}$ gives costs $(4+6,4+0)=(10,4)$.
+Either permutation of the bad excursions still attaches the contribution $6$ to an exterior contribution $4$, producing a route of cost $10>7$.
+The exact full-flow and coverage conditions hold for both families by \eqref{eq:glue-h}; only the individual budget test distinguishes them.
+\end{proof}
+
+\subsection{The interface conclusion and its quantifiers}
+
+Let $\Sigma(P)$ store the aggregate subtree flow, total internal visits and cost, and the per-route separator crossing counts with their endpoint matching.
+Let $\operatorname{Glue}(P,\mathcal E)$ mean that the \emph{given} partial family $P$ can be bijectively matched to the fixed exterior slots $\mathcal E$ so that all completed routes meet their budgets.
+Theorem \ref{thm:glue} proves
+\begin{gather*}
+ \Sigma(P_{\mathrm{good}})=\Sigma(P_{\mathrm{bad}}),\\
+ \operatorname{Glue}(P_{\mathrm{good}},\mathcal E),\qquad
+ \neg\operatorname{Glue}(P_{\mathrm{bad}},\mathcal E).
+\end{gather*}
+Consequently no function of just this summary and the exterior can exactly check gluing of \emph{each supplied partial witness}.
+Permitting route relabeling does not repair the lost per-route resource contributions in this example.
+
+The result does not exclude an existential algorithm whose state denotes all partial witnesses realizing a summary and which retains additional feasibility information or searches those witnesses.
+It also does not say that a full instance is both feasible and infeasible: the common full input is feasible via $\rho^{\mathrm{good}}$.
+Nor does it prove that retaining only the multiset of per-route costs suffices for arbitrary interfaces.
+In the present example that multiset separates the witnesses, but general gluing may also need endpoint pairing, repeated crossings, route membership, and multiple resource contributions.
+
+Root-branch separation has a different premise: a legal route cannot leave one root child and enter another without visiting the depot in between.
+The existing \src{TreeBudgetRootFactorization}{\code{pattern_unique_root_child}} and
+\code{matrix_iff_root_local} use that root-specific property.
+Here $x$ and $h$ are internal vertices, so a route may visit $c_i$ and then $S$ while accumulating both service contributions.
+The root factorization theorem therefore does not provide this internal interface for free.
+
+\subsection{A bounded next specification task}
+Before implementing an internal-subtree dynamic program, define a candidate interface and its gluing relation explicitly.
+For a fixed outside context, the desired sound abstraction property is
+\[
+ \Sigma(P)=\Sigma(P')\quad\Longrightarrow\quad
+ \bigl(\operatorname{Glue}(P,\mathcal E)
+       \longleftrightarrow\operatorname{Glue}(P',\mathcal E)\bigr),
+\]
+with the admitted relabelings and matching rules stated in advance.
+The current summary fails this property by Theorem \ref{thm:glue}.
+A revised proposal should identify which per-route resource and boundary data it retains, prove extraction and reconstruction, and only then justify compression.
+If the state instead represents an existential set of partial solutions, its invariant must say so and its transition completeness must be proved at that level.
+Signed fees, when reintroduced, allow cancellation across pieces and require particular care with pruning rules based on partial costs.
+
+\section*{Evidence, Scope, and Source Navigation}
+The three-partition correspondence and gluing separation in this note are paper proofs.
+No new Lean modules for Issues \#23 or \#19 are asserted, no local LaTeX compilation was run, and no PDF was generated.
+The English \code{article} source is standalone and intended for Overleaf with pdfLaTeX or XeLaTeX.
+Reusable source theorem links are pinned to
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/1bc992475a9bd515d77245e2bc0471e5ecab2fd5}{\code{1bc9924}}.
+The exact first-package route/row contracts are discussed in the companion
+\code{TREE_BUDGET_REPRESENTATION_CONTRACT.tex}.
+
+The research tasks remain
+\href{https://github.com/huam54925-cpu/uav-routing-certification/issues/23}{Issue \#23}
+and \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/19}{Issue \#19}.
+This note establishes neither a new algorithmic technique nor a literature novelty claim.
+It separates the present semantic mathematics from future formalization, encoding, and complexity work.
+\end{document}
