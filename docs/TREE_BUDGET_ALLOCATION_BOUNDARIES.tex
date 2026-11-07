@@ -39,6 +39,19 @@ Both arguments preserve per-occurrence service charges and the prohibition on in
 They are mathematical proofs, not new Lean results or complexity-classification claims.
 \end{abstract}
 
+\paragraph{Status addendum, 7 November 2026.}
+The paper proofs below retain their original scope and numbering.
+Issue \#23's semantic correspondence was subsequently formalized in
+\code{dcc3db8}; binary encoding and restricted complexity are proved on
+paper in \code{86993ec}. Assignment checking and explicit numbered-target
+correspondence are now formalized in \code{2a64246}; see
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/2a64246acd8e5fe323e8d6bbe3fd3399cdedd3df/docs/HUB_INTERFACES_STATUS.md}{the published interface status record}.
+Issue \#19 now has separate single-excursion and arbitrary-internal-subtree
+supplied-witness paper contracts, including unrestricted sorted-budget
+matching. Its Lean interface, general summary realizability and repeated
+crossings remain open. Historical future-work statements below describe
+the 6 November snapshot. This status edit adds no proof or validation run.
+
 \section{Common Routing Semantics}
 
 A legal route has a nonempty task sequence, starts and ends at the depot $o$, has no intermediate occurrence of $o$, and has distinct consecutive vertices.
@@ -340,7 +353,7 @@ Signed fees, when reintroduced, allow cancellation across pieces and require par
 
 \section*{Evidence, Scope, and Source Navigation}
 The three-partition correspondence and gluing separation in this note are paper proofs.
-No new Lean modules for Issues \#23 or \#19 are asserted.
+No new Lean modules for Issues \#23 or \#19 were part of this note's original package; subsequent \#23 formalization is identified in the status addendum.
 At the initial package publication on 6 November 2026 (\code{e576911}), no LaTeX compiler was run as part of that publication or its recorded local validation.
 A separately supplied six-page PDF was subsequently reviewed on the same date. This later document review does not add Lean verification, an encoding proof, or a complexity classification.
 The English \code{article} source is standalone and intended for Overleaf with pdfLaTeX or XeLaTeX. This status-only source revision has not been recompiled.

@@ -1,21 +1,23 @@
 # Issue #20：阶段记录与后续导航
 
-## 当前状态 — 2026-11-06（Asia/Tokyo）
+## 当前状态 — 2026-11-07（Asia/Tokyo）
 
-[#20](https://github.com/huam54925-cpu/uav-routing-certification/issues/20) 已于 2026-11-05 按拆分后的范围阶段完成并关闭：已交付逻辑执行计数、状态参数界、物化向量与整数检查组件、成功缓存成员界。完整位成本仍为指定实现的纸面证明；候选列表对应、完整搜索模拟与位成本语义尚未进入 Lean。
+[#20](https://github.com/huam54925-cpu/uav-routing-certification/issues/20) 已于 2026-11-05 按拆分后的范围阶段完成并关闭：逻辑执行计数、状态参数界、物化向量与整数检查组件、成功缓存成员界已交付。后续候选列表的精确保序对应也已在 #22 完成；完整搜索/缓存模拟及位成本语义仍未形式化。
 
-| 后续任务 | 当前下一小包 | 独立验收边界 |
+| 后续任务 | 已完成 | 保留范围 |
 | --- | --- | --- |
-| [#22](https://github.com/huam54925-cpu/uav-routing-certification/issues/22) 表示精化与位成本 | 证明 `map decode (candidatesV ...) = candidates ...`，保持顺序与重数 | 候选列表小包可单独验收并暂停；搜索/缓存模拟与完整位成本属于后续阶段 |
-| [#23](https://github.com/huam54925-cpu/uav-routing-certification/issues/23) 单枢纽困难性研究 | 复用 hub packing iff，核对 3-PARTITION 候选构造及双向可行性 | 语义对应与多项式编码、强困难性、NP 成员性分别验证，当前均不标为完成 |
+| [#22](https://github.com/huam54925-cpu/uav-routing-certification/issues/22) | [候选列表包](TREE_BUDGET_VECTOR_CANDIDATES_STATUS.md)：解码列表等式，保持顺序与重数 | 有序搜索/缓存及事件计数对应，再连接机器成本 |
+| [#23](https://github.com/huam54925-cpu/uav-routing-certification/issues/23) | 三划分语义 Lean iff、分配检查器、编号目标对应；编码与受限复杂度有独立纸面证明 | 二进制编解码/长度 Lean 包按约定暂缓；机器成本、一般树 NP 成员性与模型文献对照独立保留 |
+| [#21](https://github.com/huam54925-cpu/uav-routing-certification/issues/21) | [第一表示桥梁包](TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md) | 完整见证转换与约定的往返契约 |
+| [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) | 单次游程纸面契约、任意内部子树的给定见证推广、自由匹配的排序预算判据 | Lean 接口、一般摘要可实现性、多次穿越与递归状态 |
 
-候选小包复用现有向量操作、整数化与 `rowValidB` 对应，使用实际物化的枚举器和稳定过滤。精确保序用于承接当前执行器的具体答案、有序缓存和事件计数；数学层的可行性/证书合法性契约应单独保留，未来算法不必复现相同的首个见证。完成 #22 全部位成本形式化，不是 [#21](https://github.com/huam54925-cpu/uav-routing-certification/issues/21) 证书桥接或 #23 语义对应的前置条件。
+最新接口发布与证据分层见 [HUB_INTERFACES_STATUS.md](HUB_INTERFACES_STATUS.md)（[2a64246](https://github.com/huam54925-cpu/uav-routing-certification/commit/2a64246acd8e5fe323e8d6bbe3fd3399cdedd3df)）。#23 的自然数列表解码不是二进制解析；#19 的给定见证定理不保证抽象摘要可实现，也不构成一般树动态规划。
 
-### 位成本文稿与 PDF 版本
+精确保序用于承接当前执行器的具体答案、有序缓存和事件计数；未来算法可以另行满足可行性/合法证书契约。完成 #22 全部位成本形式化不是 #21 或 #23 语义工作的前置条件。
 
-当前 [LaTeX 源稿](TREE_BUDGET_BIT_COST_NOTE.tex) 已加入表示组件的验证范围，以及成功缓存成员界使用缓存合法性、无重复键和键可达性的说明。[2026-11-05 上传的 PDF](budget%20%281%29.pdf) 保留较早稿件，尚未包含这些补充；阅读最新状态时以源稿与本记录为准。纸面时间界与 FPT 推论仍不是现有编译 Lean 程序的运行时间保证。
+当前 [LaTeX 源稿](TREE_BUDGET_BIT_COST_NOTE.tex) 已加入表示组件及成功缓存成员界的假设说明；[2026-11-05 PDF](budget%20%281%29.pdf) 保留较早稿件。指定实现的纸面时间界和 FPT 推论不是现有编译 Lean 程序的运行时间保证。
 
-本次只同步文档状态与导航，没有修改 Lean 源码、重跑构建/公理审计/性能实验或重新编译 PDF。下面原有阶段内容与验证记录保留历史口径；“#20 继续保持开放”是拆分前上传时状态，不是当前待办。
+本次仅同步状态与导航，没有运行 Lean 构建、公理审计、性能实验或 LaTeX 编译。下方原始阶段记录中的“下一包”“未完成”“#20 开放”均按当时日期理解，以本节为当前进度入口。
 
 ## 2026-11-05 上传时快照（历史）
 

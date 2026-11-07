@@ -372,6 +372,18 @@ theorems are not silently substituted for service-per-visit semantics.
 \section{Validation and Next Formalization Boundary}
 \label{sec:validation}
 
+\paragraph{Status addendum, 7 November 2026.}
+The later \code{2a64246} package formalizes typed and natural-number-list
+assignment checking and the independently defined numbered target's
+correspondence with the existing hub model. Neither interface requires
+the source \code{ValidInput} predicate. See \href{https://github.com/huam54925-cpu/uav-routing-certification/blob/2a64246acd8e5fe323e8d6bbe3fd3399cdedd3df/docs/HUB_INTERFACES_STATUS.md}{the published interface status record}.
+List decoding is not binary decoding. Binary codecs, exact lengths and
+machine-cost formalization remain separate; the codec/length Lean package
+was explicitly deferred from that batch. Issue \#19's later A/B paper
+covers arbitrary internal subtrees for supplied witnesses and unrestricted
+sorted-budget matching, without a Lean interface or general realizability
+claim. This status edit changes no mathematical proof.
+
 The earlier Lean package checks the semantic theorem and finite arithmetic.
 The new proofs here cover the serialization contract, total reduction,
 output length, multitape construction bound, restricted certificate
@@ -398,13 +410,16 @@ canonical shape does not assert feasibility. The run includes malformed
 headers, truncated payloads, noncanonical trees, zero-budget targets,
 empty rows and invalid certificates. Integer tests include selected
 payloads up to 4,097 bits, not every integer of that width.
-The reference checker is retained only in the original development workspace,
-not included in this published source package. The following command reruns
-those retained local materials; it is not a fresh-clone reproduction command:
+At the original \code{86993ec} publication, the reference checker was
+local-only. Public source was subsequently published in \code{2a64246}.
+From the repository root, the current reproduction command is:
 \begin{quote}
-\code{py verification/runs/issue23-encoding-20261107/reference_codec.py}.
+\texttt{python tools/check\_hub\_encoding.py}
 \end{quote}
-The generated \code{reference_codec_results.json} stays local.
+The script writes to standard output. The original
+\code{reference_codec_results.json} and all later generated reports stay
+local under ignored \code{verification/runs/}; scope and commands are in
+\code{docs/REPRODUCING_BOUNDED_CHECKS.md}.
 
 The original Garey--Johnson book scan was fetched through the configured
 local system proxy and its relevant page images were inspected directly:
@@ -422,12 +437,12 @@ explicit machine-cost model to the constructive bound. The external
 strong NP-completeness premise must remain identified unless a compatible
 formal complexity library supplies it. A general NP-membership theorem
 requires its own certificate-size argument. Issue \#19 remains at its
-previous restricted paper specification.
+paper contracts described in the status addendum.
 
 This standalone English source is intended for pdfLaTeX or XeLaTeX. No
 LaTeX compilation or rendered layout check is claimed in this batch.
 
-\paragraph{Publication scope, 7 November 2026.}
+\paragraph{Original publication scope (\code{86993ec}), 7 November 2026.}
 This note and the README navigation/status update are published on the existing
 \code{research/structural-service-cuts-20261023} branch after semantic commit
 \code{dcc3db8}, using the configured system proxy. Publication reuses the

@@ -1,5 +1,21 @@
 # UAV proofs, certificates and structural decomposition research
 
+## Current research entry points — 2026-11-07
+
+This directory's dated sections below preserve earlier publication records. The current tree-budget and interface work is indexed in the [branch README](../../README.md); historical open-task wording is not a current backlog.
+
+| Layer | Entry points | Status record |
+| --- | --- | --- |
+| Tree budget criterion and complete search | [TreeBudgetCriterion](TreeBudgetCriterion.lean), [TreeBudgetChecker](TreeBudgetChecker.lean), [TreeBudgetMemoSearch](TreeBudgetMemoSearch.lean) | [Budget matrix](../../docs/TREE_BUDGET_MATRIX.md), [memoized search](../../docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md) |
+| Counts, representation and ordered candidates | [TreeBudgetSearchCostBounds](TreeBudgetSearchCostBounds.lean), [TreeBudgetVectorCandidates](TreeBudgetVectorCandidates.lean) | [Current stage map](../../docs/TREE_BUDGET_OPERATION_BOUNDS_STATUS.md) |
+| Route/row representation bridges | [TreeBudgetRepresentationBridge](TreeBudgetRepresentationBridge.lean) | [First bridge package](../../docs/TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md) |
+| Strict-hub three-partition semantics | [HubThreePartition](HubThreePartition.lean) | [Semantic validation](../../docs/HUB_THREE_PARTITION_STATUS.md) |
+| Supplied assignment certificates and numbered targets | [HubAssignmentChecker](HubAssignmentChecker.lean), [HubNumberedInstance](HubNumberedInstance.lean) | [Interface validation](../../docs/HUB_INTERFACES_STATUS.md), [audit source](../../verification/AuditHubInterfaces.lean) |
+
+The #19 single-excursion results and #23 binary encoding/complexity arguments remain paper-level. Natural-number list decoding is proved; binary decoding and length formalization are deferred. This index update does not run Lean or extend the earlier validation claims.
+
+## Historical Case1 baseline
+
 The thirteen frozen Case1 `.lean` files are preserved from [the completed proof commit](https://github.com/huam54925-cpu/Drone-Issues/commit/0d4466cbfacf3fe01ca98494663742f9a612b645).
 
 ```text

@@ -451,8 +451,19 @@ at a depot-root branch, the two pieces belong to the same route and can cancel
 each other's signed costs. Other root branches cannot contribute such a
 cancellation to that route.
 
-\section{Implementation Map and Staged Work}
+\section{Implementation Map and Historical Staged Work}
 \label{sec:plan}
+
+\paragraph{Status addendum, 7 November 2026.}
+The Issue \#23 semantic batch proposed below is complete in \code{dcc3db8};
+its assignment checker and numbered-model bridge followed in \code{2a64246}.
+The separate \code{TREE_SINGLE_EXCURSION_GENERALIZATION.tex} proves the
+supplied-witness contract for arbitrary internal subtrees and the sorted
+budget criterion for unrestricted matching. It does not extend the star
+matrix realization theorem. Issue \#19 Lean implementation, arbitrary
+summary realizability and repeated crossings remain open. See
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/2a64246acd8e5fe323e8d6bbe3fd3399cdedd3df/docs/HUB_INTERFACES_STATUS.md}{the published interface status record}.
+The staged list below is the original plan, not a current backlog.
 
 The following are proposed proof obligations, not declarations already added
 to Lean. A future implementation should use \code{List V} for partial pieces,
@@ -551,11 +562,16 @@ empty cases, unchanged routes, depot-fee exclusion, and the unattainable
 cost vector $(1,1)$. These are bounded falsification checks, not proofs of
 the universal theorems or a test of arbitrary metadata policies.
 
-The local reproduction command, from the repository root, is
+The original run used a local script under
+\code{verification/runs/issue19-single-excursion-20261107/}.
+A public source entry point was subsequently published in \code{2a64246}.
+From the repository root run:
 \begin{quote}
-\code{py verification/runs/issue19-single-excursion-20261107/check_single_excursion.py}
+\texttt{python tools/check\_single\_excursion.py}
 \end{quote}
-The generated \code{results.json} remains in that ignored directory.
+The script writes its finite-check report to standard output; generated
+reports remain local under ignored \code{verification/runs/}.
+See \code{docs/REPRODUCING_BOUNDED_CHECKS.md} for scope and all three scripts.
 Static source checks also verify balanced braces and environments, unique
 labels, resolved internal references, and the existence of cited local Lean
 modules. They do not validate TeX layout. A before/after SHA-256 comparison
@@ -565,8 +581,10 @@ included in the preservation snapshot.
 This is standalone English LaTeX source for pdfLaTeX or XeLaTeX.
 The present batch adds no Lean source and executes no Lean build or axiom
 audit. Historical results are only reused as source interfaces.
-LaTeX compilation and rendered PDF inspection have not been performed.
-Local finite-check scripts and raw run output belong under ignored
+LaTeX compilation and rendered PDF inspection were not performed in the
+original source-preparation batch. Later separately supplied PDF reviews
+are separate evidence, not compilation of this status revision.
+The public script is now published; historical local scripts and raw output remain under ignored
 \code{verification/runs/issue19-single-excursion-20261107/}.
 
 \end{document}
