@@ -1,0 +1,448 @@
+% Paper encoding and complexity proof; no new Lean complexity theorem.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array,enumitem}
+\usepackage{xcolor,hyperref,xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\setlength{\emergencystretch}{3em}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{corollary}[definition]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{Remark}
+\newcommand{\N}{\mathbb N}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\bits}{\{0,1\}^{*}}
+\newcommand{\Hstar}{\mathcal H_0}
+\title{Binary Encoding of the Strict-Hub Reduction\\
+  \large Exact Output Length, Polynomial Construction, and Restricted Complexity}
+\author{Project Research Note}
+\date{7 November 2026 (Asia/Tokyo)}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We fix a self-delimiting binary source encoding and an explicit sparse tree
+encoding for the previously verified strict-hub/three-partition semantic
+correspondence. On a valid source of length $L$ the target has an exact length
+formula and at most $4L+3$ bits. A total reduction on all binary strings,
+including malformed inputs, is computable in $O((L+1)^2)$ time on a
+deterministic multitape Turing machine. A precisely specified canonical
+strict-hub language has polynomial certificates; with the classical external
+strong NP-completeness theorem for 3-PARTITION, it is strongly NP-complete.
+The broader tree problem inherits strong NP-hardness, but its NP membership
+is not proved here. Encoding, runtime and complexity arguments in this note
+are paper proofs, not Lean-checked complexity theorems.
+\end{abstract}
+
+\section{Evidence Boundary and Routing Semantics}
+\label{sec:semantics}
+
+The semantic package published in
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/dcc3db87805957680d7dbbba50f8eb6f8c7ef78e}{\code{dcc3db8}}
+contains \code{HubThreePartition.exact_iff_threePartition} and the more general
+\code{routing_iff_unitMatrix}. Their recorded local kernel checks and axiom
+audits precede this note. No old check is relabeled as validation of the new
+binary encoding or a Turing-machine model.
+
+A route begins and ends at the sole depot, has a nonempty task sequence,
+has no intermediate depot, and uses only the prescribed tree edges.
+Repeated non-depot visits are permitted and every occurrence is charged.
+A family of $m$ routes must realize exactly the prescribed non-depot visit
+counts and directed edge multiplicities, and every route has service cost at
+most $B$. There are no travel charges. This note restricts service fees and
+budgets to natural numbers, interpreted as rationals by the Lean model.
+It does not change the larger repository's signed-rational semantics.
+
+\section{A Fixed Integer Code and Two Typed Formats}
+\label{sec:code}
+
+For a positive integer $t$, let $b(t)=\lfloor\log_2 t\rfloor+1$ be its bit
+length and let $\operatorname{bin}(t)$ be its binary expansion without leading
+zeros. Encode $n\in\N$ by gamma coding $n+1$:
+\begin{equation}\label{eq:gamma}
+ g(n)=0^{b(n+1)-1}\operatorname{bin}(n+1),\qquad
+ \ell(n)=|g(n)|=2b(n+1)-1.
+\end{equation}
+Thus $g(0)=1$, $g(1)=010$, $g(2)=011$ and $g(3)=00100$.
+There are no format tags, separators, alignment bits or rational-denominator
+fields. The source and target are different typed formats; their binary
+languages need not be disjoint.
+
+\begin{lemma}[Unambiguous integer decoding]\label{lem:decode}
+The code $g$ is prefix-free and uniquely decodable, including zero.
+\end{lemma}
+\begin{proof}
+Count $z$ leading zeros before the first one, then read exactly $z$ further
+bits. The resulting $(z+1)$-bit positive integer is $n+1$.
+No first one or insufficient further bits means rejection. Codes with
+different $z$ disagree at the position where one first becomes one; codes
+with the same $z$ have the same length. Thus no code is a proper prefix of
+another, and concatenated fields are uniquely parsed.
+\end{proof}
+
+\begin{definition}[Source format and language]\label{def:source}
+A well-formed source has code
+\begin{equation}\label{eq:source}
+ g(m)\,g(B)\,g(a_0)\cdots g(a_{3m-1}).
+\end{equation}
+A valid source additionally satisfies
+\begin{equation}\label{eq:valid}
+ B>0,\qquad B<4a_i,\quad 2a_i<B\quad(0\le i<3m),\qquad
+ \sum_i a_i=mB.
+\end{equation}
+The language $\mathcal P$ consists of valid sources admitting a partition
+into $m$ indexed groups of exactly three items and weight $B$ each.
+Malformed strings and tuples failing \eqref{eq:valid} are outside
+$\mathcal P$. The $m=0$ case is allowed, with an empty item list and empty
+partition; it adds only trivial instances to the usual nonempty problem.
+\end{definition}
+
+\begin{definition}[Sparse tree target format]\label{def:target}
+Vertices are the integers $0,\ldots,N-1$, with depot $0$ and $N\ge1$.
+For $v=1,\ldots,N-1$, specify a parent $p(v)<v$ and multiplicity $H(v)\in\N$.
+Specify demands $d(v)\in\N$ and service fees $s(v)\in\N$ for all vertices,
+including the depot. The code is
+\begin{equation}\label{eq:target}
+ \begin{aligned}
+ &g(N)g(m)g(B)\,\prod_{v=1}^{N-1}\bigl(g(p(v))g(H(v))\bigr)\\
+ &\hspace{22mm}\cdot\prod_{v=0}^{N-1}g(d(v))\,\prod_{v=0}^{N-1}g(s(v)).
+ \end{aligned}
+\end{equation}
+Products denote concatenation in the displayed index order, not numerical
+multiplication. No trailing bits are allowed. The strict parent inequalities
+make the edges $\{p(v),v\}$ a rooted tree. Its directed prescribed flow has
+multiplicity $H(v)$ on both directions of this edge and is zero elsewhere.
+The entry $d(0)$ is encoded but ignored by exact-route coverage semantics;
+the depot is never charged. This format represents symmetric tree-supported
+flows; it is not a dense matrix or an encoding of arbitrary directed flows.
+\end{definition}
+
+The parser checks field counts against the available input length before
+allocating arrays: the remaining target requires $4N-2$ integer fields after
+the three headers. Each field consumes at least one bit. Huge binary values
+of $N$ therefore cannot trigger an exponentially long parsing loop.
+An equivalent implementation first decodes every supplied integer to EOF,
+then checks that the actual payload count is $4N-2$ before using $N$ to
+allocate or slice the vertex arrays. This is the strategy of the reference
+codec. Parent inequalities are checked after parsing. Similarly the source parser
+first reads $m,B$, decodes the remaining fields to EOF, and then compares
+their actual number with $3m$; it never loops $3m$ times before this check.
+
+\section{The Canonical Target and Exact Length}
+\label{sec:length}
+
+Given a valid source, construct $N=3m+2$, depot $0$, hub $1$, and leaf $i+2$
+for source item $i$. Define
+\begin{align}
+ p(1)&=0,& H(1)&=m,& d(0)&=0,& s(0)&=0,\notag\\
+ p(i+2)&=1,& H(i+2)&=1,& d(1)&=4m,& s(1)&=0,\label{eq:construction}\\
+ &&&&d(i+2)&=1,&s(i+2)&=a_i.\notag
+\end{align}
+The fleet and budget headers are the original $m,B$.
+The vertex renaming $0\mapsto\code{depot}$, $1\mapsto\code{hub}$,
+$i+2\mapsto\code{satellite i}$ identifies this data with the canonical
+instance of the existing Lean semantic theorem. This renaming and the binary
+serialization themselves are specified here on paper, not as new Lean code.
+
+\begin{theorem}[Exact size and linear bound]\label{thm:length}
+Let $L$ be the length of a valid source and $L_t$ the length of its target
+under \eqref{eq:source} and \eqref{eq:target}. Then
+\begin{align}
+ L_t&=L+\ell(3m+2)+\ell(m)+\ell(4m)+27m+4,\label{eq:exactlength}\\
+ L_t&\le4L+3.\label{eq:linearlength}
+\end{align}
+\end{theorem}
+\begin{proof}
+The source length is $L=\ell(m)+\ell(B)+\sum_i\ell(a_i)$.
+Since $\ell(0)=1$ and $\ell(1)=3$, count the target fields separately:
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule Fields & Length\\\midrule
+Headers $N,m,B$ & $\ell(3m+2)+\ell(m)+\ell(B)$\\
+Hub parent and multiplicity & $1+\ell(m)$\\
+Leaf parents and multiplicities & $18m$\\
+Demands, including depot & $1+\ell(4m)+9m$\\
+Services, including depot and hub & $2+\sum_i\ell(a_i)$\\\bottomrule
+\end{tabular}
+\end{center}
+Adding proves \eqref{eq:exactlength}, also at $m=0$.
+The inequalities $3m+3\le4(m+1)$ and $4m+1\le4(m+1)$ imply
+\[
+ \ell(3m+2)\le\ell(m)+4,\qquad \ell(4m)\le\ell(m)+4.
+\]
+Every $a_i$ is positive, so $\sum_i\ell(a_i)\ge9m$. Consequently
+\[
+ \begin{aligned}
+ L_t&\le L+3\ell(m)+27m+12\\
+    &\le4L+12-3\ell(B)\le4L+3,
+ \end{aligned}
+\]
+where the last inequality uses $B>0$, hence $\ell(B)\ge3$.
+\end{proof}
+
+\begin{remark}[Representation dependence]
+The tree is explicit: every parent edge, multiplicity, demand and service
+entry is encoded. Vertex identities are their record positions, so the
+construction needs only parent labels $0$ and $1$. If instead all $N^2$
+entries of a dense flow matrix are serialized, even zero entries consume
+bits and the length becomes $O(L^2)$. That remains polynomial but is not
+the exact formula or linear bound just proved. Adding version tags or
+rational-denominator fields likewise changes the constants.
+\end{remark}
+
+\section{A Total Polynomial-Time Reduction}
+\label{sec:reduction}
+
+\begin{definition}[Target language $\Hstar$]\label{def:h0}
+The language $\Hstar\subseteq\bits$ consists of well-formed target strings
+with $N=3m+2$ and exactly the structural data in
+\eqref{eq:construction}, except that the $3m$ leaf service fees and $B$
+may be arbitrary natural numbers, for which the encoded exact-route
+instance is feasible. Noncanonical or malformed targets are outside
+$\Hstar$. Source strict bounds and total-weight equality are not required
+in this target language. Hub-only rows, zero fees and budget zero are allowed.
+\end{definition}
+
+Let $y_{\rm no}$ be the target of the fixed source tuple
+\[
+ m=2,\quad B=30,\quad a=(9,9,9,13,10,10).
+\]
+This tuple satisfies all source hypotheses. A triple containing $13$ weighs
+at least $31$; a triple not containing $13$ weighs at most $29$.
+Thus it has no three-partition. The published Lean example
+\code{HubThreePartitionExamples.infeasible_exact_routing} proves that its
+canonical route instance is infeasible. Its source length is $54$ and
+\eqref{eq:exactlength} gives $|y_{\rm no}|=129$.
+
+Define $R:\bits\to\bits$ as follows. Parse and validate the source; on
+failure return $y_{\rm no}$. On success return the encoded construction
+\eqref{eq:construction}. In particular $m=0,B=0$ must take the failure
+branch: the source requires $B>0$, even though $\Hstar$ admits empty fleets
+at budget zero.
+
+\begin{theorem}[Total many-one reduction]\label{thm:reduction}
+For every binary string $x$,
+\[
+ x\in\mathcal P\quad\Longleftrightarrow\quad R(x)\in\Hstar,
+ \qquad |R(x)|\le4|x|+129.
+\]
+There is a deterministic multitape Turing-machine implementation of $R$
+running in $O((|x|+1)^2)$ time.
+\end{theorem}
+\begin{proof}
+For valid sources, the semantic iff from Section \ref{sec:semantics} gives
+the claimed equivalence. An invalid source is not in $\mathcal P$ and maps
+to a canonical infeasible target, which is not in $\Hstar$.
+The length bound follows from Theorem \ref{thm:length} on the valid branch
+and the fixed length $129$ otherwise.
+
+For the time bound put $L=|x|$. Decode to EOF before using the claimed
+item count; the number of actual fields is at most $L$ and no decoded
+integer has more than $L$ bits. Counting the fields and testing their
+number against $3m$ is polynomial even if the claimed $m$ is enormous.
+Partial sums have at most $L+\lceil\log_2(L+1)\rceil$ bits. The $O(L)$
+schoolbook additions, shifts and comparisons therefore take $O((L+1)^2)$
+bit operations. The strict bounds use constant shifts; checking total
+weight uses one schoolbook multiplication $mB$, also $O((L+1)^2)$.
+These are multitape operations on binary words, not unit-cost arithmetic
+on unbounded integers.
+
+On the valid branch $3m\le L$, so generating the header and hub fields
+and writing $O(m)$ constant fields is polynomial. The leaf weight codewords
+can be copied from the parsed source; the final output has linear length.
+Sequential scans, copies and counters can all be implemented within the
+same quadratic bound. Failure emits a fixed word. This proves the stated
+time bound for all strings, including the empty string. A short output
+alone would not have proved this algorithmic claim.
+\end{proof}
+
+\section{Polynomial Certificates for the Restricted Target}
+\label{sec:np}
+
+\begin{theorem}[Restricted NP membership]\label{thm:np}
+$\Hstar$ belongs to NP under the explicit encoding above.
+\end{theorem}
+\begin{proof}
+First parse the target and check all canonical fields, using the length
+guard of Section \ref{sec:code}. Do not allocate $m$ rows from an unchecked
+header. Once $N=3m+2$ and the explicit records have been verified, $m=O(L_t)$,
+where $L_t$ is the input length.
+
+The certificate assigns every leaf $i$ a route label $q_i<m$. Encode each
+label in exactly
+\[
+ w=\max\{1,\lceil\log_2(m+1)\rceil\}
+\]
+bits, permitting leading zeros. The certificate has exactly $3mw$ bits,
+and no trailing bits. Reject out-of-range labels. For $m=0$ it is empty.
+Accept precisely when each row's sum of assigned leaf fees is at most $B$.
+
+For soundness, visit each row's assigned leaves in any fixed order, inserting
+the hub before, between and after them, and attach the original depot at
+both ends. A row receiving no leaf gives the legal route $[0,1,0]$.
+There are exactly $m$ routes, one visit per leaf and $m+3m=4m$ hub visits.
+Every leaf edge is used once per direction and the depot edge $m$ times
+per direction. Hub service is zero, so the checked row sum is the full
+route cost. This gives exact feasibility.
+
+Conversely the existing hub matrix theorem extracts a natural matrix with
+each leaf column summing to one. Unit-column uniqueness gives its route
+label, and the matrix's row budget is exactly the certificate's inequality.
+Thus every feasible target has an accepted certificate. This uses
+\code{routing_iff_unitMatrix}, which does not require source strict bounds
+or total-weight equality. Empty rows must not be rejected.
+
+The certificate length is $O(L_t\log(L_t+1))$. One implementation scans
+the labels and weight records for each row, comparing binary labels and
+accumulating that row's cost with schoolbook arithmetic. A conservative
+bound is $O((L_t+1)^3)$ on a multitape machine, including canonical-format
+validation. Too long or malformed certificates can be rejected while
+reading the expected length plus one bit. Hence this is a polynomial
+certificate verifier.
+\end{proof}
+
+There is also a direct size check: in any exact feasible family in $\Hstar$,
+the total number of task occurrences is $4m+3m=7m$, and the total number of
+vertices in the full route lists is $7m+2m=9m$. The total number of edge
+occurrences is $8m$. These identities still hold with zero fees, hub-only
+rows and $m=0$. They do not bound route-list length polynomially for an
+arbitrary binary-encoded large-multiplicity instance outside $\Hstar$.
+
+\section{Complexity Consequences and Their Exact Scope}
+\label{sec:complexity}
+
+The external premise is the classical strong NP-completeness of
+3-PARTITION with positive integer sizes, bounds $B/4<a_i<B/2$, and total
+size $mB$. Garey and Johnson give the definition and the strong
+NP-completeness theorem in Section 4.2 of
+\emph{Computers and Intractability}~\cite{gj79}: the 3-PARTITION definition
+is on printed page 96, and Theorem 4.4 is on printed page 99.
+This is an external complexity theorem, not an axiom or theorem added to
+the Lean development.
+
+The usual finite-list binary representation and \eqref{eq:source} are
+polynomially interconvertible: gamma coding at most doubles each positive
+integer's bit length up to a constant, and the number of explicit item
+fields is part of the input size. This re-encoding preserves every numeric
+value and the valid-instance conditions. Allowing the trivial $m=0$ case
+does not remove hardness of the restriction $m\ge1$.
+
+\begin{theorem}[Strong NP-completeness of the canonical sublanguage]
+\label{thm:strong}
+Using the external theorem just stated, $\Hstar$ is strongly NP-complete.
+The general exact service-budget routing problem on trees, under this
+binary sparse representation and allowing at least these nonnegative
+integer inputs, is strongly NP-hard.
+\end{theorem}
+\begin{proof}
+Theorem \ref{thm:reduction} supplies a polynomial many-one reduction from
+3-PARTITION, and Theorem \ref{thm:np} gives membership of $\Hstar$ in NP.
+For strong hardness one must additionally check numeric magnitudes.
+On a nonempty valid source, every input size $a_i<B$ and the largest output
+integer, including vertex count, demand and fleet fields, is at most
+\[
+ \max\{4m+2,B\}.
+\]
+The strongly hard 3-PARTITION subfamily has $B$ and its sizes bounded by
+a polynomial in its item count $3m$. The output values are consequently
+bounded by a polynomial in $N=3m+2$ as well. A fixed failure output adds
+only a constant-sized exception. The reduction thus preserves a
+polynomially bounded numerical subfamily, establishing strong hardness;
+this step does not follow from bit-length bounds alone.
+
+The same construction yields valid instances of the general tree problem
+and retains the semantic iff, so that problem inherits strong NP-hardness.
+No membership argument for that general problem is used or claimed.
+\end{proof}
+
+The hard family has tree height two and treewidth one. Its number of routes
+$m$, number of vertices and hub degree grow with the input; no claim about
+fixed fleet size or fixed hub degree follows. The result is a model-specific
+adaptation of the standard partition construction, with the repository's
+exact repeated-visit accounting. It is not a claim of a new underlying
+hardness technique or a literature-priority result. Capacity-based CVRP
+theorems are not silently substituted for service-per-visit semantics.
+
+\section{Validation and Next Formalization Boundary}
+\label{sec:validation}
+
+The earlier Lean package checks the semantic theorem and finite arithmetic.
+The new proofs here cover the serialization contract, total reduction,
+output length, multitape construction bound, restricted certificate
+verification, and complexity corollaries conditional on the cited classical
+source theorem. None of these new encoding or complexity claims is asserted
+as a new Lean theorem.
+
+A local reference codec and finite tests are kept under ignored
+\code{verification/runs/issue23-encoding-20261107/}. They check integer and
+structured round trips, the precise length formula and its valid-input
+bound, malformed/huge headers, the fixed 129-bit no-instance, and small
+source/target assignment equivalence with actual route-list accounting.
+They test the executable specification; they are not Turing-machine runtime
+proofs, exhaustive tests of unbounded integers, or fresh Lean builds.
+
+The final local run used Python 3.13.4 and passed 5,124 integer-code round
+trips, 945 structured source/target round trips, and 943 valid-source exact
+length and upper-bound checks. Small source enumeration with
+$m\in\{1,2\}$ and $1\le B\le16$ covered 630 valid instances (598 feasible,
+32 infeasible), 37,926 assignment comparisons and 37,929 actual list
+reconstructions. All 8,191 binary strings of length at most 12 were also
+checked for totalization, canonical output shape and the total length bound;
+canonical shape does not assert feasibility. The run includes malformed
+headers, truncated payloads, noncanonical trees, zero-budget targets,
+empty rows and invalid certificates. Integer tests include selected
+payloads up to 4,097 bits, not every integer of that width.
+The reference checker is retained only in the original development workspace,
+not included in this published source package. The following command reruns
+those retained local materials; it is not a fresh-clone reproduction command:
+\begin{quote}
+\code{py verification/runs/issue23-encoding-20261107/reference_codec.py}.
+\end{quote}
+The generated \code{reference_codec_results.json} stays local.
+
+The original Garey--Johnson book scan was fetched through the configured
+local system proxy and its relevant page images were inspected directly:
+printed pages 95, 96 and 99 (PDF pages 53, 54 and 55). Page 99 explicitly
+preserves a numerical bound polynomial in the number of elements in its
+hardness construction. The reference check therefore uses the original
+source text, not just a search-result summary. The downloaded book and
+page images remain local run material. Static checks of this note verify
+balanced environments and braces, internal references and bibliography keys;
+they do not compile or render the document.
+
+The next formalization can separately implement an injective binary codec
+with decoder round trips, prove the exact length formula, and connect an
+explicit machine-cost model to the constructive bound. The external
+strong NP-completeness premise must remain identified unless a compatible
+formal complexity library supplies it. A general NP-membership theorem
+requires its own certificate-size argument. Issue \#19 remains at its
+previous restricted paper specification.
+
+This standalone English source is intended for pdfLaTeX or XeLaTeX. No
+LaTeX compilation or rendered layout check is claimed in this batch.
+
+\paragraph{Publication scope, 7 November 2026.}
+This note and the README navigation/status update are published on the existing
+\code{research/structural-service-cuts-20261023} branch after semantic commit
+\code{dcc3db8}, using the configured system proxy. Publication reuses the
+finite checks and source review recorded above; it adds no Lean build,
+new runtime measurement, or LaTeX rendering. The local checker, generated
+results, downloaded book, page images and build products are excluded.
+Existing Lean source, toolchain, dependency pins and the Issue \#19
+specification are unchanged. No broader issue is closed by this publication.
+
+\begin{thebibliography}{9}
+\bibitem{gj79}
+M. R. Garey and D. S. Johnson.
+\emph{Computers and Intractability: A Guide to the Theory of NP-Completeness}.
+W. H. Freeman, 1979, Section 4.2, pp.~95--99, especially the definition
+on p.~96 and Theorem 4.4 on p.~99.
+\href{https://perso.limos.fr/~palafour/PAPERS/PDF/Garey-Johnson79.pdf}{University-hosted scan of the original book}.
+\end{thebibliography}
+\end{document}
