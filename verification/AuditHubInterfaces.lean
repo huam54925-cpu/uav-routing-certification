@@ -1,0 +1,90 @@
+import LeanCompletion.UAV.HubAssignmentChecker
+import LeanCompletion.UAV.HubAssignmentCheckerExamples
+import LeanCompletion.UAV.HubNumberedInstance
+import LeanCompletion.UAV.HubNumberedInstanceExamples
+
+/-!
+Public audit source for the assignment and numbered-instance packages.
+Run `lake env lean verification/AuditHubInterfaces.lean` after the targeted
+builds. Generated reports belong under ignored verification/runs/.
+This file contains audit commands, not stored audit output.
+-/
+
+#print axioms UAVProof.HubAssignmentChecker.assignmentLoad
+#print axioms UAVProof.HubAssignmentChecker.AssignmentValid
+#print axioms UAVProof.HubAssignmentChecker.checkAssignment
+#print axioms UAVProof.HubAssignmentChecker.assignmentLoad_eq_sum
+#print axioms UAVProof.HubAssignmentChecker.checkAssignment_eq_true_iff
+#print axioms UAVProof.HubAssignmentChecker.unitMatrix_iff_exists_valid_assignment
+#print axioms UAVProof.HubAssignmentChecker.routing_iff_exists_accepted_assignment
+#print axioms UAVProof.HubAssignmentChecker.encodeAssignment
+#print axioms UAVProof.HubAssignmentChecker.decodeAssignment
+#print axioms UAVProof.HubAssignmentChecker.encodeAssignment_length
+#print axioms UAVProof.HubAssignmentChecker.encodeAssignment_range
+#print axioms UAVProof.HubAssignmentChecker.decodeAssignment_encode
+#print axioms UAVProof.HubAssignmentChecker.decodeAssignment_some_spec
+#print axioms UAVProof.HubAssignmentChecker.encodeAssignment_of_decode
+#print axioms UAVProof.HubAssignmentChecker.decodeAssignment_eq_some_iff
+#print axioms UAVProof.HubAssignmentChecker.checkAssignmentList
+#print axioms UAVProof.HubAssignmentChecker.checkAssignmentList_eq_true_iff
+#print axioms UAVProof.HubAssignmentChecker.routing_iff_exists_accepted_list
+#print axioms UAVProof.HubAssignmentCheckerExamples.goodAssignment
+#print axioms UAVProof.HubAssignmentCheckerExamples.good_assignment_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.good_list_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.wrong_assignment_rejected_but_instance_feasible
+#print axioms UAVProof.HubAssignmentCheckerExamples.wrong_list_rejected
+#print axioms UAVProof.HubAssignmentCheckerExamples.bad_no_accepted_assignment
+#print axioms UAVProof.HubAssignmentCheckerExamples.bad_no_accepted_list
+#print axioms UAVProof.HubAssignmentCheckerExamples.empty_list_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.empty_zero_budget_routing
+#print axioms UAVProof.HubAssignmentCheckerExamples.empty_nonempty_list_rejected
+#print axioms UAVProof.HubAssignmentCheckerExamples.zeroWeights
+#print axioms UAVProof.HubAssignmentCheckerExamples.zero_cost_zero_budget_accepts_every_assignment
+#print axioms UAVProof.HubAssignmentCheckerExamples.zero_cost_zero_budget_list_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.zero_cost_zero_budget_routing
+#print axioms UAVProof.HubAssignmentCheckerExamples.unitWeights
+#print axioms UAVProof.HubAssignmentCheckerExamples.empty_row_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.empty_row_hub_only
+#print axioms UAVProof.HubAssignmentCheckerExamples.short_list_rejected
+#print axioms UAVProof.HubAssignmentCheckerExamples.long_list_rejected
+#print axioms UAVProof.HubAssignmentCheckerExamples.out_of_range_list_rejected
+#print axioms UAVProof.HubAssignmentCheckerExamples.underweight_list_accepted
+#print axioms UAVProof.HubAssignmentCheckerExamples.underweight_target_without_source_validity
+#print axioms UAVProof.HubNumberedInstance.Relabel.mapRoute
+#print axioms UAVProof.HubNumberedInstance.Relabel.mapRoute_vertices
+#print axioms UAVProof.HubNumberedInstance.Relabel.map_count
+#print axioms UAVProof.HubNumberedInstance.Relabel.map_flow
+#print axioms UAVProof.HubNumberedInstance.Relabel.mapRoute_count
+#print axioms UAVProof.HubNumberedInstance.Relabel.mapRoute_flow
+#print axioms UAVProof.HubNumberedInstance.Relabel.mapRoute_service
+#print axioms UAVProof.HubNumberedInstance.Relabel.exactFeasible_forward
+#print axioms UAVProof.HubNumberedInstance.Relabel.exactFeasible_iff
+#print axioms UAVProof.HubNumberedInstance.Vertex
+#print axioms UAVProof.HubNumberedInstance.depotN
+#print axioms UAVProof.HubNumberedInstance.hubN
+#print axioms UAVProof.HubNumberedInstance.leafN
+#print axioms UAVProof.HubNumberedInstance.nodeEquiv
+#print axioms UAVProof.HubNumberedInstance.nodeEquiv_depot
+#print axioms UAVProof.HubNumberedInstance.nodeEquiv_hub
+#print axioms UAVProof.HubNumberedInstance.nodeEquiv_leaf
+#print axioms UAVProof.HubNumberedInstance.vertex_cases
+#print axioms UAVProof.HubNumberedInstance.numberedFlow
+#print axioms UAVProof.HubNumberedInstance.numberedDemand
+#print axioms UAVProof.HubNumberedInstance.numberedService
+#print axioms UAVProof.HubNumberedInstance.numberedFlow_eq
+#print axioms UAVProof.HubNumberedInstance.numberedDemand_eq
+#print axioms UAVProof.HubNumberedInstance.numberedService_eq
+#print axioms UAVProof.HubNumberedInstance.NumberedRoutingFeasible
+#print axioms UAVProof.HubNumberedInstance.numbered_routing_iff
+#print axioms UAVProof.HubNumberedInstanceExamples.empty_vertices
+#print axioms UAVProof.HubNumberedInstanceExamples.explicit_coordinates
+#print axioms UAVProof.HubNumberedInstanceExamples.explicit_numbered_data
+#print axioms UAVProof.HubNumberedInstanceExamples.empty_numbered_routing
+#print axioms UAVProof.HubNumberedInstanceExamples.feasible_numbered_routing
+#print axioms UAVProof.HubNumberedInstanceExamples.infeasible_numbered_routing
+#print axioms UAVProof.HubNumberedInstanceExamples.underweight_numbered_routing
+#print axioms UAVProof.HubNumberedInstanceExamples.repeatedRoute
+#print axioms UAVProof.HubNumberedInstanceExamples.repeated_route_count
+#print axioms UAVProof.HubNumberedInstanceExamples.repeated_route_flow
+#print axioms UAVProof.HubNumberedInstanceExamples.signedService
+#print axioms UAVProof.HubNumberedInstanceExamples.repeated_route_signed_service

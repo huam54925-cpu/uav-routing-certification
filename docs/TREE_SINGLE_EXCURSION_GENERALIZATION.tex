@@ -1,0 +1,441 @@
+% Paper proofs only. This file asserts no new Lean theorem.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array,enumitem}
+\usepackage{xcolor,hyperref,xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\setlength{\emergencystretch}{3em}
+\setlist{itemsep=3pt,topsep=5pt}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{corollary}[definition]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{Remark}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\cat}{\mathbin{+\!+}}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\Bij}{\operatorname{Bij}}
+\newcommand{\Compat}{\operatorname{Compatible}}
+\newcommand{\Glue}{\operatorname{Glue}}
+\newcommand{\Real}{\operatorname{Realizes}}
+\title{Single-Excursion Gluing Beyond Stars\\
+  \large Issue \#19: Supplied Witnesses and Unrestricted Budget Matching}
+\author{Project Research Note}
+\date{7 November 2026 (Asia/Tokyo)}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Two small extensions separate the universal concatenation argument from the
+star-specific realization argument. First, the exact gluing contract for given
+legal internal walks remains valid when the internal component is an arbitrary
+subtree behind a single edge, provided each participating route enters and
+leaves exactly once. Second, when every matching of excursions to exterior
+slots is allowed, the remaining budget test depends only on the multiset of
+internal costs: decreasing exterior costs must be paired with increasing
+internal costs. Both results allow signed rational fees and budgets. These are
+paper proofs with finite regression checks, not Lean formalizations, a general
+summary-realizability theorem, or a recursive tree algorithm.
+\end{abstract}
+
+\section{Scope and the Role of the Star Assumption}
+\label{sec:scope}
+
+This note extends \code{TREE_BUDGET_SINGLE_EXCURSION_CONTRACT.tex}; the earlier
+note's star realization theorem is retained in its original scope. The
+mathematical dependencies are as follows.
+\begin{center}
+\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+Property & Hypotheses actually used \\
+\midrule
+Exact addition of visits, directed flow, and service cost &
+Valid lists with the prescribed endpoints and occurrence-count conventions;
+no star hypothesis. \\
+One contiguous internal block on each participating route &
+A single separating edge and exactly one crossing in each direction;
+no star hypothesis. \\
+One root branch per full route &
+Tree support and absence of an internal depot occurrence. \\
+Complete realization by a matrix of leaf counts &
+The star structure used in the earlier note. No replacement theorem for
+arbitrary subtrees is asserted here. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Package A: Given Walks in an Arbitrary Internal Subtree}
+\label{sec:package-a}
+
+Fix a finite simple undirected tree $\mathcal T=(V,E)$, depot $o$, and an edge
+$\{x,h\}$, with $o,x,h$ pairwise distinct. Let $S$ be the component of
+$\mathcal T-\{\{x,h\}\}$ containing $h$, and assume $o\notin S$.
+Thus $x\notin S$, and $\{x,h\}$ is the only edge from $S$ to $V\setminus S$.
+There is no restriction on the shape of the induced subtree on $S$.
+Fix a service fee $s:V\to\Q$ and a budget $T\in\Q$.
+
+For a finite vertex list $L$, let $N_L(v)$ count occurrences of $v$, and let
+$F_L(u,v)$ count consecutive ordered pairs $(u,v)$ in $L$. Put
+\[
+ C_s(L)=\sum_{v\ne o}s(v)N_L(v).
+\]
+Even for a partial list this definition ignores depot occurrences. A full
+route starts and ends at $o$, has at least one intervening vertex, contains no
+other occurrence of $o$, and has every consecutive pair in the tree's edge
+relation. In particular, the support condition is stronger than merely
+requiring unequal consecutive vertices. For targets $d:V\to\N$ and
+$f:V\times V\to\N$, an exact feasible family of size $m$ has aggregate visits
+$d(v)$ for $v\ne o$, aggregate flow $f(u,v)$ for all ordered pairs, and cost at
+most $T$ on each route. The value $d(o)$ is immaterial. No travel costs,
+precedence conditions, or individual route visit targets are added.
+
+\begin{definition}[Supplied internal witness and retained interface]
+\label{def:interface}
+Let $I$ be a finite excursion index set. A valid witness $P=(W_i)_{i\in I}$
+consists of nonempty vertex lists contained in $S$, starting and ending at $h$,
+whose consecutive vertices are adjacent in the original tree. In particular,
+$W_i=[h]$ is allowed. Other visits to $h$ are allowed; these walks are not
+routes with an artificial depot at $h$. Define
+\begin{align*}
+ Q_i&=[x]\cat W_i\cat[x], & c_i&=C_s(W_i),\\
+ D_P(v)&=\sum_{i\in I}N_{W_i}(v), &
+ F_P(u,v)&=\sum_{i\in I}F_{Q_i}(u,v).
+\end{align*}
+The two boundary occurrences of $x$ belong to the external route pieces;
+they are not counted in $D_P$ or charged in $c_i$.
+
+The interface $\Sigma(P)$ retains $I,D_P,F_P,(c_i)_{i\in I}$, and metadata
+$\lambda$. This metadata includes distinct directed ports $(i,+)$ and $(i,-)$
+at $x\to h$ and $h\to x$, paired with each other, and any ownership or type
+labels that constrain matching. Ports identify crossing occurrences, not
+absolute positions in the eventual route list. An excursion, its cost, its
+two ports, and its labels move together. All other internal order is deleted.
+\end{definition}
+
+\begin{definition}[Exterior context and permitted matching]
+\label{def:context}
+An exterior context $\mathcal E$ consists of finite sets $J$ of slots and $K$
+of unchanged routes, with $|J|+|K|=m$. A slot $j$ has a prefix $U_j$ from $o$
+to $x$ and a suffix $V_j$ from $x$ to $o$. Both lists stay in $V\setminus S$
+and are tree-supported; $o$ occurs only at the first position of $U_j$ and
+only at the last position of $V_j$. Each $R_\ell$, $\ell\in K$, is a full
+legal tree-supported route avoiding $S$. Set
+\begin{align*}
+ b_j&=C_s(U_j)+C_s(V_j),\\
+ D_{\mathcal E}&=\sum_{j\in J}(N_{U_j}+N_{V_j})
+                 +\sum_{\ell\in K}N_{R_\ell},\\
+ F_{\mathcal E}&=\sum_{j\in J}(F_{U_j}+F_{V_j})
+                 +\sum_{\ell\in K}F_{R_\ell}.
+\end{align*}
+Function sums are pointwise. In particular $F_{U_j}+F_{V_j}$ is used, not
+$F_{U_j\cat V_j}$: the latter would insert a spurious $x\to x$ pair.
+
+The matching policy is a set
+$\Gamma_{\mathcal E,\lambda}\subseteq\Bij(J,I)$. It depends only on the
+retained metadata and the context, and never on deleted order inside the
+$W_i$. It assigns both paired ports to the same slot. The policy may be empty
+and need not allow every bijection. For $\pi\in\Gamma_{\mathcal E,\lambda}$,
+the glued participating route is the ordinary list concatenation
+\[
+ G_j^\pi=U_j\cat W_{\pi(j)}\cat V_j.
+\]
+The two copies of $x$ are separated by a nonempty $W_{\pi(j)}$ and remain two
+different visits. No endpoint is identified or discarded in this expression.
+\end{definition}
+
+\begin{lemma}[The three exact identities]
+\label{lem:identities}
+For every valid witness, context, permitted matching, and slot $j$,
+\begin{align}
+ N_{G_j^\pi}(v)&=N_{U_j}(v)+N_{W_{\pi(j)}}(v)+N_{V_j}(v),
+                    && v\in V,\label{eq:visits}\\
+ F_{G_j^\pi}(u,v)&=F_{U_j}(u,v)+F_{Q_{\pi(j)}}(u,v)+F_{V_j}(u,v),
+                    && u,v\in V,\label{eq:flow}\\
+ C_s(G_j^\pi)&=b_j+c_{\pi(j)}.\label{eq:cost}
+\end{align}
+Each $G_j^\pi$ is a full legal tree-supported route. Its nondepot vertices
+lie in one component of the tree with $o$ removed.
+\end{lemma}
+\begin{proof}
+Ordinary list concatenation adds occurrence counts, giving
+\eqref{eq:visits}. The only consecutive pairs joining different lists are
+$x\to h$ and $h\to x$. Thus the middle contribution to flow is exactly
+$F_{W_{\pi(j)}}+\mathbf 1_{(x,h)}+\mathbf 1_{(h,x)}=F_{Q_{\pi(j)}}$,
+including the case $W_{\pi(j)}=[h]$. This proves \eqref{eq:flow}.
+Multiplying \eqref{eq:visits} by $s(v)$ and summing over $v\ne o$ gives
+\eqref{eq:cost}; no sign assumption is used.
+
+The two join edges belong to the tree, all other consecutive edges are legal
+inside the supplied pieces, and the internal vertices exclude $o$. There is
+at least the visit to $x$ and the nonempty internal walk between the two depot
+endpoints. Hence the route is legal. Removing its two depot endpoints leaves
+a connected walk in $\mathcal T-\{o\}$, containing $x$, so it lies in a
+single root branch. None of these arguments uses a star structure.
+\end{proof}
+
+\begin{definition}[Compatibility and gluing]
+Write $\Compat(\mathcal E,\Sigma(P);d,f,T)$ if there exists
+$\pi\in\Gamma_{\mathcal E,\lambda}$ such that
+\begin{align}
+ D_{\mathcal E}(v)+D_P(v)&=d(v) &&(v\ne o),\label{eq:target-visits}\\
+ F_{\mathcal E}(u,v)+F_P(u,v)&=f(u,v) &&(u,v\in V),\label{eq:target-flow}\\
+ b_j+c_{\pi(j)}&\le T &&(j\in J),\label{eq:slot-budget}\\
+ C_s(R_\ell)&\le T &&(\ell\in K).\label{eq:unchanged-budget}
+\end{align}
+Write $\Glue(\mathcal E,P;d,f,T)$ if some permitted matching gives an exact
+feasible family consisting of the glued routes and the unchanged routes.
+This existential assertion concerns the supplied witness $P$.
+\end{definition}
+
+\begin{theorem}[Given-witness gluing iff]
+\label{thm:glue}
+For every valid $P$ and $\mathcal E$,
+\[
+ \Glue(\mathcal E,P;d,f,T)
+ \quad\Longleftrightarrow\quad
+ \Compat(\mathcal E,\Sigma(P);d,f,T).
+\]
+\end{theorem}
+\begin{proof}
+For a fixed permitted $\pi$, sum \eqref{eq:visits} and \eqref{eq:flow} over
+$j$. Bijectivity of $\pi$ replaces the sums indexed by $\pi(j)$ with the sums
+over $I$. Adding the unchanged routes gives exactly
+\eqref{eq:target-visits} and \eqref{eq:target-flow}. The route budgets are
+exactly \eqref{eq:slot-budget} and \eqref{eq:unchanged-budget} by
+\eqref{eq:cost}. Legality and size $m$ are already guaranteed by the context
+and Lemma~\ref{lem:identities}. Hence feasibility for this matching is
+equivalent to the four displayed conditions. Taking the existential
+quantifier over the same policy proves both implications. If an indexing by
+$\operatorname{Fin}(m)$ is required, reindex the family on $J\sqcup K$ by any
+bijection; all sums and route budgets are preserved.
+\end{proof}
+
+\begin{theorem}[Extraction across the single cut edge]
+\label{thm:extraction}
+Let an exact feasible family be tree-supported. Suppose each route either
+avoids $S$, or traverses $x\to h$ exactly once and $h\to x$ exactly once.
+Then every route of the second kind has a unique decomposition
+$U_j\cat W_i\cat V_j$ of the form in Definitions~\ref{def:interface}
+and~\ref{def:context}, obtained at these two crossing occurrences. It
+therefore determines a valid internal witness and exterior context. If the
+chosen metadata and policy admit this extracted pairing, their interface is
+compatible with the original targets and budget, and reconstruction recovers
+the original route lists.
+\end{theorem}
+\begin{proof}
+A route begins and ends outside $S$. Since the only cut edge is $\{x,h\}$,
+its first crossing must be $x\to h$ and its last crossing must be $h\to x$.
+The two assumed crossings are all its crossings. Consequently all its
+positions in $S$ form one nonempty interval, beginning and ending at $h$.
+Take this interval as $W_i$, the prefix ending at the preceding $x$ as $U_j$,
+and the suffix beginning at the following $x$ as $V_j$. The interval is a
+tree-supported internal walk, and the exterior pieces avoid $S$ with the
+required depot occurrences. The cut positions fix the decomposition uniquely.
+All other routes form $K$. Rejoining the three consecutive list pieces
+recovers each original list exactly. If the extracted matching is admitted,
+Theorem~\ref{thm:glue} gives compatibility. No alternating hub--leaf word is
+used in this extraction.
+\end{proof}
+
+\begin{corollary}[Same-interface contextual replacement]
+\label{cor:replacement}
+Let $P$ and $P'$ be valid internal witnesses for the same tree, cut edge,
+fee function, index set, and metadata. If $\Sigma(P)=\Sigma(P')$, then for
+every admitted exterior context, targets, and budget,
+\[
+ \Glue(\mathcal E,P;d,f,T)
+ \quad\Longleftrightarrow\quad
+ \Glue(\mathcal E,P';d,f,T).
+\]
+The assertion also holds after a fixed renaming of excursion indices and
+their attached ports, costs, and labels.
+\end{corollary}
+\begin{proof}
+The policy is unchanged because it depends only on retained metadata.
+All four compatibility conditions agree, including the indexed cost of every
+matched excursion. Apply Theorem~\ref{thm:glue} on both sides. For a renaming,
+transport each matching through the same index bijection.
+\end{proof}
+
+\begin{remark}[What has not been generalized]
+\label{rem:realization}
+For an abstract summary $\sigma$, define
+$\Real(P,\sigma)$ to mean that $P$ is valid and $\Sigma(P)=\sigma$.
+Theorem~\ref{thm:glue} does not supply such a $P$. A claim about abstract
+summaries must still include $\exists P\,\Real(P,\sigma)$; checking only the
+displayed compatibility equations cannot remove that obligation.
+
+In particular, the earlier star formula
+$N_{W_i}(h)=1+\sum_a n_i(a)$ and its matrix realization proof do not extend
+to arbitrary subtrees. In the internal path $h-u-a$, the valid walk
+\[
+ W=[h,u,a,u,a,u,h]
+\]
+has $N_W(h)=2$, $N_W(u)=3$, and $N_W(a)=2$. The star formula based on the
+leaf $a$ would incorrectly give $N_W(h)=3$. Its service cost is
+$2s(h)+3s(u)+2s(a)$; its flow on $h\leftrightarrow u$ is once in each
+direction, and on $u\leftrightarrow a$ twice in each direction. The actual
+walk and its actual ledger do satisfy all the general gluing identities.
+Neither multiple boundary excursions in one route nor a general recursive
+state transition is covered by this note.
+\end{remark}
+
+\section{Package B: Unrestricted Matching of Signed Costs}
+\label{sec:package-b}
+
+\begin{theorem}[Exact sorted budget criterion]
+\label{thm:sorted}
+Let $k\in\N$, let $b_1\ge\cdots\ge b_k$ and
+$c_1\le\cdots\le c_k$ be rational sequences, and let $T\in\Q$.
+Writing $\mathfrak S_k$ for the permutations of $\{1,\ldots,k\}$,
+\[
+ \boxed{\quad
+ \exists\pi\in\mathfrak S_k\ \forall j,\ b_j+c_{\pi(j)}\le T
+ \quad\Longleftrightarrow\quad
+ \forall j,\ b_j+c_j\le T.
+ \quad}
+\]
+No nonnegativity or strict-order assumption is required.
+\end{theorem}
+\begin{proof}
+For sufficiency choose the identity permutation. For necessity fix a
+feasible $\pi$ and $1\le j\le k$. The $j$ distinct images of
+$\{1,\ldots,j\}$ cannot all lie in $\{1,\ldots,j-1\}$, which has only
+$j-1$ elements. Thus there is an $i\le j$ with $\pi(i)\ge j$. Monotonicity
+of the two sorted sequences implies
+\[
+ b_j+c_j\ \le\ b_i+c_{\pi(i)}\ \le\ T.
+\]
+This proves each required inequality directly. It uses only the order and
+addition of rational numbers, so negative entries and ties cause no change.
+For $k=0$, there is exactly one empty permutation, and both families of
+inequalities are vacuous; the equivalence still holds.
+\end{proof}
+
+\begin{corollary}[Minimum possible largest matched cost]
+\label{cor:minimax}
+For $k>0$ and the same sorted sequences,
+\[
+ \min_{\pi\in\mathfrak S_k}\ \max_{1\le j\le k}
+       (b_j+c_{\pi(j)})
+ =\max_{1\le j\le k}(b_j+c_j).
+\]
+\end{corollary}
+\begin{proof}
+For any $\pi$ take $T=\max_j(b_j+c_{\pi(j)})$ in
+Theorem~\ref{thm:sorted}. Every $b_j+c_j$ is at most this maximum, so their
+maximum is a lower bound on every matching's maximum. The identity matching
+attains the bound. Both finite sets of maxima are nonempty because $k>0$.
+No undefined maximum of an empty set is used.
+\end{proof}
+
+\begin{corollary}[Cost multiset suffices for the remaining budget test]
+\label{cor:multiset}
+In Package A, suppose $|J|=|I|=k$ and the policy permits every bijection:
+$\Gamma_{\mathcal E,\lambda}=\Bij(J,I)$. Sort the exterior costs decreasingly
+as $b_1,\ldots,b_k$ and the internal costs increasingly as
+$c_1,\ldots,c_k$. The supplied witness glues if and only if
+\eqref{eq:target-visits}, \eqref{eq:target-flow}, and
+\eqref{eq:unchanged-budget} hold, and
+\[
+ b_j+c_j\le T\qquad(1\le j\le k).
+\]
+For fixed structural ledgers and fee function, with all such matchings
+admitted, the multiset of internal costs therefore determines the remaining
+budget feasibility. In particular, two valid witnesses with equal structural
+ledgers and equal cost multisets have identical gluing feasibility in every
+such unrestricted exterior context.
+\end{corollary}
+\begin{proof}
+The visit and flow equations do not depend on the bijection. The unchanged
+routes' budgets do not depend on it either. Sorting both finite sequences
+only renames the slots and excursions, and the policy allows all bijections
+before and after these renamings. The remaining existential budget condition
+is exactly Theorem~\ref{thm:sorted}; then use Theorem~\ref{thm:glue}.
+The sorted internal sequence is determined by the cost multiset, including
+multiplicities. Excursions and their two crossing ports are matched as whole
+objects throughout.
+\end{proof}
+
+The universal-matching hypothesis is essential. If ownership forces the
+identity matching, take exterior costs $(6,0)$, indexed internal costs
+$(2,1)$, and $T=7$. The forced sums are $(8,1)$, so the budget fails.
+Free matching instead pairs costs $(1,2)$ with $(6,0)$ and gives $(7,2)$,
+which passes. Thus a retained label constraint cannot be silently dropped.
+These internal costs can occur with one fixed fee function: let $s(h)=1$
+and $s(a)=0$ on the internal edge $h-a$; the valid walks $[h]$ and
+$[h,a,h]$ have costs $1$ and $2$. Swapping their assigned indices preserves
+the aggregate structural ledger and cost multiset, but changes the indexed
+costs seen by an identity-only policy.
+
+The multiset result concerns the budget matching of already given witnesses.
+It proves neither realizability of an arbitrary internal cost vector nor
+complete representability of an arbitrary subtree by a cost multiset. Route
+type restrictions, fixed ownership, or any other proper subset of allowed
+bijections require the actual constrained matching problem.
+
+\section{Boundary Cases and Verification Evidence}
+\label{sec:evidence}
+
+The empty witness family and empty slot family are allowed: there is a unique
+empty bijection if the policy includes it, and only the unchanged routes'
+budgets and aggregate target equations remain. A policy excluding that
+bijection is empty and makes gluing false. A singleton internal walk $[h]$
+contributes one visit to $h$, both cut-edge directions once, and cost $s(h)$.
+Signed costs must be retained exactly: an internal cost $10$ and exterior
+cost $-4$ meet budget $7$, despite the internal cost exceeding $7$. No local
+discarding rule based on an internal cost alone is implied. Repeated visits
+inside $S$ are allowed, but the legal route $[o,x,h,x,h,x,o]$ crosses the cut
+edge twice each way and lies outside the extraction theorem.
+
+The new results above are paper proofs. No theorem from this note has been
+added to Lean, and no PDF compilation was performed. An independent finite
+Python check was executed on 7 November 2026 with exact rational arithmetic.
+Its reproducible source is
+\code{tools/check_single_excursion_generalization.py}; from the repository
+root, run
+\begin{quote}
+\code{python tools/check_single_excursion_generalization.py}
+\end{quote}
+with ordinary Python (without optimization flags). It uses only the standard
+library, writes its report to standard output, and performs no file writes.
+Raw results remain under the ignored local directory
+\code{verification/runs/hub-interfaces-20261107/}. This is fresh finite
+regression evidence, not an unbounded proof or a replacement for the stated
+hypotheses.
+\begin{center}
+\begin{tabular}{@{}p{0.70\linewidth}r@{}}
+\toprule
+Check & Successful cases \\
+\midrule
+Nonstar internal shapes & 2 \\
+Internal closed walks with at most eight internal edges & 141 \\
+Single-route visit/flow/cost identities and exact extraction & 1,692 \\
+Same-interface single-witness comparisons across contexts & 234 \\
+Two-excursion gluing iff, including restricted and empty policies & 92,160 \\
+Rejection of a route with two entries and two exits & 2 \\
+Sorted rational vector pairs, lengths $0$ through $4$ & 1,742 \\
+Budget-matching equivalences at selected threshold budgets & 16,082 \\
+Prefix pigeonhole witnesses and their comparison inequalities & 125,216 \\
+Nonempty minimax equalities & 1,741 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The internal shapes were the path $h-u-a$ and the branching tree with edges
+$h-u,h-v,u-a,u-b,v-d$. Walk checks used four exterior slots and three fee
+schedules (zero, positive, and signed rational). Family checks sampled the
+first eight generated walks per shape. Matching checks used entries from
+$\{-2,-\tfrac12,0,\tfrac32\}$, all permutations for each tested vector
+pair, and budgets at and around the resulting cost thresholds. The fixed
+ownership counterexample, the nonstar count counterexample, and the signed
+cost cancellation example were also checked. Source-level checks for matched
+LaTeX environments, braces, and internal references were performed separately;
+they do not establish typesetting correctness.
+
+\end{document}
