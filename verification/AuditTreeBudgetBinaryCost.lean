@@ -1,0 +1,34 @@
+import LeanCompletion.UAV.TreeBudgetBinaryTotalWork
+import LeanCompletion.UAV.TreeBudgetBinaryCorrectness
+import LeanCompletion.UAV.TreeBudgetBinaryExamples
+import LeanCompletion.UAV.TreeBudgetCostedCandidatesExamples
+import LeanCompletion.UAV.TreeBudgetCostedInputExamples
+import LeanCompletion.UAV.TreeBudgetCostedExecutionExamples
+import LeanCompletion.UAV.TreeBudgetAddressedBlocksExamples
+import LeanCompletion.UAV.TreeBudgetSearchStoreExamples
+
+/-! Public audit entry points for the binary-input intrinsic-work package.
+Build the imported modules before invoking this file. These reports do not
+assert a complete evaluator-to-heap simulation or an addressed time bound. -/
+
+#print axioms UAVProof.TreeBudgetBinaryCodec.parseInput_canonical
+#print axioms UAVProof.TreeBudgetParentArray.toRootedTree
+#print axioms UAVProof.TreeBudgetCostedParsing.parseInputD_value
+#print axioms UAVProof.TreeBudgetCostedParsing.parseInputD_steps
+#print axioms UAVProof.TreeBudgetCostedInput.decodeRawCost_value
+#print axioms UAVProof.TreeBudgetCostedSearch.memoCost_observe
+#print axioms UAVProof.TreeBudgetBinaryPipeline.preparedSearch_observe
+#print axioms UAVProof.TreeBudgetBinaryOutput.matrixBitsCost_roundtrip
+#print axioms UAVProof.TreeBudgetCostedExecution.execute_value
+#print axioms UAVProof.TreeBudgetBinaryCorrectness.execute_output_correct
+#print axioms UAVProof.TreeBudgetBinaryCorrectness.execute_refines
+#print axioms UAVProof.TreeBudgetBinaryCorrectness.execute_success_sound
+#print axioms UAVProof.TreeBudgetBinarySearchStorage.search_allocations
+#print axioms UAVProof.TreeBudgetBinarySearchStorage.initial_address_width
+#print axioms UAVProof.TreeBudgetBinaryTotalWork.execute_steps_state_cube
+#print axioms UAVProof.TreeBudgetBinaryTotalWork.execute_steps_mass
+#print axioms UAVProof.TreeBudgetBinaryTotalWork.execute_steps_support_maximum
+#print axioms UAVProof.TreeBudgetTypedStore.allocateTyped_represents
+#print axioms UAVProof.TreeBudgetAddressedBlocks.copyBlockD_correct
+#print axioms UAVProof.TreeBudgetAddressedBlocks.copyBlockD_steps
+#print axioms UAVProof.TreeBudgetSearchStore.decodeCacheStore_correct

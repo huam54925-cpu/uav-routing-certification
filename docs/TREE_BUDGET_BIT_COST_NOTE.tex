@@ -54,8 +54,15 @@ The subsequent representation package verifies array-backed vector operations,
 signed integer scaling (including unreduced raw fractions), Boolean row-check
 equivalence, and bounds on every successful entry of a valid, duplicate-free,
 reachable cache. These are component correspondences. Ordered candidate-list
-correspondence, full search simulation, and a bit-cost semantics remain outside
-the Lean results in this package.
+correspondence, full search simulation, and a bit-cost semantics remained outside
+the Lean results in that package. The 7 November complete-vector package now
+proves exact answers, ordered caches, and all six event counts; see
+\texttt{TREE\_BUDGET\_VECTOR\_MEMO\_REFINEMENT\_STATUS.md}.
+The later binary-cost package adds a parsed-input-to-serialized-matrix costed
+executor and an intrinsic-work bound, with concrete storage components.
+Its full program-to-heap refinement and address-charged total-time theorem
+remain open; see \texttt{TREE\_BUDGET\_BINARY\_COST\_STATUS.md}.
+These later checks do not turn the paper RAM bound below into a Lean theorem.
 
 Sections~\ref{sec:task}--\ref{sec:time} are mathematical proofs about an
 explicit representation specified here, not claims of a completed Lean
@@ -219,8 +226,10 @@ prepending operation agree entry by entry.
 Counting a state call, a miss, a candidate test, each visited lookup entry,
 and each visited insertion-filter entry in these matching branches gives
 the stated equality of events. This proves a mathematical simulation;
-the complete explicit-vector search and this refinement have not been
-encoded or checked in Lean in this package.
+the original package did not encode or check this complete simulation in Lean.
+The later complete-vector package cited in the status section proves the
+answer, ordered-cache, and six-event correspondence. That functional result
+does not itself prove the address-charged cost refinement below.
 \end{proof}
 
 \section{Bits, arithmetic, and the complete cost ledger}\label{sec:ledger}
