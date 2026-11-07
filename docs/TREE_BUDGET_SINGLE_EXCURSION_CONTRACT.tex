@@ -1,0 +1,572 @@
+% Standalone paper specification; no new Lean theorem is asserted.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array,enumitem}
+\usepackage{xcolor,hyperref,xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\setlength{\emergencystretch}{3em}
+\setlist{itemsep=3pt,topsep=5pt}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{corollary}[definition]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{Remark}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\cat}{\mathbin{+\!+}}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\Compat}{\operatorname{Compatible}}
+\newcommand{\Glue}{\operatorname{Glue}}
+\newcommand{\Real}{\operatorname{Realizes}}
+\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/135cdef388c4d091aac78c9dd41cefddd57f202e/LeanCompletion/UAV/#1.lean}{#2}}
+\title{An Exact Contract for One Internal Excursion per Route\\
+  \large Issue \#19: Restricted Interface, Realization, and Contextual Replacement}
+\author{Project Research Note}
+\date{7 November 2026 (Asia/Tokyo)}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We specify a sufficient interface for a supplied family of internal excursions
+in a star component separated from the original depot by a non-depot edge.
+Every participating route enters that component once and leaves once.
+The interface keeps aggregate visits and directed flow, paired crossing
+identities and ownership labels, and a cost for each excursion. We give exact
+list-concatenation identities, a matrix characterization of realizability,
+extraction and reconstruction proofs, and a replacement theorem quantified over
+all admitted exterior contexts. Service fees and budgets may be signed rational
+numbers. These are paper proofs; no new Lean theorem, general subtree algorithm,
+minimality claim, or complexity classification is supplied.
+\end{abstract}
+
+\section{Fixed Model and Exact Scope}
+\label{sec:model}
+
+Fix a finite simple undirected tree $\mathcal T=(V,E)$, depot $o$, and an edge
+$\{x,h\}$ with $o,x,h$ pairwise distinct. Deleting this edge leaves a component
+$S$ not containing $o$. Assume
+\[
+ S=\{h\}\mathbin{\dot\cup} A,
+\]
+where $A$ is a finite set of leaves adjacent only to $h$.
+In particular $x\notin S$ and the only edge from $S$ to its complement is
+$\{x,h\}$. The exterior tree is otherwise unrestricted.
+Fix a fee function $s:V\to\Q$. No sign condition is imposed on $s$ or the
+eventual budget $T\in\Q$.
+
+For a finite vertex list $L$, let $N_L(v)$ count occurrences of $v$, and let
+$F_L(u,v)$ count occurrences of $(u,v)$ in $\operatorname{zip}(L,\operatorname{tail}L)$.
+A full route $r$ starts and ends at $o$, has at least one intervening vertex,
+has no intervening $o$, and has consecutive vertices joined by tree edges.
+Its service cost is
+\[
+ C_s(r)=\sum_{v\ne o}s(v)N_r(v).
+\]
+The two depot occurrences are not charged, even if $s(o)\ne0$.
+The graph-support requirement here is explicit: repository
+\src{RouteToFlow}{\code{LegalRoute}} itself only requires unequal adjacent
+vertices, not membership in a specified graph.
+
+For fixed demands $d:V\to\N$, flow $f:V\times V\to\N$, and family size $m$,
+an exact feasible family has $m$ such routes, aggregate visits $d(v)$ for
+$v\ne o$, aggregate directed flow $f(u,v)$ for all $u,v$, and cost at most $T$
+on every route. This agrees with
+\src{SupportExactFeasibility}{\code{SupportExactFeasibility.ExactFeasible}}
+on the constructed tree-supported families. The value $d(o)$ is ignored.
+There are no travel charges, time windows, precedence constraints, or
+route-specific visit/flow prescriptions in this contract.
+
+\section{Pieces, Crossing Identities, and the Matching Policy}
+\label{sec:pieces}
+
+\begin{definition}[Internal witness]
+Fix a finite excursion index set $I$. A witness $P=(W_i)_{i\in I}$ is a family
+of lists determined by words $w_i=[a_{i,1},\ldots,a_{i,q_i}]$ over $A$:
+\[
+ W_i=[h,a_{i,1},h,\ldots,a_{i,q_i},h].
+\]
+For the empty word the list is $[h]$, with one hub occurrence.
+All repetitions of leaves are permitted. Define $n_i(a)=N_{w_i}(a)$.
+The completed local walk is $Q_i=[x]\cat W_i\cat[x]$.
+\end{definition}
+
+These are partial walks in the original tree, not routes with artificial depot
+$h$. Treating them as \code{LegalRoute h} would forbid legitimate intermediate
+hub visits.
+
+Give excursion $i$ the two distinct crossing identities
+$e_i^+=(i,+)$ and $e_i^-=(i,-)$, directed $x\to h$ and $h\to x$, respectively.
+Their pairing is $e_i^+\leftrightarrow e_i^-$.
+Each also carries the same excursion identity $i$ and ownership/type label
+$\lambda(i)$. These are identities of occurrences, not merely geometric
+endpoints. Absolute positions in a full route list are not stored; extraction
+locates those positions and assigns the canonical identities.
+
+\begin{definition}[Admitted exterior context]
+An exterior context $E_0$ consists of disjoint finite index sets $J$ and $K$,
+with $|J|+|K|=m$, and the following structurally validated pieces:
+\begin{enumerate}
+ \item For each $j\in J$, a prefix $U_j$ starting at $o$ and ending at $x$,
+ and a suffix $V_j$ starting at $x$ and ending at $o$. Their vertices lie
+ outside $S$, their consecutive pairs are tree edges, $o$ occurs in $U_j$
+ only at its first position, and in $V_j$ only at its last position.
+ \item For each $k\in K$, a full legal tree-supported route $R_k$ avoiding
+ $S$. These routes have no slot and will be retained unchanged.
+ \item An allowed set $\Gamma_{E_0,\lambda}\subseteq\operatorname{Bij}(J,I)$.
+ Its definition may use the slot identities, exterior labels, and retained
+ internal ownership labels and paired ports. It must not inspect deleted
+ internal order or other data absent from the interface.
+\end{enumerate}
+There is exactly one slot on each participating route, and no other
+participating routes. Budget and aggregate exactness are checked later.
+\end{definition}
+
+The permitted set can be a singleton for fixed ownership, all bijections for
+fully exchangeable routes, or a subset defined by retained labels. It can be
+empty. Matching $j$ to $i$ moves $e_i^+,e_i^-$ and $c_i$ together. A matching of
+inward and outward crossings independently is not an admitted operation.
+Labels in this first contract constrain ownership only; any further
+leaf/vehicle restrictions would require their own realization assumptions.
+
+The full list assigned to a slot under $\pi\in\Gamma_{E_0,\lambda}$ is
+\begin{equation}\label{eq:gluelist}
+ G_j^\pi=U_j\cat W_{\pi(j)}\cat V_j.
+\end{equation}
+This is ordinary concatenation, without identifying endpoints or adding an
+$x\to x$ edge. The last $x$ in $U_j$ and the first $x$ in $V_j$ are distinct
+visits separated by the nonempty list $W_{\pi(j)}$.
+
+\section{The Three Exact Accounting Identities}
+\label{sec:identities}
+
+For a single slot and excursion define, for $v\ne o$,
+\begin{align*}
+ N_j^{\rm out}(v)&=N_{U_j}(v)+N_{V_j}(v),&
+ N_i^{\rm in}(v)&=N_{W_i}(v),\\
+ F_j^{\rm out}(u,v)&=F_{U_j}(u,v)+F_{V_j}(u,v),&
+ F_i^{\rm in}(u,v)&=F_{Q_i}(u,v),\\
+ b_j&=\sum_{v\ne o}s(v)N_j^{\rm out}(v),&
+ c_i&=\sum_{v\ne o}s(v)N_i^{\rm in}(v).
+\end{align*}
+Internal flow includes both separator crossings; internal visits and fees
+exclude $x$. Service and flow intentionally have different boundary ownership.
+In particular $c_i$ is not the service cost of all non-depot vertices of $Q_i$.
+
+\begin{lemma}[Exact concatenation]\label{lem:additive}
+For any admitted pieces and any matching, the resulting route satisfies
+\begin{align}
+ N_{G_j^\pi}(v)&=N_j^{\rm out}(v)+N_{\pi(j)}^{\rm in}(v)
+ &&(v\ne o),\label{eq:visits}\\
+ F_{G_j^\pi}(u,v)&=F_j^{\rm out}(u,v)+F_{\pi(j)}^{\rm in}(u,v)
+ &&(u,v\in V),\label{eq:flow}\\
+ C_s(G_j^\pi)&=b_j+c_{\pi(j)}.\label{eq:cost}
+\end{align}
+\end{lemma}
+\begin{proof}
+Occurrences in a concatenation are the disjoint union of occurrences in the
+three lists, proving \eqref{eq:visits}. All three lists are nonempty.
+The adjacent pairs consist of the pairs within each list and exactly two
+new pairs, from the last vertex of $U_j$ to the first of $W_{\pi(j)}$,
+and from the last of $W_{\pi(j)}$ to the first of $V_j$.
+Those pairs are $(x,h)$ and $(h,x)$, precisely the extra pairs in $Q_{\pi(j)}$
+beyond $W_{\pi(j)}$. This proves \eqref{eq:flow}, including when $W=[h]$.
+Multiplying \eqref{eq:visits} by $s(v)$ and summing proves \eqref{eq:cost}.
+No inequality or sign assumption is used.
+\end{proof}
+
+The star gives the more explicit formulas
+\begin{align}
+ N_i^{\rm in}(h)&=1+\sum_{a\in A}n_i(a),&
+ N_i^{\rm in}(a)&=n_i(a),\label{eq:starvisits}\\
+ c_i&=s(h)+\sum_{a\in A}(s(a)+s(h))n_i(a).\label{eq:starcost}
+\end{align}
+All other internal visits vanish. The internal flow is one on each separator
+direction, $n_i(a)$ on each direction of the spoke $\{h,a\}$, and zero
+elsewhere. If $w_i=[]$, then $c_i=s(h)$, not $0$ or $2s(h)$.
+
+\section{Interface and a Complete Realizability Criterion}
+\label{sec:realization}
+
+\begin{definition}[Summary and realization]
+For fixed tree, $s$, $I$, and labels $\lambda$, retain
+\[
+ \Sigma(P)=(I,\lambda,\{e_i^+\leftrightarrow e_i^-\}_{i\in I},D,F,c),
+ \quad D=\sum_i N_i^{\rm in},\quad F=\sum_i F_i^{\rm in},\quad c=(c_i)_{i\in I}.
+\]
+We extend $D$ by zero at $o$. A candidate summary $\sigma$ has these types,
+but need not be realizable. Define $\Real(P,\sigma)$ to mean that $P$ is a
+valid witness with the specified labels and $\Sigma(P)=\sigma$.
+Define $\operatorname{Realizable}(\sigma)$ by $\exists P\,\Real(P,\sigma)$.
+\end{definition}
+
+\begin{theorem}[Star realization iff]\label{thm:realization}
+Let $k=|I|$. A candidate summary with the canonical paired ports is realizable
+if and only if there are $H:A\to\N$ and $n:I\times A\to\N$ satisfying all
+of the following equalities:
+\begin{align}
+ \sum_{i\in I}n_i(a)&=H(a) &&(a\in A),\label{eq:cols}\\
+ D(a)&=H(a) &&(a\in A),\notag\\
+ D(h)&=k+\sum_{a\in A}H(a),& D(v)&=0\quad(v\notin S),\label{eq:ledgerD}\\
+ F(x,h)&=F(h,x)=k,& F(h,a)&=F(a,h)=H(a)\quad(a\in A),\label{eq:ledgerF}\\
+ F(u,v)&=0 &&\text{on all other ordered pairs},\notag\\
+ c_i&=s(h)+\sum_{a\in A}(s(a)+s(h))n_i(a) &&(i\in I).\label{eq:rowcost}
+\end{align}
+There is no local condition $c_i\le T$.
+\end{theorem}
+\begin{proof}
+From a witness take $n_i(a)$ to be its leaf counts and $H(a)$ their column
+sums. Equations \eqref{eq:starvisits}--\eqref{eq:starcost} and the explicit
+spoke/separator flow counts give every displayed equality.
+
+Conversely, fix an ordering of the finite set $A$. For each row form a word
+by repeating $a$ exactly $n_i(a)$ times, in that order, and insert $h$ before,
+between, and after those letters. This produces the required $W_i$, including
+$[h]$ for a zero row. Every consecutive pair is a spoke edge. Adding the two
+separator edges produces $Q_i$ with the required paired crossings. Attach
+the prescribed labels to the rows. The displayed equations verify all of
+$D,F,c$, so this witness realizes the identical candidate summary.
+\end{proof}
+
+Thus an arbitrary rational cost vector, even with the right sum, is not a
+certificate of realizability. For example $I=\{1\}$, $A=\{a\}$,
+$H(a)=1$, $s(h)=0$, $s(a)=2$ forces $c_1=2$; $c_1=1$ is impossible.
+More strongly, with $I=\{1,2\}$ and the same leaf data, $c=(1,1)$ has the
+correct total cost $2$ but is unrealizable: its sole unit column must be
+$(1,0)$ or $(0,1)$, giving costs $(2,0)$ or $(0,2)$.
+Returning to the one-row example with correct cost, $D(h)=1$ instead of $2$, or
+$F(x,h)=0$ instead of $1$, is also impossible. Column sums and cost equations
+alone would miss these malformed ledgers.
+
+If $I=\varnothing$, \eqref{eq:cols} forces $H=0$ and all ledgers vanish.
+If $A=\varnothing$, every row is hub-only: $D(h)=k$, separator flow is $k$
+in each direction, and every $c_i=s(h)$. These are different boundary cases.
+
+\begin{corollary}[Finite image for fixed counts and labels]\label{cor:finite}
+Fix $I,A,H,s$, labels and the canonical ports. The set of realizable summaries
+whose leaf totals equal this fixed $H$ is finite.
+For $k=|I|>0$, its cardinality is at most
+\[
+ \prod_{a\in A}\binom{H(a)+k-1}{k-1}
+ \ \le\ \prod_{a\in A}(H(a)+1)^k.
+\]
+For $k=0$, it has one element if $H=0$, and no elements otherwise.
+\end{corollary}
+\begin{proof}
+A column is a weak composition of $H(a)$ into $k$ natural parts. Choosing
+columns independently gives the first product, and each of the $k$ entries
+lies in $\{0,\ldots,H(a)\}$, giving the second. The summary is an image of
+this finite matrix set; different matrices can have identical costs. Empty
+columns and empty rows are handled as above.
+\end{proof}
+This bound concerns fixed finite indexing and fixed labels, not arbitrary
+port names or unbounded families. It proves neither a small state space nor
+an encoding-length or runtime bound. $D$ and $F$ are deliberately redundant
+in this star; retaining both makes the two global exactness checks explicit.
+
+\section{Compatibility, Reconstruction, and Extraction}
+\label{sec:main}
+
+Include unchanged routes in the exterior totals:
+\begin{align*}
+ D^{\rm out}(v)&=\sum_{j\in J}N_j^{\rm out}(v)+\sum_{k\in K}N_{R_k}(v)
+ &&(v\ne o),\\
+ F^{\rm out}(u,v)&=\sum_{j\in J}F_j^{\rm out}(u,v)+\sum_{k\in K}F_{R_k}(u,v).
+\end{align*}
+Set $\Compat(\sigma,E_0;d,f,T)$ to mean
+\begin{equation}\label{eq:compat}
+ \begin{gathered}
+ \exists\pi\in\Gamma_{E_0,\lambda},\qquad
+ D^{\rm out}(v)+D(v)=d(v)\quad(v\ne o),\\
+ F^{\rm out}(u,v)+F(u,v)=f(u,v)\quad(u,v\in V),\\
+ b_j+c_{\pi(j)}\le T\quad(j\in J),\qquad
+ C_s(R_k)\le T\quad(k\in K).
+ \end{gathered}
+\end{equation}
+An unequal number of excursions and slots makes the bijection set empty.
+An explicit realization obligation is separate from this arithmetic predicate.
+
+For a supplied valid $P$, let $\Glue(P,E_0;d,f,T)$ mean that some allowed
+matching yields an exact feasible family consisting of the actual lists
+in \eqref{eq:gluelist} and the actual unchanged $R_k$.
+It does not permit replacing $P$ by a different realization, rerouting the
+exterior, or silently reordering a given interior word.
+
+\begin{theorem}[Supplied-witness exact gluing contract]\label{thm:glue}
+For every valid $P$ and structurally admitted $E_0$,
+\[
+ \boxed{\Glue(P,E_0;d,f,T)\quad\Longleftrightarrow\quad
+ \Compat(\Sigma(P),E_0;d,f,T).}
+\]
+\end{theorem}
+\begin{proof}
+Suppose gluing succeeds with $\pi$. Apply Lemma \ref{lem:additive} on each
+participating route. Summing and reindexing the interior sums by the bijection
+$\pi$ gives the two aggregate equations in \eqref{eq:compat}. Individual
+budget bounds give its remaining inequalities, including those for unchanged
+routes. This establishes necessity for the same matching.
+
+Conversely choose the matching in \eqref{eq:compat} and construct the lists
+\eqref{eq:gluelist}. Each starts and ends at $o$. There is no internal depot:
+the pieces exclude it except at their specified outer endpoints, and $S$
+excludes it. Each route has a nonempty task sequence because $W_{\pi(j)}$
+contains $h$. Within the pieces adjacency holds by assumption; the two new
+adjacent pairs are the distinct-vertex tree edges $(x,h)$ and $(h,x)$.
+Thus these are legal routes on the original tree. Their number, together
+with the unchanged routes, is $|J|+|K|=m$.
+Choose any equivalence from the disjoint union $J\sqcup K$ to
+$\operatorname{Fin}(m)$ when interfacing with the repository predicate;
+finite reindexing changes none of the sums or individual budget claims.
+Lemma \ref{lem:additive}, bijective reindexing, and \eqref{eq:compat} give
+exact total visits, exact total directed flow, and all route budgets.
+
+Finally every participating route remains in the root branch containing $x$:
+all its non-depot vertices form a connected walk in $\mathcal T-\{o\}$
+containing $x$. Distinct components of that graph are distinct root branches.
+Unchanged legal routes likewise stay within their respective root branches.
+\end{proof}
+
+\begin{lemma}[Extraction from complete routes]\label{lem:extract}
+Suppose an exact feasible tree-supported family is partitioned into $J,K$,
+where every $j\in J$ traverses $(x,h)$ exactly once and $(h,x)$ exactly once,
+and every $k\in K$ avoids $S$. Suppose also that the supplied ownership
+policy admits the resulting pairing of slots with excursion identities.
+Then cutting at these crossings yields valid $P,E_0$ with
+$\Compat(\Sigma(P),E_0;d,f,T)$ and recovers the original full lists by gluing.
+\end{lemma}
+\begin{proof}
+The route begins outside $S$. Since the separator is its only connection to
+the complement, its first crossing must be inward and its second outward.
+Before the inward crossing and after the outward crossing it stays outside;
+between them it stays inside. Otherwise another separator crossing would
+be necessary. Cut after the $x$ before entry and before the $x$ after exit.
+The resulting pieces are $U_j,W_i,V_j$, with each occurrence retained once.
+In a star a walk from $h$ to $h$ alternates the hub with leaves, so $W_i$
+has the required form, including the possible singleton $[h]$.
+The complete-route assumptions give the external endpoint, support, and
+depot-exclusion conditions. Label the two identified crossing occurrences
+by $(i,+),(i,-)$; the assumed policy permits their matching.
+Concatenation returns the identical original list. Lemma \ref{lem:additive}
+and exact feasibility now give compatibility as in Theorem \ref{thm:glue}.
+\end{proof}
+
+\begin{corollary}[Uniform contextual replacement]\label{cor:replace}
+Fix the tree, $s,I$, ownership labels, and policy family described in
+Section \ref{sec:pieces}. If $P,P'$ are valid and $\Sigma(P)=\Sigma(P')$, then
+for every structurally admitted $E_0$ and every $d,f,T$,
+\[
+ \Glue(P,E_0;d,f,T)\ \Longleftrightarrow\ \Glue(P',E_0;d,f,T).
+\]
+\end{corollary}
+\begin{proof}
+Both sides are equivalent to the same compatibility predicate by
+Theorem \ref{thm:glue}. The permitted matching sets agree because their
+definition only uses retained metadata and the same exterior context.
+\end{proof}
+The fee function is fixed: equality of cost vectors for one $s$ does not
+assert equality for every other fee function. Under an index isomorphism,
+labels, paired ports, and costs must all be transported together, and allowed
+matchings transported accordingly; an unlabelled cost multiset is insufficient
+for an arbitrary fixed-ownership policy.
+
+\begin{corollary}[Abstract-state existence]\label{cor:abstract}
+For every structurally admitted exterior context $E_0$ and arbitrary candidate
+summary $\sigma$,
+\[
+ \begin{aligned}
+ &\exists P\,\bigl(\Real(P,\sigma)\land\Glue(P,E_0;d,f,T)\bigr)\\
+ &\qquad\Longleftrightarrow\quad
+ \operatorname{Realizable}(\sigma)\land\Compat(\sigma,E_0;d,f,T).
+ \end{aligned}
+\]
+If the right side holds, every realization of $\sigma$ glues successfully.
+\end{corollary}
+\begin{proof}
+Use Theorem \ref{thm:glue} and the definition of realization in both directions.
+The final statement follows by applying the same theorem to any realization.
+\end{proof}
+This distinguishes a theorem about each supplied witness from existential
+search over all realizations. It does not identify the discarded words or
+provide a general recursive state transition.
+
+\section{Boundary Tests and Failure Modes}
+\label{sec:tests}
+
+Use the original separator example with edges
+$o-x,x-h,h-a,h-b,x-c_1,x-c_2$ and exterior pieces
+\[
+ U_j=[o,x,c_j,x],\quad V_j=[x,o].
+\]
+With $s(a)=s(b)=3$, $s(c_j)=4$, and $s(x)=s(h)=0$, the witnesses
+\[
+ ([h,a,h,b,h],[h])\quad\hbox{and}\quad([h,a,h],[h,b,h])
+\]
+have identical $D,F$, but respective cost vectors $(6,0)$ and $(3,3)$.
+Their full route costs are $(10,4)$ and $(7,7)$. At $T=7$ the first fails
+even with all bijections allowed; the second passes. Both produce demands
+$d(x)=6,d(h)=4,d(a)=d(b)=d(c_1)=d(c_2)=1$.
+
+\begin{longtable}{@{}p{.27\textwidth}p{.67\textwidth}@{}}
+\toprule Test & Required conclusion\\\midrule
+\endfirsthead
+\toprule Test & Required conclusion\\\midrule
+\endhead
+Boundary service & If $s(x)=t$, each exterior cost is $4+3t$.
+The two slot endpoints at $x$ are separate charged visits.\\[3pt]
+Hub service & If $s(h)=u$, the bad internal costs are $(6+3u,u)$;
+the good ones are $(3+2u,3+2u)$.\\[3pt]
+Hub-only word & $[h]$ has one hub visit, two separator crossings,
+and cost $s(h)$. It remains a valid local witness.\\[3pt]
+Signed cancellation & $c=10,b=-4,T=7$ is accepted. Realize it on
+$o-x-h-a$ with $U=[o,x],V=[x,o],W=[h,a,h]$, fees
+$s(x)=-2,s(h)=0,s(a)=10$. A local test $c\le T$ rejects incorrectly.\\[3pt]
+Ownership & For $b=(6,0),c=(2,1),T=7$, the identity matching gives
+$(8,1)$ and fails; the transposition gives $(7,2)$ and passes.
+These data are realizable with two leaves of fees $2,1$, hub fee zero,
+and exterior side-leaf fees $6,0$.\\[3pt]
+Order loss & $[h,a,h,b,h]$ and $[h,b,h,a,h]$ have the same interface.
+The replacement theorem accepts exactly the same admitted contexts.\\[3pt]
+Zero participants & $I=J=\varnothing$ gives zero internal ledgers;
+with the usual unique empty matching only the unchanged routes remain.
+Their demands, flow, and budgets still require checking.\\[3pt]
+Empty leaf set & $A=\varnothing$ permits any fixed number of hub-only
+excursions; it does not force $I=\varnothing$.\\[3pt]
+Repeated entry & $[o,x,h,x,h,x,o]$ is a legal global tree walk but has
+two separator round trips. It is outside the extraction theorem.\\[3pt]
+False realization & Wrong hub count, separator flow, off-support flow,
+or unattainable costs must fail Theorem \ref{thm:realization}.\\[3pt]
+Extra constraints & Per-route flow or demand, order-sensitive costs,
+and hidden matching restrictions are outside this interface. Their data
+cannot be inferred from $D,F,c$.\\
+\bottomrule
+\end{longtable}
+
+Signed fees preserve every equality used here. They invalidate an unsupported
+monotone pruning argument, not this final-budget contract. Unlike decomposition
+at a depot-root branch, the two pieces belong to the same route and can cancel
+each other's signed costs. Other root branches cannot contribute such a
+cancellation to that route.
+
+\section{Implementation Map and Staged Work}
+\label{sec:plan}
+
+The following are proposed proof obligations, not declarations already added
+to Lean. A future implementation should use \code{List V} for partial pieces,
+then construct \code{LegalRoute o} only after gluing. Its task list drops the
+two outer depot occurrences of the full glued list.
+
+\begin{longtable}{@{}p{.38\textwidth}p{.56\textwidth}@{}}
+\toprule Proposed declaration & Mathematical obligation\\\midrule
+\endfirsthead
+\toprule Proposed declaration & Mathematical obligation\\\midrule
+\endhead
+\code{SingleExcursion}, \code{ExteriorSlot} &
+Original-tree support, nonempty internal list, endpoint and depot conditions.\\[3pt]
+\code{BoundaryInterface}, \code{Realizes} &
+Canonical paired occurrence IDs, retained labels, aggregate ledgers and
+indexed costs; realization does not impose a local budget.\\[3pt]
+\code{realizable_iff_matrix} & Theorem \ref{thm:realization}, including
+all zero coordinates and the zero-row/zero-column cases.\\[3pt]
+\code{glue_visits}, \code{glue_flow}, \code{glue_service} &
+Lemma \ref{lem:additive}; all service counts exclude the original depot.\\[3pt]
+\code{Compatible}, \code{glue_iff_compatible} &
+Equation \eqref{eq:compat} and Theorem \ref{thm:glue}, including
+unchanged routes and bijective reindexing.\\[3pt]
+\code{extract_sound} & Lemma \ref{lem:extract}; the allowed policy
+must admit the extracted ownership assignment.\\[3pt]
+\code{same_interface_glue_iff} & Corollary \ref{cor:replace}, with fixed
+fees and metadata-only matching policies.\\
+\bottomrule
+\end{longtable}
+
+Existing source interfaces to reuse are
+\src{Flow}{\code{routeFlow}},
+\src{TotalFlow}{\code{totalRouteFlow}} and \code{totalVisitCount},
+\src{ResourceCuts}{\code{ResourceCuts.routeServiceIn}}, and
+\src{RouteToFlow}{\code{LegalRoute.vertices}}.
+The formula \eqref{eq:starcost} agrees with
+\src{HubSpokePacking}{\code{HubSpokePacking.MatrixFeasible}}, but its
+interpretation here is an internal contribution, not a standalone route
+budget. Do not apply the hub theorem by changing the original depot to $h$.
+
+\begin{enumerate}
+ \item \textbf{This batch: paper contract and finite falsification checks.}
+ Deliver the definitions, three identities, realization iff, gluing iff,
+ extraction and replacement results above; independently count concrete
+ lists for the boundary cases. Stop before new Lean modules or a searcher.
+ Finite tests support error detection; they do not prove the universal claims.
+ \item \textbf{Next implementation batch: Issue \#23 finite semantics.}
+ Reuse \code{HubSpokePacking.exact_iff_matrix}. Fix items
+ $\operatorname{Fin}(3m)$, positive integer $B,a_i$, inequalities
+ $B<4a_i$ and $2a_i<B$, and total weight $mB$.
+ Prove unit columns give unique row assignment, every row saturates $B$,
+ and every saturated group contains exactly three items. Compose the
+ strict-hub exact-feasibility/three-partition iff, including $m=0$.
+ Validate new modules locally and audit their axiom dependencies; include
+ feasible/infeasible examples and strict-boundary regressions.
+ \item \textbf{Later bounded Issue \#19 Lean batch.}
+ Start with the concatenation identities and original-depot legality.
+ Then formalize matrix realization and the supplied-witness iff. The
+ acceptance target is Corollary \ref{cor:replace} for this exact scope,
+ not a general interface inferred from a few examples.
+ \item \textbf{Separate later research.}
+ Multiple excursions per route, multiple boundary vertices, pairing order,
+ detached cycles, recursive realization/transition completeness, and
+ comparison to existing tree-routing interfaces need new specifications.
+ Full ordered-search simulation and bit-cost accounting stay with \#22;
+ encoding reductions and hardness/NP-membership claims stay separate from
+ \#23's semantic package. No current issue is closed by this note.
+\end{enumerate}
+
+\section*{Evidence and Provenance}
+The source baseline is the research branch head
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/135cdef388c4d091aac78c9dd41cefddd57f202e}{\code{135cdef}},
+checked on 7 November 2026. This document develops the user-supplied
+single-excursion proposal and the paper counterexample in Section 3 of
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/135cdef388c4d091aac78c9dd41cefddd57f202e/docs/TREE_BUDGET_ALLOCATION_BOUNDARIES.tex}{the allocation-boundaries note}.
+The public task boundaries are
+\href{https://github.com/huam54925-cpu/uav-routing-certification/issues/19}{Issue \#19}
+and \href{https://github.com/huam54925-cpu/uav-routing-certification/issues/23}{Issue \#23}.
+No literature-priority or general novelty assessment is made here.
+
+\paragraph{New finite checks in this batch.}
+An independent Python 3.13.4 script using exact \code{fractions.Fraction}
+arithmetic completed successfully. It enumerated two-leaf words of length
+at most three on two participating routes, four exterior slots per route,
+four fee schedules (including signed rational fees), six budgets, and fixed
+versus exchangeable matching. This gave 14,400 family/context/fee combinations,
+57,600 direct list-identity and cut/rejoin checks, 172,800 budget/matching
+comparisons, and 28,800 rejections of perturbed demand or flow targets.
+Across the enumerated contexts, 537 additional families agreed with a previous
+family having the same interface. Separately, the entire matrix image and
+ordered-witness image agreed for each of the 27 parameter choices
+$k,H(a),H(b)\in\{0,1,2\}$ under one fixed signed rational fee function.
+Named regressions cover the original separation, nonzero boundary/hub fees,
+hub-only excursions, signed cancellation, ownership, double-entry exclusion,
+empty cases, unchanged routes, depot-fee exclusion, and the unattainable
+cost vector $(1,1)$. These are bounded falsification checks, not proofs of
+the universal theorems or a test of arbitrary metadata policies.
+
+The local reproduction command, from the repository root, is
+\begin{quote}
+\code{py verification/runs/issue19-single-excursion-20261107/check_single_excursion.py}
+\end{quote}
+The generated \code{results.json} remains in that ignored directory.
+Static source checks also verify balanced braces and environments, unique
+labels, resolved internal references, and the existence of cited local Lean
+modules. They do not validate TeX layout. A before/after SHA-256 comparison
+found no changes to the 121 existing Lean/configuration/frozen-target files
+included in the preservation snapshot.
+
+This is standalone English LaTeX source for pdfLaTeX or XeLaTeX.
+The present batch adds no Lean source and executes no Lean build or axiom
+audit. Historical results are only reused as source interfaces.
+LaTeX compilation and rendered PDF inspection have not been performed.
+Local finite-check scripts and raw run output belong under ignored
+\code{verification/runs/issue19-single-excursion-20261107/}.
+
+\end{document}
