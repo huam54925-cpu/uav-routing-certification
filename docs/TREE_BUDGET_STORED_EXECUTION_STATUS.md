@@ -69,4 +69,10 @@ lake env lean verification/AuditTreeBudgetStoredExecution.lean
 
 本包的本地导入闭包为 110 个模块。与发布前已获取的远端研究分支逐文件对照，已有依赖仅 `TreeSupportExact` 与 `TreeRouteDecomposition` 的末尾空白不同；这两处差异不发布。固定工具链及公开仓库九项依赖的 URL、提交版本一致。开发目录另有 Prim、repl、LeanArchitect；它们不在本包导入闭包中。发布目录的配置和依赖固定版本保留原样，不以开发目录配置覆盖。
 
-原始日志仍留在本地忽略目录。迁移后的验证复用范围由实际迁移结果另行记录。
+原始日志仍留在本地忽略目录。
+
+## 研究分支迁移记录
+
+发布前重新经代理 fetch，远端研究分支实际仍为 `79dc3e589eed8ef1a5e8d0beea84e848b6302631`。先在 `codex/shared-store-execution-20261108` 保全提交 `7b1906961a5e8498ee8495e4e4d004ed76ef8ad4`，再将原研究分支快进到最新远端，以普通 cherry-pick 转入本包，得到源码提交 `595343965a91882e7894a9203a295d72009a71e0`。迁移没有冲突，33 个发布文件的树内容与保全提交完全一致；27 个 Lean 模块和公开审计源码与上述实际通过验证的文件逐字节一致。
+
+**迁移后的 Lean 检查复用上述本次验证记录，未在发布目录重新运行构建或另建环境。** 迁移未改变任何证明内容。发布仅面向 `huam54925-cpu/uav-routing-certification` 的 `research/structural-service-cuts-20261023`，采用普通提交及非强制推送；临时分支保留为本地备份。#22 保持开放，历史记录、依赖版本及原始日志边界不变。
