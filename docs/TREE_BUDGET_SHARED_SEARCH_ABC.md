@@ -71,7 +71,7 @@ work/allocation fields. `memoD_preserves` additionally retains the represented
 caller frames, original candidates and original residual vector. Frame
 constructors and frame persistence have separate proofs.
 
-## Model and remaining work
+## Model and completed D/E integration
 
 Heap cells are the existing typed append-only random-access reference model.
 Variable-sized parsing, encoding and arithmetic buffers use the existing
@@ -115,3 +115,8 @@ passed. The 26 audited contracts depend only on subsets of `propext`,
 `Classical.choice` and `Quot.sound`; none reports `sorryAx` or an additional
 axiom. Lake still emits style/flexible-tactic and `#guard` linter warnings; this
 is a successful compilation and proof audit, not a warning-free lint result.
+
+The later A–E final check recompiled all 25 executable regressions and audited
+311 explicit declarations in 27 modules. See the [final validation and publication
+record](TREE_BUDGET_STORED_EXECUTION_STATUS.md); the initial 11/26 figures above
+remain the historical A–C check, not the final package totals.

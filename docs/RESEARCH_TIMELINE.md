@@ -1,19 +1,21 @@
 # 研究时间线：历史应用与精确路线分解
 
-本页按研究阶段整理已有材料。当前主线是一般精确路线分解、逐路线预算与表示接口；历史 Case1 材料保留来源，不作为当前推进目标。本次 2026-11-07 状态整理没有重跑历史实验或 Lean 验证。
+本页按研究阶段整理已有材料。当前主线是一般精确路线分解、逐路线预算与表示接口；历史 Case1 材料保留来源，不作为当前推进目标。本次 2026-11-08 状态整理没有重跑历史实验或 Lean 验证。
 
-## 当前研究入口（2026-11-07）
+## 当前研究入口（2026-11-08）
 
 | 发布阶段 | 已完成范围 | 证据与边界 |
 | --- | --- | --- |
 | 11 月 1—4 日 | 树流存在/分解、预算矩阵、有限搜索、根分解、压缩、完整记忆化与受控测量 | [分支总览](../README.md)及各批记录；不声称新快速算法 |
-| 11 月 5 日 | #20 计数、参数、表示组件与成功缓存成员界，按范围关闭 | [阶段记录](TREE_BUDGET_OPERATION_BOUNDS_STATUS.md)；完整位成本仍是纸面证明 |
+| 11 月 5 日 | #20 计数、参数、表示组件与成功缓存成员界，按范围关闭 | [阶段记录](TREE_BUDGET_OPERATION_BOUNDS_STATUS.md)；在该阶段完整位成本仍是纸面证明 |
 | 11 月 6 日 | #22 候选列表顺序/重数对应；#21 第一表示桥梁包 | [候选包](TREE_BUDGET_VECTOR_CANDIDATES_STATUS.md)、[桥梁包](TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md) |
 | 11 月 7 日 dcc3db8 | #23 三划分语义 Lean iff；#19 单次游程纸面契约 | [语义验收](HUB_THREE_PARTITION_STATUS.md)；两条研究线证据不同 |
 | 11 月 7 日 86993ec | 二进制编码、长度和受限复杂度文稿及 README | [纸面编码](HUB_THREE_PARTITION_ENCODING.tex)，无新增 Lean 文件 |
 | 11 月 7 日 2a64246 | 分配检查器与编号模型 Lean 接口；#19 A/B 纸面推广；公开有限检查和审计源 | [发布记录](HUB_INTERFACES_STATUS.md)；13 个文件含 4 个新 Lean 模块，复用开发阶段验证 |
+| 11 月 7 日：完整向量搜索及 79dc3e5 | 有序答案/缓存/六事件精化，二进制解析、算术、输出与内在工作量界 | [向量搜索](TREE_BUDGET_VECTOR_MEMO_REFINEMENT_STATUS.md)、[二进制历史包](TREE_BUDGET_BINARY_COST_STATUS.md)；当时完整程序到堆执行精化仍缺失 |
+| 11 月 8 日 5953439 / dda05c8 | A–E 共享存储、完整输入输出精化、累计分配/容量/地址位宽与总成本；所选模型内 FPT(M)、FPT(t,U) | [实现、提交说明及迁移](TREE_BUDGET_STORED_EXECUTION_STATUS.md)；25 个回归、311 项声明审计无 sorryAx，发布复用原环境验证 |
 
-#19/#21/#22/#23 保持开放，各自剩余范围见[总路线图 #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)。二进制编解码/长度形式化按约定暂缓；一般内部摘要可实现性、多次穿越和递归接口尚未解决。
+#19/#21/#22/#23 保持开放，各自范围见[总路线图 #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)。#22 的 A–E 和[文献模型对照](TREE_BUDGET_COST_MODEL_COMPARISON.md)已交付，保留开放用于最终验收决定；不再把总成本或 FPT 列为未证明。按约定暂缓的二进制编解码/长度形式化特指 #23 的三划分归约，不包括已完成的 #22 执行器。#19 的一般内部摘要可实现性、多次穿越和递归接口仍未解决。
 
 ## 历史应用阶段
 

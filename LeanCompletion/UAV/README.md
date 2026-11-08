@@ -1,6 +1,6 @@
 # UAV proofs, certificates and structural decomposition research
 
-## Current research entry points — 2026-11-07
+## Current research entry points — 2026-11-08
 
 This directory's dated sections below preserve earlier publication records. The current tree-budget and interface work is indexed in the [branch README](../../README.md); historical open-task wording is not a current backlog.
 
@@ -8,11 +8,15 @@ This directory's dated sections below preserve earlier publication records. The 
 | --- | --- | --- |
 | Tree budget criterion and complete search | [TreeBudgetCriterion](TreeBudgetCriterion.lean), [TreeBudgetChecker](TreeBudgetChecker.lean), [TreeBudgetMemoSearch](TreeBudgetMemoSearch.lean) | [Budget matrix](../../docs/TREE_BUDGET_MATRIX.md), [memoized search](../../docs/TREE_BUDGET_MEMO_SEARCH_STATUS.md) |
 | Counts, representation and ordered candidates | [TreeBudgetSearchCostBounds](TreeBudgetSearchCostBounds.lean), [TreeBudgetVectorCandidates](TreeBudgetVectorCandidates.lean) | [Current stage map](../../docs/TREE_BUDGET_OPERATION_BOUNDS_STATUS.md) |
+| Ordered vector search and binary execution | [TreeBudgetVectorMemoIntegration](TreeBudgetVectorMemoIntegration.lean), [TreeBudgetCostedExecution](TreeBudgetCostedExecution.lean) | [Search refinement](../../docs/TREE_BUDGET_VECTOR_MEMO_REFINEMENT_STATUS.md), [November 7 binary components](../../docs/TREE_BUDGET_BINARY_COST_STATUS.md) |
+| Shared addressed execution A–E and total bit costs | [TreeBudgetSharedAnswerStore](TreeBudgetSharedAnswerStore.lean), [TreeBudgetChargedCache](TreeBudgetChargedCache.lean), [TreeBudgetStoredSearch](TreeBudgetStoredSearch.lean), [TreeBudgetStoredExecution](TreeBudgetStoredExecution.lean), [TreeBudgetStoredTotalWork](TreeBudgetStoredTotalWork.lean) | [Implementation and validation](../../docs/TREE_BUDGET_STORED_EXECUTION_STATUS.md), [public audit](../../verification/AuditTreeBudgetStoredExecution.lean), [cost-model comparison](../../docs/TREE_BUDGET_COST_MODEL_COMPARISON.md) |
 | Route/row representation bridges | [TreeBudgetRepresentationBridge](TreeBudgetRepresentationBridge.lean) | [First bridge package](../../docs/TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md) |
 | Strict-hub three-partition semantics | [HubThreePartition](HubThreePartition.lean) | [Semantic validation](../../docs/HUB_THREE_PARTITION_STATUS.md) |
 | Supplied assignment certificates and numbered targets | [HubAssignmentChecker](HubAssignmentChecker.lean), [HubNumberedInstance](HubNumberedInstance.lean) | [Interface validation](../../docs/HUB_INTERFACES_STATUS.md), [audit source](../../verification/AuditHubInterfaces.lean) |
 
-The #19 single-excursion results and #23 binary encoding/complexity arguments remain paper-level. Natural-number list decoding is proved; binary decoding and length formalization are deferred. This index update does not run Lean or extend the earlier validation claims.
+The #22 A–E package is complete in its addressed bit-cost model: `steps + allocations <= 2^50 * S^3 * (ell+1)^7`, yielding FPT in `M` and `(t,U)`. #22 remains open for final acceptance review. The November 8 validation record reports 25 executable regressions and 311 audited declarations without `sorryAx`; publication and migration reused that record.
+
+The #19 single-excursion results and #23 reduction-encoding/complexity arguments remain paper-level. For #23, natural-number list decoding is proved and binary codec/length formalization remains deferred; this is separate from #22's completed binary execution. This index update does not run Lean or extend the recorded validation claims.
 
 ## Historical Case1 baseline
 
