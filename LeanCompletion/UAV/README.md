@@ -1,6 +1,6 @@
 # UAV proofs, certificates and structural decomposition research
 
-## Current research entry points — 2026-11-08
+## Current research entry points — 2026-11-09
 
 This directory's dated sections below preserve earlier publication records. The current tree-budget and interface work is indexed in the [branch README](../../README.md); historical open-task wording is not a current backlog.
 
@@ -16,7 +16,7 @@ This directory's dated sections below preserve earlier publication records. The 
 
 The #22 A–E package is complete in its addressed bit-cost model: `steps + allocations <= 2^50 * S^3 * (ell+1)^7`, yielding FPT in `M` and `(t,U)`. #22 remains open for final acceptance review. The November 8 validation record reports 25 executable regressions and 311 audited declarations without `sorryAx`; publication and migration reused that record.
 
-The #19 single-excursion results and #23 reduction-encoding/complexity arguments remain paper-level. For #23, natural-number list decoding is proved and binary codec/length formalization remains deferred; this is separate from #22's completed binary execution. This index update does not run Lean or extend the recorded validation claims.
+The #23 representation/length block is complete in bd0dd94: [HubGammaCodec](HubGammaCodec.lean), [HubReductionCodec](HubReductionCodec.lean), [HubReductionEncoding](HubReductionEncoding.lean), [HubReductionTotal](HubReductionTotal.lean), and [regressions](HubReductionExamples.lean). See the [acceptance record](../../docs/HUB_REDUCTION_ENCODING_STATUS.md) and [exhaustive audit entry](../../verification/AuditHubReduction.lean): 85 named theorems including 19 regressions; 303 audited declarations including generated auxiliaries. Total bitstring correctness and output-size bounds do not establish construction/verification machine costs. Those costs and the restricted complexity argument remain paper-level. #19 generalization is a long-term task. All four planned blocks now have scoped deliveries, pending joint review of their existing evidence. This index update runs no Lean build or audit.
 
 ## Historical Case1 baseline
 

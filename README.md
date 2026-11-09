@@ -26,6 +26,17 @@ The November 8 [shared-store execution package A–E](docs/TREE_BUDGET_STORED_EX
 
 The small-scale measurement package now includes proved statistics erasure and controlled comparisons: [performance report and reproduction commands](docs/TREE_BUDGET_MEMO_PERFORMANCE.md). On these tiny cases, memoization reduces repeated expansions but association-list overhead makes cold search slower; pre-generated warm hits and full-entry repeated calls are measured separately.
 
+## Original four work blocks — delivery status
+
+| Block | Delivered result | Evidence |
+| --- | --- | --- |
+| 1. Complete explicit search refinement | Concrete answers, ordered caches and all six event counters correspond exactly | [Vector refinement](docs/TREE_BUDGET_VECTOR_MEMO_REFINEMENT_STATUS.md), 4243887 |
+| 2. Binary and addressed execution | A–E refinement, input-derived resources, total bit costs and FPT in the stated model | [Stored execution](docs/TREE_BUDGET_STORED_EXECUTION_STATUS.md), 5953439 / dda05c8 |
+| 3. Numbered target correspondence | Independent numbered data and route relabeling preserve exact feasibility | [Hub interfaces](docs/HUB_INTERFACES_STATUS.md), 2a64246 |
+| 4. Reduction codecs and lengths | Gamma/EOF contracts, sparse semantic bridge, exact length, 4L+3, total language equivalence and 4L+129 | [Reduction encoding](docs/HUB_REDUCTION_ENCODING_STATUS.md), bd0dd94 |
+
+All four blocks have scoped deliveries. The next step is joint review of their contracts, assumptions and existing validation records; this status synchronization is not a new joint build or axiom audit. #22 remains open for final acceptance, #23 retains its separate machine-cost work, and #19 generalization remains a long-term task.
+
 ## Current mathematical results
 
 | Question | Formalized result |
@@ -36,7 +47,7 @@ The small-scale measurement package now includes proved statistics erasure and c
 | When are individual budgets feasible on a tree? | Exactly when flow compatibility and a four-constraint edge-count matrix hold: column sums, one depot departure per row, ancestor closure, and row budgets. |
 | Can the one-departure condition be relaxed? | For nonnegative non-depot fees, rows can be split and normalized without changing feasibility. A signed-fee counterexample shows why nonnegativity matters. |
 | Is there a closed-form special case? | For a non-depot hub with one satellite, nonnegative task fees and a nonempty fleet, feasibility is determined by a ceiling-allocation formula. |
-| Is the canonical strict-hub target equivalent to three-partition? | Under `ValidInput`, exact routing iff three-partition is proved in Lean. The encoding and restricted strong NP-completeness argument remain paper-level. |
+| Is the canonical strict-hub target equivalent to three-partition? | Under `ValidInput`, exact routing iff three-partition is proved in Lean. Binary representation, the sparse semantic bridge, exact/linear lengths and total bitstring correctness are also proved in Lean (bd0dd94). Construction/verification machine costs and the restricted strong NP-completeness argument remain paper-level. |
 | What does the assignment checker certify? | A supplied typed assignment or natural-number list is accepted iff it is well formed and satisfies every route budget; an accepted certificate exists iff the canonical target is feasible. No `ValidInput` or three-items-per-row condition is required. |
 | Does explicit vertex numbering change feasibility? | Independent numbered flow, demand and fee definitions agree with the existing hub model; relabeling preserves route legality, exact visits, directed flow, signed costs and feasibility. |
 | Can service and travel budgets reuse the checker? | Rational directional edge costs have an exact signed virtual-service encoding, preserving route costs and matrix/certificate feasibility. |

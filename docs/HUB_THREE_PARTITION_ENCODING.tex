@@ -26,6 +26,17 @@
 \begin{document}
 \maketitle
 
+\paragraph{Current status, 9 November 2026.}
+The fourth work block is delivered in \code{bd0dd94}. See
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/bd0dd940e3ba73d6e1c0892aa3b377d60950eccf/docs/HUB_REDUCTION_ENCODING_STATUS.md}{the encoding acceptance record}.
+It records 85 named theorems (19 regressions) and 303 audited declarations,
+including generated auxiliaries. Canonical parsing, numbered-model transport,
+exact and linear lengths, and total bitstring language equivalence are now
+formalized. The construction and verification machine costs and complexity
+classifications below remain paper results. Dated validation paragraphs retain
+their historical scope. This status edit runs no Lean build, audit or LaTeX compilation.
+
+
 \begin{abstract}
 We fix a self-delimiting binary source encoding and an explicit sparse tree
 encoding for the previously verified strict-hub/three-partition semantic
@@ -36,8 +47,10 @@ deterministic multitape Turing machine. A precisely specified canonical
 strict-hub language has polynomial certificates; with the classical external
 strong NP-completeness theorem for 3-PARTITION, it is strongly NP-complete.
 The broader tree problem inherits strong NP-hardness, but its NP membership
-is not proved here. Encoding, runtime and complexity arguments in this note
-are paper proofs, not Lean-checked complexity theorems.
+is not proved here. This note originally supplied paper proofs. The later bd0dd94 package
+formalizes the codecs, sparse semantic bridge, exact/linear lengths and total
+bitstring correctness. Runtime and complexity classifications remain paper
+proofs, not Lean-checked complexity theorems.
 \end{abstract}
 
 \section{Evidence Boundary and Routing Semantics}
@@ -147,8 +160,9 @@ for source item $i$. Define
 The fleet and budget headers are the original $m,B$.
 The vertex renaming $0\mapsto\code{depot}$, $1\mapsto\code{hub}$,
 $i+2\mapsto\code{satellite i}$ identifies this data with the canonical
-instance of the existing Lean semantic theorem. This renaming and the binary
-serialization themselves are specified here on paper, not as new Lean code.
+instance of the existing Lean semantic theorem. At the original publication these were paper specifications. Renaming was
+subsequently formalized in 2a64246; bd0dd94 adds binary serialization and the
+sparse-record semantic bridge.
 
 \begin{theorem}[Exact size and linear bound]\label{thm:length}
 Let $L$ be the length of a valid source and $L_t$ the length of its target
@@ -431,9 +445,10 @@ page images remain local run material. Static checks of this note verify
 balanced environments and braces, internal references and bibliography keys;
 they do not compile or render the document.
 
-The next formalization can separately implement an injective binary codec
-with decoder round trips, prove the exact length formula, and connect an
-explicit machine-cost model to the constructive bound. The external
+The codec, decoder contracts and exact length formula are now formalized in
+bd0dd94. A subsequent package may connect an explicit machine-cost model to
+the constructive bound, including the actual canonicality and field-reconstruction
+checks performed by the Lean implementation. The external
 strong NP-completeness premise must remain identified unless a compatible
 formal complexity library supplies it. A general NP-membership theorem
 requires its own certificate-size argument. Issue \#19 remains at its
