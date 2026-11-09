@@ -37,6 +37,24 @@ correctness. In particular, the second entry point tests star interiors; the
 arbitrary-subtree and sorted-matching paper results are tested by the third
 entry point, with scope in [the new package record](HUB_INTERFACES_STATUS.md).
 
+## Lean reduction representation and length package (November 9)
+
+The unbounded binary parsing, semantic bridge, exact/linear lengths, and total
+bitstring transformation now have their own Lean proofs. From the repository
+root with the locked toolchain and dependencies, run:
+
+```powershell
+lake build LeanCompletion.UAV.HubReductionExamples
+lake env lean verification/AuditHubReduction.lean
+```
+
+The audit enumerates all declarations in the five new namespaces and fails
+on any axiom outside `propext`, `Classical.choice`, and `Quot.sound`. The
+[acceptance record](HUB_REDUCTION_ENCODING_STATUS.md) reports 85 named theorems
+(19 regressions) and 303 audited declarations, including generated auxiliaries.
+The Python checks above remain separate finite reference tests. Machine
+running costs and general-tree NP membership are not proved by this package.
+
 ## Historical and current records
 
 Commit `dcc3db8` published the Lean semantic package and the original
