@@ -95,3 +95,6 @@ python tools/check_tree_budget_subtree_states.py
 固定总费用、状态数界、对称性商等尚未在本包形式化。
 带符号费用下不得直接按局部超预算删除状态。
 这不完成 #19 的全部文献比较及接口研究，也不提供 #23 的标准机器时间证明。
+
+后续可执行实现及其精化证明见
+[可执行压缩状态 DP 状态说明](TREE_BUDGET_SUBTREE_DP_STATUS.md)。
