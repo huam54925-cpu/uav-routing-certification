@@ -1,0 +1,50 @@
+import LeanCompletion.UAV.TreeBudgetSubtreeExamples
+
+/-! Audit all public theorems of the subtree semantic package. Run after the
+targeted build; raw reports stay under ignored verification/runs/. -/
+
+#print axioms UAVProof.TreeBudgetSubtreeState.InSubtree.rank_le
+#print axioms UAVProof.TreeBudgetSubtreeState.InSubtree.trans
+#print axioms UAVProof.TreeBudgetSubtreeState.parent_mem_subtree_of_ne_top
+#print axioms UAVProof.TreeBudgetSubtreeState.subtree_ne_root
+#print axioms UAVProof.TreeBudgetSubtreeState.child_mem_subtree
+#print axioms UAVProof.TreeBudgetSubtreeState.top_not_child_subtree
+#print axioms UAVProof.TreeBudgetSubtreeState.child_subtrees_pairwise_disjoint
+#print axioms UAVProof.TreeBudgetSubtreeState.subtree_cases
+#print axioms UAVProof.TreeBudgetSubtreeState.mem_subtree
+#print axioms UAVProof.TreeBudgetSubtreeState.subtree_eq_insert_children_union
+#print axioms UAVProof.TreeBudgetSubtreeState.sum_subtree
+#print axioms UAVProof.TreeBudgetSubtreeState.PartialValid.entry_le
+#print axioms UAVProof.TreeBudgetSubtreeState.PartialValid.positive_top
+#print axioms UAVProof.TreeBudgetSubtreeState.PartialValid.zero_of_top_zero
+#print axioms UAVProof.TreeBudgetSubtreeState.restrictMatrix_eq
+#print axioms UAVProof.TreeBudgetSubtreeState.partial_restrict_valid
+#print axioms UAVProof.TreeBudgetSubtreeState.subtreeCost_congr
+#print axioms UAVProof.TreeBudgetSubtreeState.subtreeCost_restrict
+#print axioms UAVProof.TreeBudgetSubtreeState.subtreeCost_split
+#print axioms UAVProof.TreeBudgetSubtreeState.glueMatrix_top
+#print axioms UAVProof.TreeBudgetSubtreeState.glueMatrix_child
+#print axioms UAVProof.TreeBudgetSubtreeState.partial_glue_valid
+#print axioms UAVProof.TreeBudgetSubtreeState.subtreeCost_glue
+#print axioms UAVProof.TreeBudgetSubtreeState.partialRep_merge_iff
+#print axioms UAVProof.TreeBudgetSubtreeState.partialRep_leaf_iff
+#print axioms UAVProof.TreeBudgetSubtreeState.root_subtree
+#print axioms UAVProof.TreeBudgetSubtreeState.subtree_root
+#print axioms UAVProof.TreeBudgetSubtreeState.rowCost_eq_sum_root_subtrees
+#print axioms UAVProof.TreeBudgetSubtreeState.rootAccept_iff_matrixFeasible
+#print axioms UAVProof.TreeBudgetSubtreeState.rootAccept_iff_exactFeasible
+#print axioms UAVProof.TreeBudgetSubtreeState.subtreeLinearCost_eq
+#print axioms UAVProof.TreeBudgetSubtreeState.compactRep_iff_partialRep
+#print axioms UAVProof.TreeBudgetSubtreeState.compactRep_merge_iff
+#print axioms UAVProof.TreeBudgetSubtreeState.capped_eq_indicator
+#print axioms UAVProof.TreeBudgetSubtreeState.compactRootAccept_iff_matrixFeasible
+#print axioms UAVProof.TreeBudgetSubtreeExamples.repeated_leaf
+#print axioms UAVProof.TreeBudgetSubtreeExamples.repeated_internal_merge
+#print axioms UAVProof.TreeBudgetSubtreeExamples.child_count_exceeds_parent
+#print axioms UAVProof.TreeBudgetSubtreeExamples.signed_matrix
+#print axioms UAVProof.TreeBudgetSubtreeExamples.signed_root_accept
+#print axioms UAVProof.TreeBudgetSubtreeExamples.signed_compact_root_accept
+#print axioms UAVProof.TreeBudgetSubtreeExamples.signed_leaf_above_budget
+#print axioms UAVProof.TreeBudgetSubtreeExamples.root_child_cap_rejects_two
+#print axioms UAVProof.TreeBudgetSubtreeExamples.zero_routes_negative_budget
+#print axioms UAVProof.TreeBudgetSubtreeExamples.depot_only_positive_routes
