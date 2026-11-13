@@ -1,5 +1,7 @@
 # Tree-budget route decomposition: literature comparison and research directions
 
+> **Navigation update — 2026-11-13:** This is the November 3 historical review; its memoization/encoding implementation checklist is not the current status. See the [new literature review and exact-subtree algorithm plan](TREE_INTERFACE_ALGORITHM_RESEARCH_20261113.md) for #19 state/recurrence design, additional primary sources and the distinct role of #23. The four original blocks have scoped deliveries; see the [November 9 encoding record](HUB_REDUCTION_ENCODING_STATUS.md) and [#22 execution record](TREE_BUDGET_STORED_EXECUTION_STATUS.md). This navigation update adds no proof or validation run.
+
 **Date:** 2026-11-03  
 **Research branch:** `research/structural-service-cuts-20261023`  
 **Code baseline reviewed:** `2466e0b4b91744045618c78fdb61ecc986863b39`  
