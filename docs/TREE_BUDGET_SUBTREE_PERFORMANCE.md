@@ -197,3 +197,6 @@ python -B tools/run_tree_budget_subtree_stats.py --verify-only
 [公理审计](../verification/AuditTreeBudgetSubtreeStats.lean)覆盖全部 50 个公开定理及 15 个执行入口，
 全部依赖均在 `propext`、`Classical.choice`、`Quot.sound` 之内，没有 `sorryAx` 或新增公理。
 统计的耗时不用于原执行器的时间结果；公理审计和编译均在计时实验前完成。
+
+后续对非零费用例的比较路径与字段顺序干预，见
+[比较开销分层诊断报告](TREE_BUDGET_SUBTREE_COMPARE_DIAGNOSIS.md)。
