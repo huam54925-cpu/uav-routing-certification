@@ -1,0 +1,674 @@
+% Compile locally with XeLaTeX. This source was not compiled during authoring.
+\documentclass[UTF8,a4paper,11pt]{ctexart}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,longtable,array,enumitem,xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{Code}{Verbatim}{fontsize=\small,frame=single}
+\setlist{nosep}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem{remark}[theorem]{说明}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\ch}{\operatorname{Ch}}
+\newcommand{\Rep}{\operatorname{CompactRep}}
+\newcommand{\MF}{\operatorname{MatrixFeasible}}
+\newcommand{\len}{\operatorname{len}}
+\title{精确子树 DP 的不变量、规模与执行精化\\下一轮纸面证明及 Lean 4 实施指导}
+\author{工作稿：供既有本地 Lean 工程实施与验收}
+\date{2026 年 11 月 14 日}
+
+\begin{document}
+\maketitle
+
+\noindent\textbf{证据边界。}
+本文以研究分支提交
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/df2d3f46bafb15b1d0943105e5b3ce3fc63912d7}{\texttt{df2d3f4}}
+为固定基线。现有子树状态、可执行 DP、统计擦除与比较诊断已由仓库各自记录交付。
+本文新增结论是本轮的纸面推导；附带 Lean 种子源码尚未编译，不是已通过的形式化交付。
+文中的建议声明名不是现有仓库定理名。未重建环境、未修改远端、未编译本 TeX。
+
+\noindent\textbf{本轮建议目标。}
+主包 A--D 完成状态不变量、双重规模界、实际统计上界、整数执行精化；
+扩展包 E 完成矩阵证书回溯。不要为等待 E 而拖延 A--D 的独立验收。
+费用坐标压缩与安全剪枝先获得数学定理，暂不混入原默认执行器。
+
+\tableofcontents
+
+\section{固定模型与已经具备的接口}
+
+令 $R$ 是以 $o$ 为根的有限树，$N=|V|\ge1$，$n=N-1$。
+非根顶点 $x$ 对应父边，给定重数 $H(x)\in\N$、路线标签集 $[m]$、
+带符号有理服务费用 $s:V\to\Q$ 及预算 $T\in\Q$。根需求字段和根服务费不计入下述费用。
+一份完整矩阵 $n_i(x)$ 满足精确列和、祖先正支撑闭合、每行恰一次根出发以及逐行预算。
+内部节点允许重复穿越，不要求孩子次数不超过父次数。
+
+定义非根线性权重
+\[
+ \beta(x)=\begin{cases}0,&\operatorname{parent}(x)=o,\\
+ s(\operatorname{parent}(x)),&\operatorname{parent}(x)\ne o,
+ \end{cases}\qquad a(x)=s(x)+\beta(x).
+\]
+对非根子树 $V_v$，合法局部矩阵在子树外为零，在子树内满足
+\[
+ \sum_{i=1}^m n_i(x)=H(x),\qquad
+ x\ne v,\ n_i(x)>0\Longrightarrow n_i(\operatorname{parent}(x))>0.
+\]
+若 $v$ 是根的直接孩子，另有 $n_i(v)\le1$。
+压缩状态为 $z=(A,b)$，其中
+\[
+ A=\{i:n_i(v)>0\},\qquad b_i=\sum_{x\in V_v}a(x)n_i(x).
+\]
+所有路线标签一直保留。状态表示的是存在某个局部矩阵，不是保留某份外部给定游走的全部信息。
+
+\begin{longtable}{p{.43\textwidth}p{.51\textwidth}}
+\toprule 现有接口 & 本轮用途 \\ \midrule
+\texttt{PartialValid.column}, \texttt{entry\_le} & 列和、$0\le n_i(x)\le H(x)$ \\
+\texttt{PartialValid.zero\_of\_top\_zero} & 非活跃路线在整棵局部子树上为零 \\
+\texttt{compactRep\_merge\_iff} & 局部列与孩子状态的双向合并 \\
+\texttt{computeCompact\_spec} & 非根返回表成员当且仅当 $\Rep$ \\
+\texttt{insideCosts\_spec}, \texttt{rootFold\_spec} & 按已处理孩子集合建立中间不变量 \\
+\texttt{insideRaw\_length}, \texttt{rootRaw\_length} & 去重前列表的精确乘积长度 \\
+\texttt{dedupComparisons\_bound} & 输入长度 $L$ 时 $2E\le L(L-1)$ \\
+\texttt{checkCompactStats\_count} & 将新上界接到既有实际统计执行器 \\
+\bottomrule
+\end{longtable}
+
+\section{包 A：固定费用总和、非活跃坐标与信息冗余}
+
+\begin{theorem}[总和不变量]
+对任意 $\Rep(R,H,m,s,v,(A,b))$，令
+\[
+ C_v=\sum_{x\in V_v}a(x)H(x),
+\]
+则 $\sum_i b_i=C_v$。费用可为负，预算不参与此结论，$m=0$ 也允许。
+\end{theorem}
+\begin{proof}
+取实现该状态的矩阵，交换有限和并应用列和：
+\[
+ \sum_i b_i=\sum_i\sum_{x\in V_v}a(x)n_i(x)
+ =\sum_{x\in V_v}a(x)\sum_i n_i(x)
+ =\sum_{x\in V_v}a(x)H(x).
+\]
+\end{proof}
+
+\begin{lemma}[零支撑与支撑规模]
+对上述状态，$i\notin A$ 蕴含整行局部矩阵为零，因而 $b_i=0$。
+而且 $|A|\le\min(m,H(v))$。
+若 $v$ 是根的直接孩子，则 $|A|=H(v)$。
+\end{lemma}
+\begin{proof}
+从 $n_i(v)=0$ 和祖先闭合得到子树内所有 $n_i(x)=0$；子树外本来为零。
+每个 $i\in A$ 至少贡献一次顶列访问，因此
+$|A|\le\sum_i n_i(v)=H(v)$。
+根孩子的顶列至多为一，故 $n_i(v)=\mathbf1_{i\in A}$，得到等式。
+\end{proof}
+
+\begin{corollary}[零顶重数的完整分类]
+若 $H(v)=0$，则局部状态存在当且仅当 $V_v$ 内全部 $H(x)=0$；
+此时唯一状态为 $(\varnothing,0)$。
+若 $m=0$，无论 $H(v)$ 如何，局部状态存在当且仅当子树内全部重数为零，存在时同样唯一。
+\end{corollary}
+\begin{proof}
+顶列全零迫使所有行全零，再由列和得各 $H(x)=0$。
+反向采用零矩阵。$m=0$ 时各列的空和为零，结论相同。
+\end{proof}
+
+\begin{corollary}[费用支配退化]
+固定同一 $R,H,m,s,v$，两个可实现状态的费用满足 $b_i\le b'_i$ 对所有 $i$ 成立，
+则 $b=b'$。要进一步推出整个状态相同，还须 $A=A'$。
+\end{corollary}
+\begin{proof}
+所有 $b'_i-b_i\ge0$ 且总和为零，每项都为零。
+\end{proof}
+这排除了同一子树、同一支持集中的非平凡逐坐标 Pareto 删除。
+它不排除其他基于外部上下文的剪枝，也不允许合并费用相同但支持不同的状态。
+
+\begin{theorem}[删除一个费用坐标的单射]
+若 $m\ge1$，固定一个路线标签 $p$，则
+\[
+ (A,b)\longmapsto\bigl(A,(b_i)_{i\ne p}\bigr)
+\]
+在可实现状态集合上单射，因为
+$b_p=C_v-\sum_{i\ne p}b_i$。
+固定非空 $A$ 后，可先删去所有非活跃坐标，再删去 $A$ 中一个坐标，只保留 $|A|-1$ 个费用数。
+\end{theorem}
+\begin{proof}
+被删坐标由固定总和和保留坐标唯一决定。非活跃坐标全为零，故不携带额外费用信息。
+\end{proof}
+\textbf{实现顺序：}先证明单射和恢复恒等式；不要同时引入新的变长数组、坐标排序和比较器。
+压缩一个坐标可能减少存储，却未必改善运行时间。
+
+\section{包 B1：整数网格与更紧的数值状态界}
+
+取正整数 $D$ 以及整数权重 $w(x)$，使
+\[
+ D a(x)=w(x)\quad(x\ne o).
+\]
+可以取全部非根 $a(x)$ 的规范正分母之积；空积为一。
+首轮形式化先接受这份显式缩放契约，再单独证明由输入构造它。
+不要求 $DT$ 为整数。
+
+\begin{definition}
+对任意非根顶点集合 $X$，定义
+\[
+ L_X=\sum_{x\in X}\min(0,w(x)H(x)),\qquad
+ U_X=\sum_{x\in X}\max(0,w(x)H(x)),
+\]
+\[
+ W_X=U_X-L_X=\sum_{x\in X}|w(x)|H(x),\qquad
+ K_X=\sum_{x\in X}w(x)H(x).
+\]
+这里 $L_X,U_X,K_X\in\Z$，$W_X\ge0$，用于自然数幂时取其非负整数值。
+\end{definition}
+
+\begin{theorem}[有符号网格与区间]
+对合法状态，$z_i=Db_i=\sum_{x\in V_v}w(x)n_i(x)\in\Z$，且
+\[
+ L_{V_v}\le z_i\le U_{V_v},\qquad \sum_i z_i=K_{V_v}.
+\]
+\end{theorem}
+\begin{proof}
+当 $w(x)\ge0$ 时，$0\le w(x)n_i(x)\le w(x)H(x)$；
+当 $w(x)<0$ 时，$w(x)H(x)\le w(x)n_i(x)\le0$。
+逐项求和得到区间，列和给出总和。整数性来自整数乘积的有限和。
+\end{proof}
+
+\begin{theorem}[数值状态界]
+当 $m\ge1$ 时，非根可实现压缩状态集合 $\mathcal S_v$ 满足
+\[
+ |\mathcal S_v|\le 2^m(W_{V_v}+1)^{m-1}.
+\]
+当 $H(v)>0$ 时有更细的界
+\[
+ |\mathcal S_v|\le
+ \sum_{r=1}^{\min(m,H(v))}\binom mr(W_{V_v}+1)^{r-1}.
+\]
+若 $v$ 是根孩子且 $1\le H(v)\le m$，可进一步只保留 $r=H(v)$ 那一项；
+若 $H(v)>m$，该根孩子表为空。
+\end{theorem}
+\begin{proof}
+先选支持集，至多 $2^m$ 种，再选 $m-1$ 个区间内整数，各有 $W_{V_v}+1$ 种，
+最后一个由总和确定。这个编码允许无效组合，故给上界。
+细界按 $r=|A|$ 分组，选 $\binom mr$ 个支持集之一，只保存 $r-1$ 个活跃费用。
+正顶重数排除空支持。根孩子用 $|A|=H(v)$。
+\end{proof}
+
+\begin{remark}
+上一轮的对称区间 $[-W,W]$ 给 $(2W+1)^{m-1}$；
+本轮按权重符号分开求上下界，把区间宽度收紧为 $W$。
+这仍是依赖数值大小的上界，不是二进制输入多项式时间结论。
+状态可能很少但候选生成仍很大，不能只将这个界代入最终表就声称总时间界。
+\end{remark}
+
+\section{包 B2：弱组合数与不依赖费用数值的统一界}
+
+定义完整列枚举数
+\[
+ q_m(h)=\begin{cases}
+ 1,&m=0,h=0,\\0,&m=0,h>0,\\
+ \binom{h+m-1}{m-1},&m\ge1.
+ \end{cases}
+\]
+为同时覆盖空路线和空中间表，定义
+\[
+ Q_x=\max(1,q_m(H(x))),\qquad
+ P_X=\prod_{x\in X}Q_x,\quad P_v=P_{V_v},\quad
+ P=P_{V\setminus\{o\}}.
+\]
+所有 $Q_x,P_X\ge1$。当 $m\ge1$ 时 $Q_x=q_m(H(x))$。
+
+\begin{lemma}[候选长度、无重复与根孩子筛选]
+\texttt{compositionsV m h} 无重复，长度等于 $q_m(h)$。
+若 $m\ge1$，根孩子的筛选后候选数为 $\binom m{H(v)}$（$H(v)>m$ 时为零）。
+一般节点筛选后候选数不超过 $Q_v$。
+\end{lemma}
+\begin{proof}
+枚举按首坐标 $a=0,\ldots,h$ 分组，再递归枚举尾向量总和 $h-a$。
+不同组首坐标不同，组内由归纳无重复；成员规格覆盖全部弱组合。
+星与条隔板计数给 $\binom{h+m-1}{m-1}$。
+根孩子每个坐标为零或一，等价于选择 $H(v)$ 个路线标签。
+\end{proof}
+\textbf{注意：}现实现先生成全部弱组合再筛选。不能把筛选后 $\binom m{H(v)}$
+冒充 \texttt{columnsGenerated} 或候选递归的成本。
+
+\begin{theorem}[矩阵像的组合状态界]
+对任意非根 $v$，$|\mathcal S_v|\le P_v$。
+因此 $m\ge1$ 时可同时使用
+\[
+ |\mathcal S_v|\le
+ \min\{P_v,\;2^m(W_{V_v}+1)^{m-1}\}.
+\]
+\end{theorem}
+\begin{proof}
+不施加祖先条件时，每列有 $q_m(H(x))$ 个选择，完整局部矩阵的数量至多其乘积。
+施加祖先闭合和根孩子上限只会减少数量。状态是这些矩阵的像，故基数不会增加。
+用 $Q_x\ge q_m(H(x))$ 处理 $m=0$ 情形。
+\end{proof}
+
+\begin{lemma}[质量参数界]
+当 $m\ge1$ 时，$q_m(h)\le m^h$，于是
+\[
+ P\le m^M,\qquad M=\sum_{x\ne o}H(x).
+\]
+\end{lemma}
+\begin{proof}
+把列 $(q_1,\ldots,q_m)$ 编成长度 $h$ 的非降标签序列：先写 $q_1$ 个标签一，
+再写 $q_2$ 个标签二，依此类推。计数可恢复原列，故这是到 $[m]^h$ 的单射。
+对各非根顶点相乘即得结论。
+\end{proof}
+
+\section{包 C1：候选递归的真实调用数}
+
+设 $F(m,h)$ 为现有 \texttt{compositionsStats} 的递归调用数。
+其精确递推为
+\[
+ F(0,h)=1,\qquad F(m+1,h)=1+\sum_{a=0}^{h}F(m,h-a).
+\]
+\begin{theorem}[候选递归闭式]
+对所有 $m,h\in\N$，
+\[
+ F(m,h)=\binom{h+m+1}{m},\qquad
+ \texttt{rangeChoices}=F(m,h)-1.
+\]
+另外
+\[
+ F(m,h)\le (m+1)(h+1)\max(1,q_m(h)).
+\]
+\end{theorem}
+\begin{proof}
+闭式由递推及曲棍球棒恒等式归纳：
+\[
+ 1+\sum_{j=0}^h\binom{j+m+1}{m}
+ =1+\binom{h+m+2}{m+1}-1.
+\]
+每一次 range 选择恰产生一条递归调用边；整棵调用树的边数为节点数减一。
+对上界，深度 $d$ 的调用节点对应长度 $d$、总和至多 $h$ 的部分列，数量为
+$\binom{h+d}{d}$。各层数量不超过末层数量，因此
+\[
+ F(m,h)\le(m+1)\binom{h+m}{m}
+ \le(m+1)(h+1)\binom{h+m-1}{m-1}\quad(m\ge1).
+\]
+末个不等式由比值 $(h+m)/m\le h+1$ 得到；$m=0$ 直接验证。
+\end{proof}
+特别地 $m=1$ 时只有一份输出列，但原递归仍调用 $h+2$ 次。
+这说明单路线直接候选生成的收益与状态压缩应独立归因。
+
+\section{包 C2：中间表、去重前列表与全统计界}
+
+\subsection{固定局部列的孩子折叠}
+固定节点 $v$ 和局部列 $q$，设 $J\subseteq\ch(v)$ 是已经处理的孩子集合。
+实际程序右折叠，$J$ 首先是列表后缀；证明只需孩子无重复和子树不交。
+令
+\[
+ B_J=\prod_{u\in J}P_u.
+\]
+\begin{lemma}[内部中间列表界]
+固定 $q$ 的累计费用表长度至多 $B_J$。
+加入新孩子 $u$ 时，去重前列表长度至多 $P_u B_J=B_{J\cup\{u\}}$。
+\end{lemma}
+\begin{proof}
+空集合时表为单元素 base，长度一等于空积。
+下一步先筛选支持兼容的孩子状态，其数目不超过完整孩子表长度 $P_u$，
+再与累计费用表做乘积。去重不增加长度，完成归纳。
+证明不需要计算任何费用区间，也不要求费用非负。
+\end{proof}
+
+令 $B_v=\prod_{u\in\ch(v)}P_u$，则子树不交给 $P_v=Q_v B_v$。
+节点遍历至多 $Q_v$ 个局部列，每列返回费用表长度至多 $B_v$。
+所以\textbf{节点最后去重前的整张列表也至多 $P_v$}，而不只是去重后的表有此上界。
+最终表的无重复性质来自 \texttt{List.dedup}，应单独声明。
+
+\subsection{根折叠}
+对已处理根孩子 $J$，根表长度至多 $\prod_{u\in J}P_u$。
+加入孩子后，\texttt{rootRaw} 的完整乘积列表满足相同新乘积上界，之后的
+根次数上限筛选及去重均不增加长度。
+\textbf{实际代码先相加再筛选，拒绝的根配对也发生了 $m$ 次费用加法，不能漏计。}
+
+\begin{theorem}[整个执行的单表界]
+公开入口 \texttt{checkCompactStats} 中的最终表、中间去重表、内部 raw 表、
+节点 raw 表及根 cap 筛选前的 raw 表长度都不超过 $P$。
+其 \texttt{maxRawTable} 与 \texttt{maxDedupTable} 均不超过 $P$。
+\end{theorem}
+\begin{proof}
+所有子树和孩子集合的因子均来自全局乘积，且其他因子至少一，故各局部乘积不超过 $P$。
+空折叠的单元素起始表由 $P\ge1$ 覆盖。
+\end{proof}
+这不是同时存活的全部内存界；统计最大值不相加，不能当作总字节数或堆容量。
+
+\subsection{逐项统计的统一目标}
+令 $U=\max_{x\ne o}H(x)$，空集合取零。所有下式针对公开入口的同一次执行；
+根孩子仅计算一次，祖先 rank 终止且每个非根顶点被访问一次。
+\begin{theorem}[高层逻辑统计界]
+现有统计量满足下表的纸面上界，支持 $m=0$、带符号费用与任意预算。
+\begin{center}
+\begin{tabular}{ll}
+\toprule 字段或字段组合 & 上界／恒等式 \\ \midrule
+\texttt{nodeCalls} & $n$（精确） \\
+\texttt{compositionCalls} & $\sum_{v\ne o}F(m,H(v))\le n(m+1)(U+1)P$ \\
+\texttt{rangeChoices} & $\texttt{compositionCalls}-n$（精确） \\
+\texttt{columnsGenerated}, \texttt{columnsAccepted} & 各至多 $nP$ \\
+\texttt{subsetCalls} & $nP$ \\
+\texttt{insidePairs}+\texttt{rootPairs} & $nP$ \\
+\texttt{rootRejected} & $nP$ \\
+\texttt{ratAdds}, \texttt{ratMuls} & 各至多 $mnP$ \\
+\texttt{dedupInput}, \texttt{dedupOutput} & 各至多 $2nP$ \\
+\texttt{eqCalls} & $nP^2$ \\
+\texttt{acceptCalls} & $P$ \\
+\texttt{maxRawTable}, \texttt{maxDedupTable} & 各至多 $P$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{theorem}
+\begin{proof}
+候选枚举字段由上节闭式及 $Q_v\le P$ 得到。
+固定一个内部父子关系 $(v,u)$：它随局部列重复处理至多 $Q_v$ 次。
+每次 raw 长度至多 $B_v$，故配对总数至多 $Q_vB_v=P_v\le P$；
+每次支持扫描长度至多 $P_u\le B_v$，故支持调用也至多 $P$。
+根父子关系不遍历局部列，每次配对至多 $P$。
+全树恰有 $n$ 个父子关系，因此内部及根配对之和至多 $nP$，加法数恰为其 $m$ 倍。
+每个接受的局部列初始化 $m$ 次乘法，给乘法界。
+
+去重分两类：$n$ 次节点最终去重，以及父子折叠中的去重。
+节点类每次输入至多 $P$，内部折叠对同一父子关系所有局部列的输入总数至多 $P$，
+根折叠也至多 $P$。故去重总输入、总输出都至多 $2nP$。
+
+对比较次数要保留平方：节点类每次 $2E\le P^2$。
+固定内部父子关系的所有局部列，
+\[
+ 2\sum_q E_q\le Q_vB_v^2\le Q_v^2B_v^2=P_v^2\le P^2.
+\]
+根父子关系同样 $2E\le P^2$。两类共贡献 $2\,\texttt{eqCalls}\le2nP^2$。
+最终接受扫描至多访问整个根表一次，给 $P$ 界。
+所有最大值结论来自单表界。零路线时 $Q_v=1$，相同论证成立；
+列为空会减少实际工作，不把全局乘积置零即可覆盖先处理的非空中间表。
+\end{proof}
+
+\begin{corollary}[统一统计包络]
+定义 $\mathcal L$ 为前十五项累加字段之和，\emph{不包含两个最大值字段}，则
+\[
+ \boxed{\mathcal L\le32N(m+1)(U+1)P^2.}
+\]
+这是为方便汇总选取的保守常数，不声称最紧。
+\end{corollary}
+\begin{proof}
+由上表，
+\[
+ \mathcal L\le n+2n(m+1)(U+1)P+(9+2m)nP+nP^2+P.
+\]
+使用 $n\le N$、$P\ge1$、$(m+1)(U+1)\ge m+1\ge1$ 即得所示宽松界。
+\end{proof}
+
+\begin{corollary}[规范输入下的质量参数推论]
+若 $m=\sum_{u\in\ch(o)}H(u)$ 且 $m\ge1$，则 $m\le M$、$U\le M$，从而
+\[
+ \mathcal L\le32N(M+1)^2M^{2M}.
+\]
+这是高层逻辑工作量的 FPT 形状；仍不是新 DP 的机器时间 FPT 定理。
+\end{corollary}
+不相容的任意巨大路线数字段不能悄悄代入 $m\le M$。
+若希望扩展到所有原始输入，应另证根次数必要条件并在包装器中显式拒绝不相容输入。
+$m=0$ 单独采用 $P=1$ 的界。
+
+\subsection{当前统计没有覆盖的成本}
+\begin{enumerate}
+\item \texttt{childrenList} 对每个顶点扫描全部 $N$ 个编号，另有至多 $N^2$ 个候选父关系检查；它不在现有十七项统计中。
+\item 一次支持检查和一次根 cap／accept 检查内部可能扫描 $m$ 个坐标；一次状态相等也不是常数位操作。
+\item 列表构造、向量复制、索引、递归栈、共享和释放不由上述统计完整度量。
+\item 有理数／整数的位宽、归一化、乘法、比较需要独立模型。
+\end{enumerate}
+所以这些上界不替代 \#22 的带地址执行证明，也不自动继承它。
+
+\section{包 D：保持有序表的整数费用执行器}
+
+与其立即修改支持表示，建议先实现费用从 $\Q$ 到 $\Z$ 的精确转换。
+给定 $D>0$ 与 $Da(x)=w(x)$，整数节点仍保存同一支持集，只把费用改成整数向量，
+初始项为 $w(v)q_i$，孩子合并仍为逐坐标相加，根仍用原 0/1 次数规则。
+最终整数预算取
+\[
+ B=\lfloor DT\rfloor\in\Z.
+\]
+必须使用数学向下取整；负数不能使用向零截断或转成自然数。
+
+\begin{lemma}[提升映射与预算]
+令 $\iota_D(z)=z/D\in\Q$，则提升逐坐标单射，保持加法与对应的局部初始费用，且
+\[
+ \iota_D(z)\le T\quad\Longleftrightarrow\quad z\le\lfloor DT\rfloor.
+\]
+\end{lemma}
+\begin{proof}
+$D>0$ 给缩放和除法的单射、单调性；整数不超过实／有理阈值等价于不超过其 floor。
+\end{proof}
+
+\begin{theorem}[有序执行精化的目标]
+保持原候选顺序、孩子顺序、右折叠与保留最右代表的去重规则。
+整数表逐项提升后等于原有理表，包含顺序与全部元素；根判定相同。
+若计数继续记对应的算术调用次数，则十七个逻辑字段也逐项相同。
+\end{theorem}
+\begin{proof}
+局部列枚举不涉及费用，因此完全相同。
+提升保持每次加法和局部乘法；支持筛选、根次数筛选完全相同。
+对单射 $f$，有
+\[
+ \operatorname{map}(f,\operatorname{dedup}(L))
+ =\operatorname{dedup}(\operatorname{map}(f,L)).
+\]
+按列表归纳证明：单射使当前元素在尾表中的成员判断保持，故保留／删除及顺序一致。
+相等判断真值完全相同，短路扫描比较次数相同。
+先对内部、根折叠归纳，再按树 rank 归纳；最终预算由上引理处理。
+算术成本字段这里只表示对应次数：整数加法和有理加法的实际成本不宣称相等。
+\end{proof}
+
+建议新入口与默认入口并存，先证明精化，再测量六个原诊断实例。
+转换费用、预算的预处理时间与预生成权重后的 DP 时间应分别报告。
+无论是否测出加速，只要精化成立，整数层都会为后续位成本提供更直接的对象。
+
+\section{可选推导：带符号费用下安全的完成下界}
+
+\begin{theorem}[补全必要条件]
+设 $X\subseteq V\setminus\{o\}$ 是已经确定的列集合，当前整数费用为
+$z_i(X)=\sum_{x\in X}w(x)n_i(x)$。
+任何满足逐路线预算的完整矩阵都必须满足
+\[
+ z_i(X)+L_{(V\setminus\{o\})\setminus X}\le B\quad\text{对每个 }i.
+\]
+因此违反该式的部分状态不可能扩展成预算可行完整矩阵。
+\end{theorem}
+\begin{proof}
+未处理列仍满足 $0\le n_i(x)\le H(x)$，其总费用至少为相应 $L$。
+若当前费用加这一普适下界已经超过 $B$，任何真实补全的费用都会超过 $B$。
+\end{proof}
+这里使用的是线性费用 $b$，包含已分配到边上的父服务费，不是未经调整的子树服务和 $c$。
+例如当前费用为 $5$，剩余一项权重为 $-3$、重数一，预算 $3$；
+局部 $5>3$ 不能拒绝，因为 $5-3=2\le3$。
+所示规则比较 $5+(-3)$，不会发生这个错误。
+
+\textbf{实现边界。}
+这个规则可以删除局部可实现但全局不可补全的状态，所以加上它之后
+\texttt{computeCompact\_spec} 的原始 ``成员 iff CompactRep'' 一般不再成立。
+必须新增执行器，分别证明所有保留状态局部可靠，以及每个全局可行见证的限制都会保留；
+再证明根判定完备。不要在原执行器中直接加 filter 后沿用旧表语义。
+本轮可先完成上述必要条件，剪枝执行精化留为可选扩展。
+
+\section{包 E：从判定恢复可检查的矩阵证书}
+
+\subsection{首版采用显式矩阵载荷}
+每个状态附一份实现它的局部矩阵；比较及去重仅看状态键，不能让矩阵载荷参与相等判断。
+局部候选 $q$ 建立顶列，孩子载荷在不交子树上拼接。
+内部中间载荷记录固定顶列与已处理孩子的列，子树外为零。
+根拼接孩子载荷并把根坐标规范为零。
+首版接受较大的载荷开销，先把输出契约闭合；随后再换成回溯索引或共享 DAG。
+
+\begin{theorem}[键去重保持代表见证]
+设每个带载荷条目 $(k,w)$ 都满足 $\operatorname{Realizes}(k,w)$。
+按键稳定去重并保留最右条目后，每个保留条目仍满足该性质，而且
+键投影列表等于原键列表的普通去重。
+\end{theorem}
+\begin{proof}
+列表归纳。若当前键已在去重尾部出现，保留已有合法代表；否则把当前合法条目加入。
+载荷不参与比较，因此删除规则与原键去重完全一致。
+\end{proof}
+
+\subsection{必须证明的接口}
+\begin{enumerate}
+\item 带见证节点表忘掉载荷后，\emph{有序列表}恰等于既有 \texttt{computeCompact}。
+\item 每个节点条目的载荷满足 \texttt{PartialValid}、根孩子 cap、支持及费用等式。
+\item 根接受条目的载荷满足完整矩阵四条件。
+\item 新 \texttt{solveCompact} 返回 \texttt{some C} 蕴含既有模式证书检查器接受 $C$。
+\item 新入口返回 \texttt{none} 当且仅当 $\neg\MF$；零路线成功必须是 \texttt{some []}。
+\item 接回实际路线存在性时仍使用相应的 \texttt{HasDegrees} 等桥接假设。
+\end{enumerate}
+每个矩阵行可先转为重数一的模式条目，再调用已有稳定证书压缩。
+逐顶点路线生成属于后续独立输出任务。失败布尔值或 \texttt{none} 不自动成为简短不可行性证书。
+本节的载荷执行器和回溯结构改变了存储与构造工作，不能沿用包 C 的时间或内存口径。
+
+\section{Lean 模块顺序与关键规格}
+
+建议仅新增模块，沿用既有工具链、Mathlib 固定提交和开发环境。
+下列名称为建议；实际命名以本地无冲突为准。
+\begin{longtable}{p{.39\textwidth}p{.55\textwidth}}
+\toprule 建议模块后缀（均以 \texttt{TreeBudgetSubtree} 开头） & 核心交付 \\ \midrule
+\texttt{Invariants} & 总和、非活跃零费用、支撑基数、零顶重数分类、无非平凡费用支配、坐标恢复 \\
+\texttt{GridBounds} & 缩放契约、整数区间、固定和、数值基数界 \\
+\texttt{CompositionBounds} & 列枚举 Nodup、精确长度、根孩子筛选长度、递归闭式 \\
+\texttt{TableBounds} & 任意已处理孩子列表的长度界、raw 界、节点与根界、组合与网格最小值界 \\
+\texttt{StatsBounds} & 同次公开执行的十七项界；累加量和最大值分开；规范质量参数推论 \\
+\texttt{IntegerDP} / \texttt{IntegerRefinement} & 新整数执行器、完整有序表与计数精化、floor 预算 \\
+\texttt{WitnessDP} / \texttt{WitnessCorrectness} & 可选 E：键去重载荷、矩阵恢复、原 checker 接受 \\
+\bottomrule
+\end{longtable}
+
+\subsection{种子代码}
+同目录的 \texttt{TreeBudgetSubtreeBoundsSeed.lean} 包含七个完整证明尝试：
+总费用、非活跃费用、支配退化、删除零号费用坐标、实际表总费用、内部折叠列表界、根折叠列表界。
+源码没有占位证明或新增公理，但\textbf{未经过 Lean 编译}；本地需先解决可能的类型推断、
+有限和重写与引理参数问题，再拆入正式模块。不要把未编译源码的存在写成 PASS。
+
+关键的单一数学入口可写成：
+\begin{Code}
+noncomputable def subtreeTotal (R : RootedTree V)
+    (H : V -> Nat) (s : V -> Rat) (v : V) : Rat :=
+  Finset.sum (subtree R v)
+    (fun x => linearWeight R s x * (H x : Rat))
+
+-- The companion Lean file uses the existing exact CompactRep signature:
+-- compact_cost_sum (hz : CompactRep R H m s v z) :
+--   (sum i, z.cost i) = subtreeTotal R H s v
+\end{Code}
+该定义有意为证明层非计算对象；执行层继续使用可计算孩子列表和向量。
+
+\subsection{不用先构造全部矩阵才能证明列表界}
+包 C 的直接证明应优先复用
+\begin{Code}
+insideRaw_length
+rootRaw_length
+List.dedup_sublist
+List.length_filter_le
+dedupComparisons_bound
+insideCostsStats_count
+rootFoldStats_count
+nodeTableStats_count
+checkCompactStats_count
+\end{Code}
+对列表做归纳，将长度界逐层传递。
+先得到纯列表的乘积包络，再用孩子子树不交将局部乘积嵌入 $P$。
+不要只给数学状态集合装一个 \texttt{Fintype} 就结束；实际列表长度还需重复元素控制。
+
+\subsection{建议声明签名的逻辑内容}
+以下为规格清单，不是可直接编译的占位模块：
+\begin{enumerate}
+\item \texttt{compositionsV\_nodup}：任意 $m,h$ 的候选列表无重复。
+\item \texttt{compositionsV\_length}：长度为上述分情形定义的 $q_m(h)$。
+\item \texttt{compositionProfile\_calls}：调用字段为 $\binom{h+m+1}{m}$。
+\item \texttt{compositionProfile\_choices}：range 字段加一等于调用字段。
+\item \texttt{computeCompact\_length\_le\_columnProduct}：非根表长度至多 $P_v$。
+\item \texttt{checkCompactStats\_bounds}：一份结构化结论同时给十七项界。
+\item \texttt{checkCompactStats\_mass\_bound}：显式带根次数相容性前提的质量界。
+\item \texttt{computeInteger\_lift\_eq}：整数表的逐项有序提升等于有理表。
+\item \texttt{checkInteger\_eq}：使用 $\lfloor DT\rfloor$ 的根判定一致。
+\item \texttt{solveCompact\_sound} 与 \texttt{solveCompact\_none\_iff}：可选证书包。
+\end{enumerate}
+
+\section{本地实施、回归和停止条件}
+
+\subsection{第一轮命令}
+解压后把种子文件复制到实际开发工程的 \texttt{LeanCompletion/UAV/} 下。
+从工程根目录执行；无需初始化新 Lake 工程，也不执行依赖更新。
+\begin{Code}
+lake env lean LeanCompletion/UAV/TreeBudgetSubtreeBoundsSeed.lean
+lake build LeanCompletion.UAV.TreeBudgetSubtreeBoundsSeed
+python path/to/check_bounds.py
+\end{Code}
+Windows PowerShell 每条关键命令后立即记录 \texttt{\$LASTEXITCODE}。
+种子文件自带七条公理报告。正式新增模块完成后另建覆盖全部新增声明的审计入口，
+不能只审计种子七条就称整个包通过。
+
+\subsection{回归矩阵}
+\begin{longtable}{p{.35\textwidth}p{.59\textwidth}}
+\toprule 边界／反例 & 要保护的性质 \\ \midrule
+$m=0$、只有根、$M=0$ & 空积一、成功空证书与失败不同、任意负预算的空族语义 \\
+$H(v)=0$ 但后代正重数 & 空表，而不是错误地生成零状态 \\
+$m=1$、大 $H$ & 输出一列但原候选递归 $H+2$ 次 \\
+根孩子 $H(v)>m$ & 筛选后为空，筛选前生成成本仍存在 \\
+内部孩子次数大于父次数 & 保留合法重复穿越，不引入错误次数单调约束 \\
+零费用、活跃却费用零 & 费用零不能推出非活跃 \\
+负费用抵消 & 禁止直接按局部费用超预算拒绝 \\
+负非整数 $DT$ & floor 向下取整，不能向零截断 \\
+两份状态费用相同、支持不同 & 不做错误合并 \\
+不同 $q$ 压缩碰撞 & 去重保序、载荷保留有效代表 \\
+第一张／中间孩子表为空 & 仍计之后的支持扫描及已生成孩子表工作 \\
+根配对被 cap 拒绝 & 相加后筛选，拒绝配对的算术照计 \\
+\bottomrule
+\end{longtable}
+
+附带 \texttt{check\_bounds.py} 使用标准库与精确有理数，独立递归构表，
+并对局部矩阵直接枚举，核对状态、整数区间、组合界、raw／统计界和补全下界必要性。
+本轮实际运行：63 组候选检查、2944 组树／费用／预算实例、8400 张局部表全部通过。
+这是有限检查，不替代上述一般性 Lean 证明，也不是原 Lean 执行器的重新测试。
+
+\subsection{验收门槛与有意义的停点}
+\begin{enumerate}
+\item A 验收：固定总和及信息冗余结论接到实际表成员，不仅停留在纸面定义。
+\item B/C 验收：候选 Nodup／长度／调用数，中间 raw 界，以及同次统计执行的逐项界；
+必须保留 $m=0$ 和签名中的相容性条件。
+\item D 验收：有序表及判定精化；负预算 floor 回归；计数对应与速度观测分开。
+\item E 验收：实际输出矩阵／证书，由原 checker 接受；失败完备性；压缩碰撞的载荷回归。
+\item 使用现有缓存环境定向构建，新增声明公理审计无未经证明公理。
+原始日志放忽略目录；只提交精炼验证记录，明确本轮 Built 与依赖 Replayed。
+\end{enumerate}
+A--C 完成即形成完整的数学／逻辑复杂度包；D 为执行表示包；E 为输出证书包。
+可连续推进，但每包都有独立停点。没有必要通过不断增加性能实验来替代证明收尾。
+
+\section{研究定位与尚未宣称的结果}
+固定列和的守恒、星与条隔板计数、动态规划状态合并、整数缩放和见证回溯均是常见方法。
+本轮价值在于将它们精确适配本仓库带符号逐次访问费用的模型，
+并连接现有可执行程序、有序状态表与统计定义，不作方法首次发现或首次形式化的声称。
+
+本轮没有证明：新 DP 的标准机器时间或位成本 FPT、实际峰值内存、编译 Lean 的秒数界、
+一般图接口、任意给定游走见证的上下文替换、状态信息最小性或路线置换商的正确性。
+\#22 已有结果仍属于其原执行器和成本模型；\#23 的归约机器成本不作为本轮前置任务。
+
+\begin{thebibliography}{9}
+\bibitem{repo} UAV Routing Certification，研究分支固定提交 \texttt{df2d3f4}：
+\url{https://github.com/huam54925-cpu/uav-routing-certification/tree/df2d3f46bafb15b1d0943105e5b3ce3fc63912d7}。
+\bibitem{state} 同仓库，\texttt{TreeBudgetSubtreeState.lean}、
+\texttt{TreeBudgetSubtreeCompact.lean}、\texttt{TreeBudgetSubtreeDP.lean}。
+\bibitem{stats} 同仓库，\texttt{TreeBudgetSubtreeStats.lean}、
+\texttt{TreeBudgetSubtreeStatsPrimitives.lean}、\texttt{TreeBudgetSubtreeCandidates.lean}。
+\bibitem{mathlib} Mathlib，固定提交
+\texttt{5450b53e5ddc75d46418fabb605edbf36bd0beb6}，
+\texttt{Mathlib/Algebra/Order/BigOperators/Group/Finset.lean}。
+其中加法版本 \texttt{Finset.sum\_eq\_sum\_iff\_of\_le}
+可用于有限和相等下的逐项支配退化。
+在线文档用于定位，实际编译以该固定依赖为准：
+\url{https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/Order/BigOperators/Group/Finset.html}。
+\end{thebibliography}
+\end{document}
