@@ -20,8 +20,16 @@ def add (a b : Vector ℤ m) : Vector ℤ m := Vector.ofFn fun i => val a i + va
 
 def inside (a : Vector Bool m) (base : Vector ℤ m) : List (List (IntState m)) → List (Vector ℤ m)
   | [] => [base]
-  | t :: ts => ((t.filter fun e => subsetB e.active a).flatMap fun e =>
-      (inside a base ts).map (add e.cost)).dedup
+  | t :: ts =>
+    let rest := inside a base ts
+    ((t.filter fun e => subsetB e.active a).flatMap fun e =>
+      rest.map (add e.cost)).dedup
+
+/-- Hoisting the tail table preserves the original ordered recurrence definitionally. -/
+theorem inside_cons_eq (a : Vector Bool m) (base : Vector ℤ m)
+    (t : List (IntState m)) (ts : List (List (IntState m))) :
+    inside a base (t :: ts) = ((t.filter fun e => subsetB e.active a).flatMap fun e =>
+      (inside a base ts).map (add e.cost)).dedup := rfl
 
 def node (R : RootedTree (Fin N)) (H : Fin N → ℕ) (w : Fin N → ℤ)
     (m : ℕ) (v : Fin N) (ts : List (List (IntState m))) : List (IntState m) :=
@@ -41,7 +49,13 @@ def rootAdd (x : IntRoot m) (e : IntState m) : IntRoot m :=
 def cap (x : IntRoot m) : Bool := (List.finRange m).all fun i => decide (val x.used i ≤ 1)
 def rootFold : List (List (IntState m)) → List (IntRoot m)
   | [] => [rootZero m]
-  | t :: ts => ((t.flatMap fun e => (rootFold ts).map fun b => rootAdd b e).filter cap).dedup
+  | t :: ts =>
+    let rest := rootFold ts
+    ((t.flatMap fun e => rest.map fun b => rootAdd b e).filter cap).dedup
+theorem rootFold_cons_eq (t : List (IntState m)) (ts : List (List (IntState m))) :
+    rootFold (t :: ts) =
+      ((t.flatMap fun e => (rootFold ts).map fun b => rootAdd b e).filter cap).dedup := rfl
+
 def accept (B : ℤ) (b : IntRoot m) : Bool :=
   (List.finRange m).all fun i => decide (val b.used i = 1 ∧ val b.cost i ≤ B)
 def check (R : RootedTree (Fin N)) (H : Fin N → ℕ) (w : Fin N → ℤ)

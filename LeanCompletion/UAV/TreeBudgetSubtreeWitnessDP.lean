@@ -46,8 +46,17 @@ structure Inside (N m : ℕ) where
 def inside (a : Vector Bool m) (base : Vector ℚ m) :
     List (List (Entry N m)) → List (Inside N m)
   | [] => [⟨base, []⟩]
-  | t :: ts => dedupKey Inside.cost ((t.filter fun e => subsetB e.key.active a).flatMap fun e =>
-      (inside a base ts).map fun r => ⟨addCost e.key.cost r.cost, e :: r.picks⟩)
+  | t :: ts =>
+    let rest := inside a base ts
+    dedupKey Inside.cost ((t.filter fun e => subsetB e.key.active a).flatMap fun e =>
+      rest.map fun r => ⟨addCost e.key.cost r.cost, e :: r.picks⟩)
+
+/-- The original recurrence, including rightmost representatives and payload order. -/
+theorem inside_cons_eq (a : Vector Bool m) (base : Vector ℚ m)
+    (t : List (Entry N m)) (ts : List (List (Entry N m))) :
+    inside a base (t :: ts) =
+      dedupKey Inside.cost ((t.filter fun e => subsetB e.key.active a).flatMap fun e =>
+        (inside a base ts).map fun r => ⟨addCost e.key.cost r.cost, e :: r.picks⟩) := rfl
 
 theorem inside_keys (a : Vector Bool m) (base : Vector ℚ m) (ts : List (List (Entry N m))) :
     (inside a base ts).map Inside.cost = insideCosts a base (ts.map (List.map Entry.key)) := by
@@ -198,9 +207,16 @@ structure Root (N m : ℕ) where
 
 def roots : List (List (Entry N m)) → List (Root N m)
   | [] => [⟨rootZero m, []⟩]
-  | t :: ts => dedupKey Root.key
-      ((t.flatMap fun e => (roots ts).map fun r => ⟨rootAdd r.key e.key, e :: r.picks⟩).filter
+  | t :: ts =>
+    let rest := roots ts
+    dedupKey Root.key
+      ((t.flatMap fun e => rest.map fun r => ⟨rootAdd r.key e.key, e :: r.picks⟩).filter
         fun r => rootCapB r.key)
+
+theorem roots_cons_eq (t : List (Entry N m)) (ts : List (List (Entry N m))) :
+    roots (t :: ts) = dedupKey Root.key
+      ((t.flatMap fun e => (roots ts).map fun r => ⟨rootAdd r.key e.key, e :: r.picks⟩).filter
+        fun r => rootCapB r.key) := rfl
 
 theorem roots_keys (ts : List (List (Entry N m))) :
     (roots ts).map Root.key = rootFold (ts.map (List.map Entry.key)) := by
