@@ -1,5 +1,7 @@
 # 自动整数输入与完整证书精化（F0–F4）
 
+> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+
 2026-11-15 本地验证。目标上游是
 `huam54925-cpu/uav-routing-certification` 的
 `research/structural-service-cuts-20261023` 分支，基线为

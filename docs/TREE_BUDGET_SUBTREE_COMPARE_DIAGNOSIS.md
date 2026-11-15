@@ -1,5 +1,7 @@
 # #19：比较开销的分层诊断与受控验证
 
+> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+
 日期：2026-11-13。冻结基线为 `3d4022704e3ac2b5bf4c0d50e006484c75810ff1`。
 本包只研究 `fees_4`、`fees_8`、`zero_4`、`zero_8`、`rational_short`、`rational_long`。
 不改变原执行器、实例、工具链及 Lean `--run` 后端，#23 继续暂缓。

@@ -1,5 +1,7 @@
 # #19：子树状态、精确合并与支持集压缩
 
+> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+
 日期：2026-11-13。本包依据用户提供的
 `issue19_today_plan_proofs_20261113_zh.tex` 实现独立矩阵语义及其递推契约。
 未编译 TeX，未安装或重建 Lean 环境，未涉及 #23 的机器成本实现。
@@ -87,14 +89,8 @@ python tools/check_tree_budget_subtree_states.py
 `5450b53e5ddc75d46418fabb605edbf36bd0beb6` 一致。
 发布基线为研究分支的 `9b1093f9059d8c2e1674139b7402b6f0290d5283`。
 
-## 下一步边界
+## 原批次边界与后续完成情况
 
-本包没有实现可执行 DP 表、去重、回溯输出路线或操作计数。
-下一步可用 `partialRep_merge_iff` / `compactRep_merge_iff` 证明表成员关系恰等于对应语义，
-再分别统计局部次数枚举、孩子组合、集合比较、有理数运算与去重。
-固定总费用、状态数界、对称性商等尚未在本包形式化。
-带符号费用下不得直接按局部超预算删除状态。
-这不完成 #19 的全部文献比较及接口研究，也不提供 #23 的标准机器时间证明。
+本页的 11 月 13 日语义包本身不包含执行器或统计。其后[可执行压缩 DP](TREE_BUDGET_SUBTREE_DP_STATUS.md)已证明有序表成员对应与完整判定；[A–E](TREE_BUDGET_SUBTREE_BOUNDS_STATUS.md)已完成固定费用总和、状态/网格/组合界、统计和矩阵证书恢复；[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md)与[G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md)又完成自动整数证书和指定源码资源界。这些不再列作下一步。
 
-后续可执行实现及其精化证明见
-[可执行压缩状态 DP 状态说明](TREE_BUDGET_SUBTREE_DP_STATUS.md)。
+当前 H0–H4 计划集中在 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)。对称性商、逐顶点游走输出、外部给定游走拼接契约及 #23 标准机器成本仍独立保留。带符号费用下不得直接按局部超预算删除状态；本页历史验证不因导航更新而重跑。

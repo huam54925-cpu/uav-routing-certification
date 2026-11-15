@@ -1,5 +1,7 @@
 # 树预算路由：从信息充分性走向精确子树算法
 
+> 当前状态导航（2026-11-15）：本文是 11 月 13 日的文献与设计快照，以下“尚无实现”“下一步状态/重建”按当时阶段理解。子树状态语义、可执行 DP、A–E 规模/统计/矩阵证书、F0–F4 自动整数证书及 [G0–G4 资源界](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已后续交付。当前实施计划是 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/预处理成本和算术精化；给定游走契约及更进一步压缩仍独立保留。本次不重做文献检索或历史实验。
+
 **日期：2026-11-13（Asia/Tokyo）**  
 **分支：research/structural-service-cuts-20261023**  
 **源码核对基线：** [ca92c6c](https://github.com/huam54925-cpu/uav-routing-certification/commit/ca92c6c17e9eda26f89044f65399515380235da6)  

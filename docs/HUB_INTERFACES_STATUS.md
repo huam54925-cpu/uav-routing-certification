@@ -1,6 +1,6 @@
 # 单次游程推广、分配检查器与编号模型 — 2026-11-07
 
-> 当前导航（2026-11-09）：本页保留 2a64246 的历史开发和验收记录。#23 的二进制编解码、稀疏语义桥、精确/线性长度和总位串变换已由 [bd0dd94](https://github.com/huam54925-cpu/uav-routing-certification/commit/bd0dd940e3ba73d6e1c0892aa3b377d60950eccf) 完成，见[第四块验收记录](HUB_REDUCTION_ENCODING_STATUS.md)。#22 完整搜索精化及 A–E 总成本/FPT 也已交付，见[执行记录](TREE_BUDGET_STORED_EXECUTION_STATUS.md)。以下“暂缓”“仍未完成”仅描述 11 月 7 日批次；当前待办为四块联合验收及独立的 #23 机器成本，#19 一般化保留长期任务。本次仅同步说明，没有新构建或审计。
+> 当前导航（2026-11-15）：本页保留 2a64246 的历史开发和验收记录。#23 的编解码、稀疏语义桥、长度和总位串变换已由 [bd0dd94](https://github.com/huam54925-cpu/uav-routing-certification/commit/bd0dd940e3ba73d6e1c0892aa3b377d60950eccf) 完成；#22 的 A–E 总成本/FPT 已交付并等待最终验收。#19 的存在性矩阵状态、递归 DP、自动整数证书及 [G0–G4 资源界](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已完成，当前下一包是 [H0–H4 预检/预处理成本](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)（计划，尚未实施）。给定游走拼接契约、一般见证转换及 #23 机器成本仍独立保留。以下“暂缓/未完成”仅描述 11 月 7 日批次；本次导航同步没有新构建或审计。
 
 
 本批以研究分支 `86993ec790cb6c7ab3f28ed61805dcb783aa7f0f` 为发布基线，

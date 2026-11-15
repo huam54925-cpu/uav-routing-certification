@@ -1,5 +1,7 @@
 # #19：压缩子树 DP 的操作计数与完整次数参照
 
+> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+
 日期：2026-11-13。冻结基线为 `b7ace6dcddedc6e46d12d9ce5d6e3609b665153f`。
 本包测量子树精确判定器，暂不涉及 #23 的标准机器成本、见证回溯或统一时间上界。
 
