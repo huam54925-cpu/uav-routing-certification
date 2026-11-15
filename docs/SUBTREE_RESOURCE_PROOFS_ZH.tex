@@ -1,0 +1,513 @@
+% !TeX program = xelatex
+% Paper proofs and implementation guidance; no claim of local Lean compilation.
+\documentclass[UTF8,11pt,a4paper]{ctexart}
+\usepackage[margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,longtable,array}
+\usepackage{enumitem,xcolor,listings}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\setlist{itemsep=3pt,topsep=5pt}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem{remark}[theorem]{说明}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\ch}{\operatorname{Ch}}
+\newcommand{\den}{\operatorname{den}}
+\newcommand{\bits}{\operatorname{size}}
+\newcommand{\lcmop}{\operatorname{lcm}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,keepspaces=true,
+  frame=single,showstringspaces=false}
+\title{自动整数子树见证搜索：\protect\\ 分母恒等式、矩阵载荷资源界与下一包形式化}
+\author{研究推进与本地实施指导}
+\date{2026 年 11 月 15 日；基线提交 \texttt{58d5462}}
+\begin{document}
+\maketitle
+
+\noindent\textbf{本稿的证据范围。}
+基线是仓库研究分支的提交
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/58d54620aa8634238409bf6c6e98a91db40c670a}{\texttt{58d54620aa8634238409bf6c6e98a91db40c670a}}。
+已有 F0--F4 结论给出自动整数化以及完整有序载荷、所选证书的精确对应。
+本文给出下一包的纸面证明、计费模型和实施顺序；随包 Lean 文件是未在本会话编译的候选源码。
+Python 有限核对实际运行通过，但不替代 Lean 内核证明。
+本文不把下述事件计数称为编译后机器总时间，也不把矩阵坐标内容位数称为整个程序的峰值内存。
+
+\section{固定对象与已经可复用的事实}
+设 $R$ 是顶点集 $V=\operatorname{Fin}(N)$ 上的有根树，根为 $o$，父映射为 $p$。
+因为存在根，$N\ge1$。记 $n=N-1$，$k_v=\abs{\ch(v)}$，则
+\begin{equation}\label{eq:degree}
+  \sum_{v\in V} k_v=n.
+\end{equation}
+每个非根顶点的父边重数是 $H_v\in\N$，$H_o$ 不参与约束。
+路线数为 $m\in\N$，服务费用 $s_v\in\Q$，预算 $T\in\Q$；本包保留负费用和负预算。
+取 $U\in\N$ 满足 $H_v\le U$ 对所有 $v\ne o$ 成立。
+
+局部列是将 $H_v$ 分配给 $m$ 条有编号路线的弱组合。
+令
+\[
+ q_m(h)=
+ \begin{cases}
+  \binom{h+m-1}{m-1},&m>0,\\
+  1,&m=0,\ h=0,\\
+  0,&m=0,\ h>0,
+ \end{cases}
+ \qquad
+ P=\prod_{v\ne o}\max\{1,q_m(H_v)\}.
+\]
+因此 $P\ge1$；不能在空表或零路线情形删掉 $\max\{1,\cdot\}$。
+本文的 $P$ 对应 \code{globalProduct R H m}。
+
+现有表界与统计界提供：
+\begin{enumerate}
+\item 每个非根节点去重前的原始节点表长度 $A_v$ 至多为局部列积，故 $A_v\le P$。
+\item 各次内部合并、根部合并及节点去重的输入表长度均至多为 $P$。
+\item 全部去重输入长度之和至多为 $2nP$。
+\item 包括根部随后被拒绝的配对在内，
+\[
+ \mathrm{insidePairs}+\mathrm{rootPairs}\le nP.
+\]
+\item 旧的 17 项统计中，前 15 项之和满足
+\begin{equation}\label{eq:old}
+ L\le 32N(m+1)(U+1)P^2.
+\end{equation}
+后两项是单张表最大长度，不计入 $L$，也不代表峰值内存。
+\end{enumerate}
+对新执行器复用这些结论之前，必须证明：投影到键以后完整有序列表相同，而且新执行器的 17 个统计字段与旧统计执行器相同。
+不能只证明最终成功标志相同，也不能用另外运行一次旧执行器来制造新执行器的统计。
+
+\section{公共分母实际上与树形无关}
+对非根顶点定义
+\begin{equation}\label{eq:alpha}
+ \alpha_v=s_v+\mathbf1_{p(v)\ne o}s_{p(v)},\qquad \alpha_o=0.
+\end{equation}
+这正是树预算矩阵的线性费用系数，根的服务费用被忽略。
+所有有理数采用既约表示，分母为正，$\den(0)=1$。
+约定空族的最小公倍数为 $1$。
+
+\begin{lemma}[相同的整数缩放条件]\label{lem:scale}
+对任意正整数 $d$，
+\[
+ \bigl(\forall v\ne o,\ ds_v\in\Z\bigr)
+ \quad\Longleftrightarrow\quad
+ \bigl(\forall v\ne o,\ d\alpha_v\in\Z\bigr).
+\]
+\end{lemma}
+\begin{proof}
+正向直接由式 \eqref{eq:alpha} 及整数对加法封闭得到。
+反向沿从根向下的深度归纳。若 $p(v)=o$，则 $s_v=\alpha_v$。
+否则父顶点已满足 $ds_{p(v)}\in\Z$，而
+\[
+ ds_v=d\alpha_v-ds_{p(v)}\in\Z.
+\]
+有限树保证该归纳覆盖所有非根顶点。
+这里不需要 $s_v\ge0$，也不需要预算假设。
+\end{proof}
+
+\begin{theorem}[分母 LCM 恒等式]\label{thm:lcm}
+令
+\[
+ D_\alpha=\lcmop_{v\ne o}\den(\alpha_v),\qquad
+ D_s=\lcmop_{v\ne o}\den(s_v).
+\]
+则
+\begin{equation}\label{eq:lcm}
+ \boxed{D_\alpha=D_s\le\prod_{v\ne o}\den(s_v).}
+\end{equation}
+\end{theorem}
+\begin{proof}
+既约分数 $q=a/b$ 满足 $dq\in\Z$ 当且仅当 $b\mid d$：充分性直接；
+必要性由 $b\mid da$、$\gcd(\abs a,b)=1$ 得到 $b\mid d$。
+因此引理 \ref{lem:scale} 说明两组分母具有完全相同的正公共倍数。
+也可分别代入 $d=D_s,D_\alpha$，得到 $D_\alpha\mid D_s$ 和 $D_s\mid D_\alpha$。
+二者都是正整数，所以相等。最小公倍数不超过乘积给出后半式。
+若没有非根顶点，两端均为 $1$。
+\end{proof}
+
+\begin{remark}
+按深度排列非根顶点后，$s\mapsto\alpha$ 是单位下三角整数矩阵变换，逆变换也为整数矩阵。
+上述恒等式是这一可逆整数变换的直接结果，不应单独宣称为新的复杂度算法。
+固定根与服务费用后，改变树的形状不会改变 $D_s$。
+\end{remark}
+
+\begin{corollary}[可选的预处理替换]
+先用原始非根服务分母求 $D_s$，计算 $t_v=D_s s_v\in\Z$，再令
+\[
+ w_o=0,\qquad w_v=t_v+\mathbf1_{p(v)\ne o}t_{p(v)},\qquad
+ B=\lfloor D_s T\rfloor,
+\]
+所得缩放因子、权重向量和预算与现有自动预处理逐字段相等。
+\end{corollary}
+\begin{proof}
+因子相等由定理 \ref{thm:lcm}。每个权重坐标都等于 $D_s\alpha_v$；根坐标均为零。
+预算使用同一正整数因子与同一 floor 定义，因此也相等。
+\end{proof}
+建议先证明此对应，再考虑替换预处理；本包不根据纸面式子提前宣称运行更快。
+
+\section{位长界：明确处理负预算与零值}
+写 $s_v=a_v/b_v$、$T=u/t$，均为既约分数且 $b_v,t\ge1$。
+设整数 $b\ge1$ 满足
+\[
+ \abs{a_v}<2^b,\quad b_v<2^b\ (v\ne o),\qquad
+ \abs u<2^b,\quad t<2^b.
+\]
+令 $D=D_\alpha=D_s$，$w_v=D\alpha_v\in\Z$，$B=\lfloor DT\rfloor$。
+
+\begin{theorem}[缩放数据界]\label{thm:width}
+有
+\begin{align}
+ 1\le D&\le2^{nb},\label{eq:Dwidth}\\
+ \abs{w_v}&<2^{(n+1)b+1}\quad(v\in V),\label{eq:wwidth}\\
+ \abs B&<2^{(n+1)b}.\label{eq:Bwidth}
+\end{align}
+\end{theorem}
+\begin{proof}
+式 \eqref{eq:Dwidth} 来自分母乘积界；$n=0$ 时 $D=1$，仍成立。
+由于 $\abs{s_v}<2^b$，式 \eqref{eq:alpha} 给出
+$\abs{\alpha_v}<2^{b+1}$，乘以 $D\le2^{nb}$ 得到权重界。
+
+对预算，令 $a=D\abs u\in\N$。若 $u\ge0$，则
+$0\le\lfloor Du/t\rfloor\le a$。
+若 $u<0$，则
+\[
+ \abs{\lfloor Du/t\rfloor}=\lceil a/t\rceil\le a,
+\]
+最后一步使用 $a$ 为整数、$t\ge1$；$a=0$ 时同样成立。
+因此 $\abs B\le D\abs u<2^{nb}2^b$。
+这里不能以向零截断替换负数的 floor。
+\end{proof}
+
+令 $\bits(x)$ 表示自然数二进制位数，约定 $\bits(0)=0$。
+因而上述数值界分别给出
+\[
+ \bits(D)\le nb+1,\qquad
+ \bits(\abs{w_v})\le(n+1)b+1,\qquad
+ \bits(\abs B)\le(n+1)b.
+\]
+对 $D$ 使用非严格上界时需要保留这里的 $+1$；尤其 $n=0$ 时 $D=1$。
+有符号数的实际编码还应另外声明符号位及长度字段。
+定义
+\[
+ W=\sum_{v\ne o}\abs{w_v}H_v,\quad
+ r=\bits(n),\quad h=\bits(U),\quad
+ K=(n+1)b+1+r+h.
+\]
+\begin{corollary}[所有部分费用的统一范围]\label{cor:cost}
+有 $W<2^K$。若费用坐标来自合法局部矩阵，或来自互不相交子树的任意部分合并，则其绝对值至多为 $W$。
+此结论也覆盖根部通过容量筛选之前的原始配对。
+\end{corollary}
+\begin{proof}
+若 $n=0$ 或 $U=0$，则 $W=0<2^K$。
+否则由 $n<2^r$、$U<2^h$ 及式 \eqref{eq:wwidth}，
+\[
+ W<nU\,2^{(n+1)b+1}<2^K.
+\]
+对一条路线，局部矩阵每个非根坐标位于 $[0,H_v]$。
+每个部分合并的费用是某个互不相交顶点集合上的
+$\sum_v w_v a_v$，其中 $0\le a_v\le H_v$，故三角不等式给出绝对值至多 $W$。
+根部容量筛选只限制路线经过几个根子树；即便这项筛选失败，子树顶点集合仍然互不相交，以上绝对值估计仍成立。
+\end{proof}
+
+\noindent\textbf{形式化要点。}
+必须将局部不变量加强到去重前、筛选前和部分子树列表，而不是只对最终保留状态证明范围。
+可用一个不依赖预算的谓词：存在部分自然数矩阵，列坐标有界、支撑局限于指定森林，且费用等于加权和。
+随后对 raw 合并保持性归纳。根部原始使用数坐标至多 $2$，保留坐标至多 $1$。
+费用可有抵消，不能据此进行未经证明的超预算提前剪枝。
+
+\section{先增加根部必要条件预检}
+定义
+\[
+ M_o=\sum_{v\in\ch(o)}H_v,\qquad M=\sum_{v\ne o}H_v.
+\]
+\begin{theorem}[根部质量守恒]\label{thm:guard}
+若预算矩阵可行，则 $m=M_o$。因此在自动预处理之前增加
+\[
+ \operatorname{solveGuarded}=
+ \begin{cases}
+ \operatorname{solveAuto},&m=M_o,\\
+ \operatorname{none},&m\ne M_o
+ \end{cases}
+\]
+保持完整的返回值 $\operatorname{Option}$(Certificate) 相等。
+\end{theorem}
+\begin{proof}
+设矩阵为 $a_{iv}$。每行的根子树重数之和为 $1$，非根列和为 $H_v$，故
+\[
+ m=\sum_{i=1}^{m}1
+ =\sum_i\sum_{v\in\ch(o)}a_{iv}
+ =\sum_{v\in\ch(o)}\sum_i a_{iv}=M_o.
+\]
+若预检通过，两入口调用同一求解器。
+若预检失败，不存在可行矩阵，现有失败完备性定理说明原入口也返回 none。
+因此返回值完全相等，非仅成功标志相等。
+\end{proof}
+
+预检必须在创建长度为 $m$ 的任何向量之前执行。
+否则单根树 $N=1$、$M=0$、二进制输入的巨大 $m$ 已经构成问题：原入口需要构造长度为 $m$ 的根状态，即使最后拒绝。
+因此不能把只在 $m\le M$ 下推导的参数界宣称为未经预检入口在任意二进制输入上的总时间 FPT 定理。
+预检本身只枚举根的孩子并求和；其位成本应另记入入口预处理成本。
+
+\section{去重时的键列表分配不能用比较次数代替}
+当前保留最右代表的去重递推为
+\begin{lstlisting}
+dedupKey key [] = []
+dedupKey key (x :: xs) =
+  let r := dedupKey key xs
+  if key x in r.map key then r else x :: r
+\end{lstlisting}
+指定如下源程序计费：每次 \code{r.map key} 生成 $\abs r$ 个列表单元；随后 membership 按实际短路轨迹收费。
+键投影只引用已有向量，不深拷贝向量或矩阵。
+
+\begin{definition}
+对长度为 $\ell$ 的列表 $X$，令 $E(X)$ 为实际键比较次数，$K(X)$ 为上述临时键列表单元数。
+递推式为
+\[
+ K([])=0,\qquad K(x::X)=K(X)+\abs{\operatorname{dedupKey}(X)}.
+\]
+\end{definition}
+\begin{lemma}[单次去重界]
+\[
+ E(X)\le K(X),\qquad 2K(X)\le\ell(\ell-1).
+\]
+\end{lemma}
+\begin{proof}
+每次短路扫描比较的元素数至多为已生成键列表的长度，累加得到第一式。
+去重尾列表长度不超过原尾列表长度，故
+$K(X)\le0+1+\cdots+(\ell-1)=\ell(\ell-1)/2$。
+该证明允许键相同而载荷不同，保留右侧代表的语义不受影响。
+\end{proof}
+
+\begin{theorem}[全部去重临时键单元数]\label{thm:keymap}
+令 $K_{\rm all}$ 是一次 DP 运行内所有去重调用的 $K(X)$ 之和。
+则
+\[
+ \boxed{\mathrm{eqCalls}\le K_{\rm all}\le nP(P-1).}
+\]
+\end{theorem}
+\begin{proof}
+各输入表长度 $\ell_j\le P$，且 $\sum_j\ell_j\le2nP$。
+所以
+\[
+ 2K_{\rm all}\le\sum_j\ell_j(\ell_j-1)
+ \le(P-1)\sum_j\ell_j\le2nP(P-1).
+\]
+空表及 $P=1$ 时也成立，约去自然数乘数 $2$ 即可。
+\end{proof}
+例如，100 个键为 $0$ 的旧载荷之后接键 $0,1,\dots,19$ 的不同载荷，
+实际有 $K=2190$、$E=290$。
+这解释了为何仅使用 \code{eqCalls} 不能估计这里的临时列表单元分配。
+本包不同时改成哈希去重，以免计费修改和算法修改交织。
+
+\section{矩阵构造的精确计数与树度数求和}
+每个条目存储完整 $m\times N$ 自然数矩阵。
+令 $A_v$ 是节点 $v\ne o$ 去重前产生的条目数，$A=\sum_{v\ne o}A_v$。
+令 $C\in\{0,1\}$ 表示最终是否返回证书。
+节点表去重前已经调用了 glue，所以即使条目随后被丢弃，其矩阵构造仍需计费。
+根部成功时另调用一次 glue；失败时不调用。
+
+对父节点 $v$、局部列 $q$ 和 $k$ 个孩子条目，glue 的逐坐标定义是
+\[
+ a_{ix}=
+ \begin{cases}
+  q_i,&x=v,\\
+  \displaystyle\sum_{e\in\mathrm{picks}}e.\mathrm{matrix}_{ix},&x\ne v.
+ \end{cases}
+\]
+固定计费约定：每次矩阵写入一个坐标计一次；
+每读一个孩子矩阵坐标计一次；\code{map} 产生一个临时自然数列表单元计一次；
+每个求和元素计一次自然数加法，包括加零；列读取也逐坐标收费。
+计费约定定义的是抽象 census，不强制编译器保留临时列表。
+
+\begin{theorem}[矩阵载荷精确式]\label{thm:matrix}
+设
+\[
+ Y=m(N-1)\left(\sum_{v\ne o}k_v A_v+Ck_o\right).
+\]
+则
+\begin{align*}
+ \mathrm{matrices}&=A+C,\\
+ \mathrm{matrixCells}&=mN(A+C),\\
+ \mathrm{columnReads}&=m(A+C),\\
+ \mathrm{childReads}=\mathrm{natAdds}=\mathrm{tempCells}&=Y,\\
+ \mathrm{pickCons}&=\mathrm{insidePairs}+\mathrm{rootPairs},\\
+ \mathrm{rootZeroCells}&=mC.
+\end{align*}
+\end{theorem}
+\begin{proof}
+每次节点 raw 条目产生一个矩阵，去重不能撤销已经发生的构造；最终成功再产生一个矩阵，得到前三式。
+一次 glue 对每行的 $N-1$ 个非顶点坐标遍历恰好 $k$ 个孩子，
+每个元素产生一次读取、一次临时单元和一次加法。因此一次 glue 的三项计数均为 $m(N-1)k$。
+节点内部的 picks 与孩子表逐项对应，长度恰为 $k_v$，最终根部 picks 长度为 $k_o$，累加得到 $Y$。
+每个内部或根部原始配对构造一次 $e::\mathrm{picks}$，即使根配对随后被拒绝仍然收费。
+成功时构造长度为 $m$ 的最终根零列，得到最后一式。
+\end{proof}
+
+\begin{corollary}[避免多乘一个顶点数]\label{cor:payload}
+\begin{align*}
+ A&\le nP,\\
+ \mathrm{matrixCells}&\le mN(nP+1),\\
+ \boxed{\mathrm{childReads}=\mathrm{natAdds}=\mathrm{tempCells}
+   \le mn^2P.}
+\end{align*}
+\end{corollary}
+\begin{proof}
+由 $A_v\le P$ 得 $A\le nP$。
+另外 $C\le1\le P$，结合树度数恒等式 \eqref{eq:degree}，
+\[
+ \sum_{v\ne o}k_vA_v+Ck_o
+ \le P\sum_{v\ne o}k_v+Pk_o=nP.
+\]
+乘以 $mn$ 即得最后一式。这里先对度数求和，避免把每个节点的孩子数都粗略替换成 $N$ 后再对节点求和。
+\end{proof}
+
+\begin{lemma}[构造中的自然数范围]
+所有生成矩阵的根坐标为零，非根坐标至多为对应的 $H_x$。
+在 glue 中每个自然数求和的部分和也至多为 $H_x$。
+\end{lemma}
+\begin{proof}
+局部列 $q$ 的非负坐标和为 $H_v$，故 $q_i\le H_v$。
+不同孩子的子树互不相交，并且各孩子矩阵在自己的子树外为零。
+固定 $x\ne v$ 时，至多一个孩子矩阵在列 $x$ 上非零；该项至多为 $H_x$。
+其余项均为零，所以任何求和顺序的部分和也有相同上界。
+这同时证明去重前的 raw 矩阵范围，不能只对输出列表调用不变量。
+\end{proof}
+
+\section{组合成一个明确的 DP 资源定理}
+定义九项载荷统计为
+\[
+ \begin{gathered}
+ \mathrm{matrices},\ \mathrm{matrixCells},\ \mathrm{childReads},\
+ \mathrm{natAdds},\ \mathrm{tempCells},\ \mathrm{columnReads},\\
+ \mathrm{pickCons},\ \mathrm{keyMapCells},\ \mathrm{rootZeroCells}.
+ \end{gathered}
+\]
+令 $Q$ 为这九项之和，$\mathcal R=L+Q$。
+\begin{theorem}[新计费模型中的统一界]\label{thm:resource}
+\begin{align}
+ Q&\le(mN+m+1)(nP+1)+3mn^2P+nP^2+m,\label{eq:Q}\\
+ \boxed{\mathcal R&\le64(N+1)^2(m+1)(U+1)P^2.}\label{eq:R}
+\end{align}
+\end{theorem}
+\begin{proof}
+矩阵数、写入与列读取的总和是 $(mN+m+1)(A+C)$。
+三个 $Y$ 项的和至多 $3mn^2P$。
+由定理 \ref{thm:keymap} 和配对数界，
+\[
+ \mathrm{pickCons}+\mathrm{keyMapCells}
+ \le nP+nP(P-1)=nP^2.
+\]
+最终根零列至多计 $m$，得到式 \eqref{eq:Q}。
+
+设 $F=(N+1)^2(m+1)(U+1)P^2$。
+因为 $N\ge1$、$P\ge1$，有 $nP+1\le NP$，且
+$mN+m+1\le(m+1)(N+1)$，所以式 \eqref{eq:Q} 第一项至多 $F$。
+其余三项分别至多 $3F,F,F$，故 $Q\le6F$。
+由已有式 \eqref{eq:old}，$L\le32F$。
+因此 $\mathcal R\le38F\le64F$；取 $64$ 方便后续合并常数。
+\end{proof}
+
+\noindent\textbf{这个定理没有声称什么。}
+它没有给出 \code{prepare} 的执行成本；没有给出完整向量、列表、记录、调用栈的所有分配；
+没有计入计数器自身更新的成本；没有给出大整数单步位成本、地址位宽、引用计数或垃圾回收成本。
+其中某些分量是高层事件，另一些是选定源操作的细化计数。
+因此这是精确定义的 DP 资源账本上界，不是整个程序时间定理。
+后续若要机器成本结论，应连接显式执行模型，不能直接重命名 $\mathcal R$ 为 time。
+
+\section{存储结论与参数化推论的准确范围}
+令 $b_H=\max\{1,\bits(U)\}$。
+\begin{corollary}[矩阵坐标内容的累计容量]
+在每个自然数坐标使用 $b_H$ 位的固定宽度内容表示下，
+所有构造过的矩阵坐标内容总位数至多
+\[
+ \boxed{mN(nP+1)b_H.}
+\]
+临时自然数求和列表的累计元素内容位数至多 $mn^2Pb_H$。
+\end{corollary}
+\begin{proof}
+所有相关自然数均至多 $U<2^{b_H}$，所以各用 $b_H$ 位足够。
+分别乘以推论 \ref{cor:payload} 的写入数与临时列表单元数。
+零的编码至少预留一位，故不能直接将 $\bits(0)=0$ 当作实际坐标编码长度。
+\end{proof}
+任何时刻活着的、属于上述逻辑矩阵分配的对象数不超过累计分配数，
+因而可获得这一组件的峰值内容上界。
+要升级成整个堆或程序的峰值字节数，还需指定对象布局、指针表示、共享、生命周期以及执行模拟。
+最终 Certificate 的函数字段也不自动等于一个已经定义好的序列化格式。
+
+\begin{corollary}[通过根部预检后的质量参数界]
+在 $m=M_o$ 的执行分支，取 $U=M$。令 $\widehat M=\max\{1,M\}$，则
+\[
+ \boxed{\mathcal R\le64(N+1)^2(M+1)^2\widehat M^{2M}.}
+\]
+\end{corollary}
+\begin{proof}
+根孩子属于非根顶点，所以 $m\le M$；每个 $H_v\le M$。
+若 $m>0$，将 $h$ 个有标签对象分到 $m$ 个盒子的函数映射到无标签弱组合，
+这个映射满射，所以 $q_m(h)\le m^h$。
+由 $m^h\ge1$ 得 $P\le m^M\le\widehat M^M$。
+若 $m=0$，按定义每个列因子均为 $1$，所以 $P=1\le\widehat M^M$。
+代入定理 \ref{thm:resource} 即得。
+\end{proof}
+这给出本计费模型中关于数值参数 $M$ 的 FPT 形状上界。
+若要得到带地址位成本模型下、任意编码输入的总时间 FPT 定理，仍需计入预检、预处理、整数原语、输入读取以及全部执行开销。
+不能直接将另一个记忆化执行器的总时间定理迁移到本子树见证执行器。
+
+\section{Lean 落地顺序与验收}
+推荐将下一次推进集中为下列五块；先不更换候选枚举、去重策略或矩阵表示。
+\begin{longtable}{p{0.08\linewidth}p{0.35\linewidth}p{0.48\linewidth}}
+\toprule
+块 & 数学目标 & 本地必须完成的形式化验收\\
+\midrule
+G0 & 根部预检保持完整证书 & \code{matrixFeasible_rootMass}、\code{solveGuarded_eq}，预检置于所有 $m$ 维构造之前。\\
+G1 & 公共分母恒等式和位长 & 公共缩放等价；既约分母整除桥；LCM 双整除；权重、负预算、部分费用范围。\\
+G2 & 真正带载荷的统计执行器 & \code{solveAutoR_erase}；完整有序键投影；17 字段逐项相等；不能二次运行旧 solver。\\
+G3 & 矩阵与键列表精确计数 & raw 矩阵不变量；picks 长度；$A_v$ 和度数加权和；keyMapCells 的三角界与全局界。\\
+G4 & 统一界与证据归档 & $64$ 常数定理、组件位容量、全入口退化回归、实际公理审计，文档逐项标明证明层级。\\
+\bottomrule
+\end{longtable}
+
+随包源码的分工：
+\begin{itemize}
+\item \code{TreeBudgetSubtreeResourcePrimitivesSeed.lean}：九项统计、单遍带载荷去重、键映射单元计数、findCounted 及证明候选。
+\item \code{TreeBudgetSubtreeResourceExecutorSeed.lean}：按现有求值结构累计统计，完整返回证书；包含擦除定理候选。
+\item \code{TreeBudgetSubtreeResourceMathSeed.lean}：根部预检、整数缩放等价的核心递归证明、位长桥。
+\item \code{PROOF_TARGETS.txt}：没有混入可编译文件的后续精确定理目标；不能以占位假设代替完成。
+\end{itemize}
+
+一个容易出错的细节是树的 rank 方向：仓库中
+\code{R.parent_rank} 给出 $\operatorname{rank}(v)<\operatorname{rank}(p(v))$。
+子树递归可用 $\operatorname{rank}(v)$；从系数反推原服务费用时递归到父节点，
+应使用 $B_R-\operatorname{rank}(v)$，其中 $B_R$ 是所有 rank 的共同上界。
+随包代码使用 $B_R=\sum_x\operatorname{rank}(x)$，这只是证明终止的工具，不进入执行成本。
+
+\noindent\textbf{已有接口对应。}
+自动缩放来自 \code{TreeBudgetSubtreeAutoScaleSeed.lean}；完整证书对应来自
+\code{TreeBudgetSubtreeIntegerWitnessSeed.lean}；单步计数来自
+\code{TreeBudgetSubtreeStatsPrimitives.lean}；整数统计迁移来自
+\code{TreeBudgetSubtreeIntegerStats.lean}；表界、全局计数界、质量参数界分别来自
+\code{TreeBudgetSubtreeTableBounds.lean}、\code{TreeBudgetSubtreeStatsGlobalBounds.lean}、
+\code{TreeBudgetSubtreeMassBounds.lean}。
+
+\section{本次实际核对与本地仍需执行的事项}
+标准库 Python 模型核对了：
+\begin{itemize}
+\item $N=1,2,3,4$、$p(v)<v$ 的全部递增编号根树；非根 $H_v\in\{0,1,2\}$；$m\in\{0,1,2,3\}$。
+\item 五组含零、正、负分数的服务费用；六个预算 $-3/2,-1/6,0,1/2,3,10$。
+\item 3,680 组完整有序表及载荷对应、3,680 次分母 LCM 恒等式核对。
+\item 22,080 组完整证书、资源精确式与上界、位长以及根部预检对应核对。
+\item 一组刻意构造的键映射单元数与短路比较次数差距。
+\item 单根树上 $m=2^{200}$ 的提前预检退出；若错误调用后续 solver，测试立即失败。
+\end{itemize}
+这些检查以仓库已有 Python 模型为参照，不是执行 Lean，也没有穷尽所有输入。
+本次新脚本没有重新运行参照脚本自身的全部穷举矩阵验收入口。
+
+继续需要的环境只有现有 Lean/Mathlib 工程、Python 3.9 或更新版本的标准库，
+以及可选的 XeLaTeX。无需安装新的优化库、求解器或重建工具链。
+先把候选源码放进现有工程并定向构建，再补齐目标；对全部新命名定理运行直接公理审计。
+只有本地实际构建、实际回归与实际公理报告通过之后，才能将相应目标标为 Lean 已证。
+完整操作命令、日志保存方式与预计核对计数见同包 \code{RUN_LOCAL.txt}。
+
+\end{document}
