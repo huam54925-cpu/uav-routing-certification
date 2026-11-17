@@ -59,8 +59,11 @@ class Meter:
         return out
 
 
-def counted_tables(ref, parent, H, w, m):
+def counted_tables(ref, parent, H, w, m, root=0):
     nV, meter, tables = len(parent), Meter(), {}
+
+    def children(v):
+        return [u for u in range(nV) if u != root and parent[u] == v]
 
     def compositions(m0, h):
         meter.bump('compositionCalls')
@@ -89,10 +92,10 @@ def counted_tables(ref, parent, H, w, m):
 
     def compute(v):
         meter.bump('nodeCalls')
-        ts = [compute(u) for u in ref.children(parent, v)]
+        ts = [compute(u) for u in children(v)]
         all_q = compositions(m, H[v])
         meter.bump('columnsGenerated', len(all_q))
-        qs = [q for q in all_q if parent[v] != 0 or all(x <= 1 for x in q)]
+        qs = [q for q in all_q if parent[v] != root or all(x <= 1 for x in q)]
         meter.bump('columnsAccepted', len(qs))
         raw = []
         for q in qs:
@@ -100,7 +103,7 @@ def counted_tables(ref, parent, H, w, m):
             meter.bump('ratMuls', m)
             base = meter.cost([w[v] * x for x in q])
             for cost, picks in inside(active, base, ts):
-                matrix = counted_glue(ref, parent, H, m, v, q, picks, meter)
+                matrix = counted_glue(ref, parent, H, m, v, q, picks, meter, root)
                 raw.append(ref.Entry(active, cost, matrix))
         meter.raw_by_vertex[v] = len(raw)
         tables[v] = meter.dedup(raw, lambda e: (e.active, e.cost))
@@ -129,11 +132,11 @@ def counted_tables(ref, parent, H, w, m):
         meter.key['maxRawTable'] = max(meter.key['maxRawTable'], raw_count)
         return meter.dedup(kept, lambda r: (r.used, r.cost))
 
-    rs = roots([compute(v) for v in ref.children(parent, 0)])
+    rs = roots([compute(v) for v in children(root)])
     return tables, rs, meter
 
 
-def counted_glue(ref, parent, H, m, v, q, picks, meter):
+def counted_glue(ref, parent, H, m, v, q, picks, meter, root=0):
     meter.payload['matrices'] += 1
     mat = []
     for i in range(m):
@@ -152,7 +155,7 @@ def counted_glue(ref, parent, H, m, v, q, picks, meter):
                 for a in temp:
                     meter.payload['natAdds'] += 1
                     value += a
-                    assert value <= (0 if x == 0 else H[x])
+                    assert value <= (0 if x == root else H[x])
             meter.payload['matrixCells'] += 1
             meter.max_nat_cell = max(meter.max_nat_cell, value)
             row.append(value)
@@ -162,13 +165,13 @@ def counted_glue(ref, parent, H, m, v, q, picks, meter):
     return result
 
 
-def finish(ref, parent, H, m, B, roots, initial):
+def finish(ref, parent, H, m, B, roots, initial, root=0):
     meter = copy.deepcopy(initial)
     for r in roots:
         meter.bump('acceptCalls')
         if all(u == 1 and c <= B for u, c in zip(r.used, r.cost)):
             meter.payload['rootZeroCells'] += m
-            return counted_glue(ref, parent, H, m, 0, (0,) * m, r.picks, meter), meter
+            return counted_glue(ref, parent, H, m, root, (0,) * m, r.picks, meter, root), meter
     return None, meter
 
 
