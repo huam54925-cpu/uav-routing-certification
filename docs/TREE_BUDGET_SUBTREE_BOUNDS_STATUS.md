@@ -1,6 +1,6 @@
 # 子树 DP：规模界、实际统计、整数精化与证书输出
 
-> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+> 当前导航（2026-11-17）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md)、[G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md)、[H0–H4 预检/预处理](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) 与 [I0–I4 统一标量执行](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 均已交付，I 包证明提交为 [66bcf08](https://github.com/huam54925-cpu/uav-routing-certification/commit/66bcf082189e3b368693af93a5008a213e7ddaba)。H/I 已建立共同位宽下的算术费用界；对象表示、真实地址、分配、共享和控制帧仍是独立后续层。当前任务见 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)；此次导航同步没有重跑验证。
 
 日期：2026-11-14。基线：`df2d3f46bafb15b1d0943105e5b3ce3fc63912d7`。
 本包新增独立模块，保留原压缩执行器、候选顺序、孩子顺序和右侧代表去重规则。

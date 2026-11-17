@@ -1,5 +1,7 @@
 # Issue #21: first representation-bridge package
 
+> Current navigation — 2026-11-17: this page preserves the November 6 package and PDF-review records. #23's semantic, assignment/numbering, [binary encoding, length and total-bitstring packages](HUB_REDUCTION_ENCODING_STATUS.md) have since been delivered. #19 now has the existential subtree DP, automatic matrix certificates, G resources, [H preprocessing](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) and [I uniform scalar costs](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) (66bcf08). General supplied-witness round trips, vertex-walk output and object/address refinement remain separate scopes. The later results do not change this first bridge package's validation; this navigation edit reruns no checks.
+
 Date: 2026-11-06 (Asia/Tokyo). This package completes the bounded route/row interface task and its information-loss examples. The wider Issue #21 remains open. Plans and mathematical derivations are provided as English LaTeX source; this page records implementation and verification evidence.
 
 ## Delivered interfaces
@@ -50,7 +52,7 @@ Raw logs, hashes, and scratch output remain in ignored `verification/runs/issue2
 
 At the initial package validation, both standalone sources used `article` and were intended for Overleaf with pdfLaTeX or XeLaTeX. Mathematical statements and source references were independently reviewed; environment/brace matching, labels, internal references, English text, and source paths were checked statically. No LaTeX compiler was run and no PDF was generated or visually verified as part of that validation. The subsequent review below is a separate event.
 
-The #23 and #19 results remain paper proofs. They are not new Lean results, a formal complexity reduction, a strong NP-hardness classification, or a new internal-subtree algorithm. Full certificate round trips, executable reconstruction, and relaxation of the reverse next sign assumptions are outside this completed first package.
+At the November 6 validation, the #23 and #19 results in these two notes were paper proofs. That batch did not supply their Lean formalization, a formal complexity reduction, a strong NP-hardness classification, or an internal-subtree algorithm. Full certificate round trips, executable reconstruction, and relaxation of the reverse next sign assumptions are outside this completed first package.
 
 ## Publication comparison
 
@@ -66,4 +68,4 @@ After implementation commit [e576911](https://github.com/huam54925-cpu/uav-routi
 
 This documentation update does not change Lean files, rerun builds or axiom audits, compile LaTeX, or regenerate either supplied PDF. The corrected representation source has not yet been rendered; the supplied PDFs remain snapshots preceding this documentation revision.
 
-The first #21 bridge package and the first #22 candidate-list package are complete within their stated scopes; both wider issues remain open. The next bounded proof task is #23's semantic correspondence: unit columns determine an assignment, total cost saturates every row budget, and each saturated group has three items, followed by composition with the existing hub-packing theorem. Polynomial encoding and complexity classifications remain later tasks. For #19, continue the paper specification with one matched boundary excursion per route before considering a general internal-subtree DP. No new Lean work for #23 or #19 is included here.
+The first #21 bridge package and the first #22 candidate-list package are complete within their stated scopes; both wider issues remain open. The next bounded proof task identified at that November 6 review was #23's semantic correspondence: unit columns determine an assignment, total cost saturates every row budget, and each saturated group has three items, followed by composition with the existing hub-packing theorem. That review left polynomial encoding and complexity classifications to later tasks and proposed continuing #19's paper specification with one matched boundary excursion per route. The subsequent deliveries are indexed at the top of this page; they are not part of this November 6 verification batch.

@@ -19,14 +19,14 @@
 | 11 月 14 日 dad8a84 | 子树 A–E：不变量、网格/组合/质量界、17 字段统计界、整数精化与矩阵证书 | [A–E 验收记录](TREE_BUDGET_SUBTREE_BOUNDS_STATUS.md)；既有验证不与后续包混计 |
 | 11 月 15 日 58d5462 | F0–F4：自动 LCM/floor 输入、整数见证执行、完整有序载荷与整个证书精化 | [F 包验收记录](TREE_BUDGET_SUBTREE_AUTO_STATUS.md)；逐顶点游走仍另列 |
 | 11 月 15 日 604efea | G0–G4：根预检、分母恒等式、raw 数值范围、17 字段迁移、精确载荷计数及 64 常数资源界 | [G 包验收记录](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md)；167 项声明审计和新旧回归保留 11 月 15 日验证日期，H 包的重跑另记 |
-| 11 月 17 日 | H0–H4：物化输入、单次预检与预处理、完整证书/统计精化、中间位宽和 Euclid 界、明确算术模型中的六次多项式 | [H 包实现与验证](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md)；ghost 计数与填充位收费，不是整个 DP 执行器的机器时间 |
-| 11 月 17 日 | I0–I4：完整 DP 标量执行、全结果/17＋9 字段精化、实际次数到 G 的连接、共同位宽下 H/I 总费用 | [I 包实现与验证](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md)；对象、真实地址、分配、共享、控制帧仍属下一层 |
+| 11 月 17 日 [b23b766](https://github.com/huam54925-cpu/uav-routing-certification/commit/b23b766e2e202e134546a3e1b781f0ca4c2bafbe) | H0–H4：物化输入、单次预检与预处理、完整证书/统计精化、中间位宽和 Euclid 界、明确算术模型中的六次多项式 | [H 包实现与验证](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md)；ghost 计数与填充位收费，不是整个 DP 执行器的机器时间 |
+| 11 月 17 日 [66bcf08](https://github.com/huam54925-cpu/uav-routing-certification/commit/66bcf082189e3b368693af93a5008a213e7ddaba) | I0–I4：完整 DP 标量执行、全结果/17＋9 字段精化、实际次数到 G 的连接、共同位宽下 H/I 总费用 | [I 包实现与验证](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md)；13 模块、205 项审计、608 完整记录、1,225 比较例属于该证明批次；对象/地址/分配等仍属下一层 |
 
 #19/#21/#22/#23 保持开放，各自范围见[总路线图 #15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)。#19 的存在性矩阵状态、一般树递归 DP、矩阵见证恢复及 A–E/F/G 资源层已完成；不能再把这些写成长期未启动任务。给定游走的拼接/往返契约、逐顶点路线输出及一般访问副本转换仍独立保留。
 
 **[#19 的 H0–H4](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) 与 [I0–I4](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 已实现。** I 包保持当前表示和完整结果，把孩子全编号扫描、完整尾键映射、逐坐标比较、矩阵拼接及控制费用接到 G，再按同一最大位宽重计 H 的预处理收费。各包的实际构建、审计与回归见各自记录。下一层是对象表示、真实地址、分配、共享和控制帧，不能直接继承 #22 的存储执行结论。
 
-#22 的 A–E 与[文献模型对照](TREE_BUDGET_COST_MODEL_COMPARISON.md)已交付，开放状态仅保留最终验收决定；#23 的编解码、长度和总位串语义已完成，其机器成本继续暂缓。H/I 包不改变两者的既有交付范围。历史应用任务不恢复。
+#22 的 A–E 与[文献模型对照](TREE_BUDGET_COST_MODEL_COMPARISON.md)已交付，开放状态仅保留最终验收决定；#23 的编解码、长度和总位串语义已完成，其机器成本继续暂缓。H/I 包不改变两者的既有交付范围。I 包按统一标量收费与共同位宽的既定目标收口；存储精化须作为独立后续包固定表示关系和收费范围。本次仅核对源码并同步文档/议题，没有重跑 Lean、审计、回归或性能测量。历史应用任务不恢复。
 
 ## 历史应用阶段
 

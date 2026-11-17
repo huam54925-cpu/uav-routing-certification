@@ -1,21 +1,21 @@
 # Issue #20：阶段记录与后续导航
 
-## 当前状态 — 2026-11-08（Asia/Tokyo）
+## 当前状态 — 2026-11-17（Asia/Tokyo；保留各批原验证日期）
 
 [#20](https://github.com/huam54925-cpu/uav-routing-certification/issues/20) 已于 2026-11-05 按拆分后的范围阶段完成并关闭：逻辑执行计数、状态参数界、物化向量与整数检查组件、成功缓存成员界已交付。随后 #22 已完成候选列表保序对应、完整向量搜索精化，以及 A–E 共享存储执行与总位成本证明。
 
 | 后续任务 | 已完成 | 保留范围 |
 | --- | --- | --- |
 | [#22](https://github.com/huam54925-cpu/uav-routing-certification/issues/22) | [候选列表](TREE_BUDGET_VECTOR_CANDIDATES_STATUS.md)、[有序搜索](TREE_BUDGET_VECTOR_MEMO_REFINEMENT_STATUS.md)、[A–E 完整执行与总成本](TREE_BUDGET_STORED_EXECUTION_STATUS.md)、[文献对照](TREE_BUDGET_COST_MODEL_COMPARISON.md) | 所选模型内技术包已交付；保持开放，等待最终验收决定 |
-| [#23](https://github.com/huam54925-cpu/uav-routing-certification/issues/23) | 三划分语义 Lean iff、分配检查器、编号目标对应；编码与受限复杂度有独立纸面证明 | 二进制编解码/长度 Lean 包按约定暂缓；机器成本、一般树 NP 成员性与模型文献对照独立保留 |
+| [#23](https://github.com/huam54925-cpu/uav-routing-certification/issues/23) | 三划分语义 Lean iff、分配检查器、编号目标对应；[二进制编解码、稀疏语义桥、长度和总位串变换](HUB_REDUCTION_ENCODING_STATUS.md) 已由 bd0dd94 交付 | 机器成本继续暂缓；一般树 NP 成员性、复杂度分类与模型文献对照独立保留 |
 | [#21](https://github.com/huam54925-cpu/uav-routing-certification/issues/21) | [第一表示桥梁包](TREE_BUDGET_REPRESENTATION_BRIDGE_STATUS.md) | 完整见证转换与约定的往返契约 |
-| [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) | 单次游程纸面契约、任意内部子树的给定见证推广、自由匹配的排序预算判据 | Lean 接口、一般摘要可实现性、多次穿越与递归状态 |
+| [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) | 存在性子树状态/递归 DP、A–E/F/G 界与矩阵证书、[H 预处理](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md)、[I 统一标量费用](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md)（66bcf08）；另有给定游走纸面契约 | 对象/地址/分配/共享/控制帧精化；给定游走拼接/往返、逐顶点路线输出等独立范围 |
 
 A–E 源码发布于 [5953439](https://github.com/huam54925-cpu/uav-routing-certification/commit/595343965a91882e7894a9203a295d72009a71e0)，研究分支迁移说明见 [dda05c8](https://github.com/huam54925-cpu/uav-routing-certification/commit/dda05c86af22f9d8fa10590cf2c9c3bcf43a5d93)。完整执行器从实际位串出发，保持答案、有序缓存与六事件，证明无存储错误，并独立证明 `steps + allocations <= 2^50 * S^3 * (ell+1)^7`。两个 FPT 定理覆盖所有位串，包含拒绝输入；没有未证容量或总成本假设。验证记录为 25 个可执行回归、311 项声明公理审计通过，无 `sorryAx`；迁移复用原环境检查，不代表新构建。
 
 这里的时间是明确定义的带地址位成本，累计辅助分配也计费；不是编译 Lean 程序的秒数或实际峰值内存。标准机器模拟、需求到 H、实际路线展开和压缩输出属于另行扩展的任务，不列作当前 A–E 未完成项。
 
-#23 与 #19 的接口发布及证据分层仍见 [HUB_INTERFACES_STATUS.md](HUB_INTERFACES_STATUS.md)。#23 的自然数列表解码不是二进制解析，不能把 #22 的编码结果自动迁移为 #23 的归约证明；#19 的给定见证定理不保证抽象摘要可实现，也不构成一般树动态规划。
+#23 与 #19 的历史接口发布及证据分层见 [HUB_INTERFACES_STATUS.md](HUB_INTERFACES_STATUS.md)。#23 后续已完成自己的二进制归约编解码，不能用 #22 的编码结果替代其证明。#19 的给定游走契约与后续已实现的存在性矩阵状态 DP 属于不同接口；H/I 已证明统一标量算术费用，仍须另证对象/地址等执行精化才能复用 #22 的相关组件，其完整总成本/FPT 定理不自动迁移。
 
 [旧 LaTeX 位成本稿](TREE_BUDGET_BIT_COST_NOTE.tex)及 [2026-11-05 PDF](budget%20%281%29.pdf)保留各自的纸面推导与日期。旧纸面次数和 79dc3e5 的内在工作量界均不替换 A–E 对新执行器证明的固定七次总位成本界。
 

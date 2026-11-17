@@ -4,6 +4,8 @@
 工作区从导航提交 `a89e0b2d68226f76887f3fcb4ca1e10a5a6769f3` 建立。
 **H0–H4 已实现并通过下述本地验证。** 本包针对 #19；#22 的验收边界和开放状态不变。
 
+> 后续交付（2026-11-17）：[I0–I4](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 已在 [66bcf08](https://github.com/huam54925-cpu/uav-routing-certification/commit/66bcf082189e3b368693af93a5008a213e7ddaba) 完成具体 DP 标量计数及共同位宽下的 H/I 费用组合。H 本页的验证记录及预处理六次多项式保持原范围；不能把该次数直接扩展为整个 DP 的机器时间。此次导航同步没有新验证。
+
 ## 输入与执行顺序
 
 `TreeBudgetSubtreePre.Input N` 存储根编号、`Vector (Fin N) N` 父数组、
@@ -115,7 +117,7 @@ Euclid 每步余数小于除数，商/余数不超过被除数，全部递归操
 
 与 G 包组合时，同时给出上述预处理位收费界和原来的 `resourceWork` 界。
 `preBitWork + resourceWork` 是混合单位，未命名为 totalTime。
-完整子树 DP 的所有标量操作、对象/地址/堆管理、编译后秒数及标准机器模拟仍未覆盖。
+H 包自身未覆盖完整 DP 标量操作；后续 [I 包](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 已为具体 DP 补齐这些操作，并把 H 段按共同最大位宽重新收费。对象/地址/堆管理、编译后秒数及标准机器模拟仍不在 H/I 结论中。
 
 ## 本次验证与复现
 
@@ -160,5 +162,5 @@ lake env lean LeanCompletion/UAV/TreeBudgetSubtreeDPExamples.lean *> verificatio
 
 ## 保留范围
 
-#19 的给定游走拼接、实际逐顶点路线输出、进一步压缩及整个执行器的机器成本仍独立保留。
+#19 的给定游走拼接、实际逐顶点路线输出、进一步压缩及对象/地址/分配等执行精化仍独立保留；预检、预处理和完整 DP 的统一标量费用已由 H/I 交付。
 #21 的一般见证转换、#22 的最终验收、#23 的归约机器成本不由本包启动或改变。

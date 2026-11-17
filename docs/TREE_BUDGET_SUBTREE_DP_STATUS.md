@@ -1,6 +1,6 @@
 # #19：可执行压缩状态 DP 与完整精化
 
-> 当前导航（2026-11-15）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md) 和 [G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已交付；下一包为 [#19 的 H0–H4](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 预检/自动预处理成本与算术原语精化，尚未实施。此次导航更新没有重跑验证。
+> 当前导航（2026-11-17）：本页保留原批次的证明与验证记录。子树 A–E、[F0–F4](TREE_BUDGET_SUBTREE_AUTO_STATUS.md)、[G0–G4](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md)、[H0–H4 预检/预处理](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) 与 [I0–I4 统一标量执行](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 均已交付，I 包证明提交为 [66bcf08](https://github.com/huam54925-cpu/uav-routing-certification/commit/66bcf082189e3b368693af93a5008a213e7ddaba)。H/I 已建立共同位宽下的算术费用界；对象表示、真实地址、分配、共享和控制帧仍是独立后续层。当前任务见 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)；此次导航同步没有重跑验证。
 
 日期：2026-11-13。基于提交 `3c8da01ef3a9c63675a43dd0d4a4db3431ff225a`
 已经证明的 `CompactRep` 与压缩合并定理，实现精确判定器。
@@ -103,7 +103,7 @@ Lean 回归包含：零路线、只有根、零重数子树、孩子次数大于
 ## 后续范围
 
 本包交付可运行且有正确完备性证明的基准实现。
-后续 A–E/F/G 已完成矩阵见证回溯、状态数量界、性能统计、自动整数缩放及指定源码资源界，见页首导航。逐顶点路线输出与 #23 的机器成本仍单独保留；当前下一包为 #19 的 H0–H4 预检/预处理成本，不能再将上述已完成项目作为待办。
+后续 A–E/F/G 已完成矩阵见证回溯、状态数量界、性能统计、自动整数缩放及指定源码资源界；H/I 又完成预检/预处理收费、完整 DP 标量收费与共同位宽组合，见页首导航。上述项目均已交付。对象/地址/分配等执行精化、逐顶点路线输出与 #23 的机器成本各自保留，不能由本页的原执行器定理直接推出。
 未证明压缩一定使运行时间更短，也未把失败布尔值称为简短不可行性证书。
 
 后续计数规格、完整次数参照和实测对照见
