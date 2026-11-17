@@ -2,7 +2,7 @@
 
 基线为 F0–F4 的 `58d54620aa8634238409bf6c6e98a91db40c670a`。本包给实际执行一次的整数矩阵见证搜索加入资源计数，并证明结果擦除、全部 17 字段统计迁移、数值大小、矩阵构造累计式和全局资源界。
 
-证明发布提交：[604efea](https://github.com/huam54925-cpu/uav-routing-certification/commit/604efea285e1561479f76d95acd27ca338f242ce)。**G0–G4 已完成；当前下一包 H0–H4 是计划，尚未实施。** 详细任务及验收清单集中在 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)，总优先级见 [#15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)。下面的构建、167 项审计及回归数字保留该证明包原记录，本次文档同步没有重跑。
+证明发布提交：[604efea](https://github.com/huam54925-cpu/uav-routing-certification/commit/604efea285e1561479f76d95acd27ca338f242ce)。**G0–G4 已完成；后续 H0–H4 的实现与新验证见 [2026-11-17 预处理记录](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md)。** 详细任务集中在 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19)，总优先级见 [#15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15)。下面的构建、167 项审计及回归数字保留 G 包原验证日期，不改写为 H 包的新验证。
 
 ## 形式化接口
 
@@ -95,11 +95,11 @@ python tools/check_subtree_resources.py
 
 本包只完成子树自动整数见证执行器的上述资源层。给定游走拼接、逐顶点路线输出、一般访问副本往返契约以及标准机器成本仍由相关 Issue 分别保留。
 
-## 后续计划：预检与自动预处理成本（H0–H4）
+## 后续实现：预检与自动预处理成本（H0–H4）
 
-在既有完整证书与 G 包资源界上，先固定物化输入和计费边界，再给 rootMass/LCM/scaleNum/floorBudget/prepare 加入单次计数执行，证明 Prepared 全字段及整个返回证书相等；随后证明全部中间乘除、未约分有理数及 Euclid 轨迹的范围，推导明确算术模型下的预处理成本。实施与验收以 [#19](https://github.com/huam54925-cpu/uav-routing-certification/issues/19) 的 H0–H4 清单为准。
+2026-11-17 的 [H 包](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) 固定了物化输入和带统一填充宽度的算术收费模型，给出单次预检/预处理、Prepared 全字段相等、完整证书及统计保持、中间值/Euclid 界和六次多项式。计数器为 ghost 观察量；参考算术费用不等于 Lean 内建算术的机器时间。
 
-预检失败的零 DP 计数不表示预检自身免费；最终 D/w/B 的范围也不替代所有中间值范围。`preBitWork + resourceWork` 仍是混合计费量，必须继续细化 DP 操作才能宣称整个入口的位成本。完整堆、地址、共享、栈及机器模拟仍为后续独立层。H 包目前没有新增证明或验证，不改变 #21/#22/#23 的已有验收范围。
+预检失败的零 DP 计数不表示预检自身免费；最终 D/w/B 的范围也不替代所有中间值范围。`preBitWork + resourceWork` 仍是混合计费量，必须继续细化 DP 操作才能宣称整个入口的位成本。完整堆、地址、共享、栈及机器模拟仍为后续独立层。H 包的新验证单独记录，不改变 #21/#22/#23 的已有验收范围。
 
 ## 发布源码指纹
 
