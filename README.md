@@ -4,7 +4,9 @@
 
 This research branch studies when an integer edge flow can be realized by legal depot routes with exact visit demands and individual service budgets. The current focus is tree-supported routing: explicit flow existence, exact decomposition, and a complete edge-count matrix characterization of budget feasibility.
 
-**Research snapshot: November 17, 2026** · Branch: `research/structural-service-cuts-20261023`
+**Research snapshot: November 18, 2026** · Branch: `research/structural-service-cuts-20261023`
+
+The November 18 proofs compute the least feasible tree budget, reuse one table across rational budget queries, certify the persistent heap growth of deduplication, and expand checked certificates into legal vertex routes. The module interfaces, cost boundaries and reproduction commands are in [Subtree budgets, deduplication and explicit routes](docs/TREE_BUDGET_PROFILES_HEAP_AND_ROUTES.md).
 
 The November 15 [resource package G0–G4](docs/TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) extends the automatic integer witness executor with an early root-mass guard, reduced-denominator identities, intermediate integer magnitude bounds, exact matrix construction charges and complete 17-field statistics transport. The single-run measured solver preserves the full certificate and satisfies `resourceWork ≤ 64*(N+1)^2*(m+1)*(U+1)*P^2`, with a guarded total-mass corollary. The model excludes preprocessing, counter maintenance and machine/heap overhead. The supplied [Chinese paper reference](docs/SUBTREE_RESOURCE_PROOFS_ZH.tex) is preserved without LaTeX compilation; verification and reproduction details are in the package record.
 
