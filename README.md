@@ -12,15 +12,15 @@ The November 18 proofs compute the least feasible tree budget, reuse one table a
 
 [Current results and claim boundaries](docs/TREE_ROUTING_RESEARCH_STATUS_20261118.md) · [November 18 literature review](docs/TREE_BUDGET_LITERATURE_REVIEW_20261118.md) · [Detailed next-step plan](docs/TREE_BUDGET_INNOVATION_ROADMAP_20261118.md) · [Chinese research draft — LaTeX source](docs/TREE_ROUTING_RESEARCH_DRAFT_20261118_ZH.tex)
 
-The next research phase studies **sparse solution certificates, information needed for subtree completion, and route-permutation algorithms** within the existing exact-flow tree model. It reuses the proved matrix/pattern interfaces and optimizer. The three packages below are planned; their new arguments are paper derivations, not newly verified Lean results.
+The next research phase studies **sparse solution certificates, information needed for subtree completion, and route-permutation algorithms** within the existing exact-flow tree model. Package A has priority: A0–A2 are the first structural delivery, followed by A3–A4 binary verification and complexity. See the separate [sparse certificate implementation and validation record](docs/TREE_BUDGET_SPARSE_CERTIFICATES_STATUS.md); B and C remain plans.
 
 | Package | Intended result | Status and scope |
 | --- | --- | --- |
-| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | A bounded single-route polytope, two support-size bounds, polynomial binary certificate length, then a checked encoding and NP-membership argument | Paper derivations available; Lean proofs and verifier bit-cost work pending; linked to #21/#23 |
+| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | A bounded single-route polytope, simultaneous box/bit/parity support bounds and the original checker, then binary verification | A0–A2 locally verified: 41 theorems, 54-declaration axiom audit; A3–A4 and formal NP membership remain pending; [record](docs/TREE_BUDGET_SPARSE_CERTIFICATES_STATUS.md) |
 | [B: completion interfaces — #25](https://github.com/huam54925-cpu/uav-routing-certification/issues/25) | A five-vertex family with many context-distinguishable states, including a route-permutation version | Paper derivation available; a supplied-completion/representative-family lower bound, not a lower bound for all algorithms; linked to #19/#21 |
 | [C: route-permutation DP — #26](https://github.com/huam54925-cpu/uav-routing-certification/issues/26) | Joint-type histograms, exact transport-table matching, witness recovery, and state/coupling bounds | Planned new executor; preserves feasibility/optimum and checked witnesses, without assuming the old tie-breaking matrix is unchanged; linked to #19 |
 
-The literature review attributes integer-cone, representative-set and multiset-DP methods to their sources. The new 2026 integer-cone FPT results are external preprints, not the repository's machine-checked algorithm. Existing #22 final acceptance and #19 whole-executor cost closure remain separate tasks. This documentation/source-draft update runs no Lean build, axiom audit, benchmark or LaTeX compilation.
+The literature review attributes integer-cone, representative-set and multiset-DP methods to their sources. The new 2026 integer-cone FPT results are external preprints, not the repository's machine-checked algorithm. Existing #22 final acceptance and #19 whole-executor cost closure remain separate tasks. The original `3389ea7` documentation/source-draft update ran no Lean build, axiom audit, benchmark or LaTeX compilation; subsequent A0–A2 validation is recorded separately.
 
 <details>
 <summary>Earlier package summaries and their dated verification records</summary>
