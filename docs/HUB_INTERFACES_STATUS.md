@@ -1,6 +1,6 @@
 # 单次游程推广、分配检查器与编号模型 — 2026-11-07
 
-> 当前导航（2026-11-17）：本页保留 2a64246 的历史开发和验收记录。#23 的编解码、稀疏语义桥、长度和总位串变换已由 [bd0dd94](https://github.com/huam54925-cpu/uav-routing-certification/commit/bd0dd940e3ba73d6e1c0892aa3b377d60950eccf) 完成；#22 的 A–E 总成本/FPT 已交付并等待最终验收。#19 的存在性矩阵状态、递归 DP、自动整数证书及 [G0–G4 资源界](TREE_BUDGET_SUBTREE_RESOURCES_STATUS.md) 已完成，[H0–H4 预检/预处理](TREE_BUDGET_SUBTREE_PREPROCESSING_STATUS.md) 与 [I0–I4 统一标量费用](TREE_BUDGET_SUBTREE_SCALAR_STATUS.md) 也已交付（I：66bcf08）；对象/地址/分配/共享/控制帧是独立后续层。给定游走拼接契约、一般见证转换及 #23 机器成本仍独立保留。以下“暂缓/未完成”仅描述 11 月 7 日批次；本次导航同步没有新构建或审计。
+> 当前导航（2026-11-18）：本页保留 2a64246 的历史验收。#22 A–E、#23 编码/长度及 #19 H/I 已交付；最新[预算、局部堆收费与路线输出](TREE_BUDGET_PROFILES_HEAP_AND_ROUTES.md)已补入。树证书的显式路线输出不再整体列为未实现。一般给定见证转换与完整机器费用仍独立保留。新[三项研究计划](TREE_BUDGET_INNOVATION_ROADMAP_20261118.md)研究稀疏证书、补全接口下界和置换商 DP，均未验收为新 Lean 结果。以下批次说明保留原发生时间；本次没有新构建或审计。
 
 
 本批以研究分支 `86993ec790cb6c7ab3f28ed61805dcb783aa7f0f` 为发布基线，
@@ -145,3 +145,4 @@ Lean 构建、远端 CI、性能测量或 LaTeX 编译。交付 Lean、审计和
 逐字节相同，状态文档仅补充发布说明。原始日志、生成 JSON、构建产物和下载材料不纳入提交。
 旧 Lean、工具链、依赖锁定、冻结输入及两份旧 LaTeX 文稿保持不变；
 编解码/长度形式化及其余未完成项按前述范围保留。
+

@@ -1,5 +1,7 @@
 # Strict-hub reduction: binary representation and length
 
+> Navigation update — 2026-11-18: this page retains the completed reduction/codec package and its historical checks. The [new sparse-certificate plan A](TREE_BUDGET_INNOVATION_ROADMAP_20261118.md) targets polynomial binary witnesses and a verifier for the general tree language. Its support bounds are paper derivations, not an already formalized NP-membership result. External integer-cone parameter results are attributed in the [new literature review](TREE_BUDGET_LITERATURE_REVIEW_20261118.md). The old reduction machine-cost task remains independent; no new build or audit is performed here.
+
 This package implements the fourth work block from issue #23. The wire format
 is the one in `HUB_THREE_PARTITION_ENCODING.tex`: MSB-first gamma coding of
 `n + 1`, no format tag, no extra list headers, and interleaved parent/multiplicity
@@ -124,3 +126,4 @@ external strong NP-completeness theorem for 3-PARTITION, prove general-tree NP
 membership, or settle issue #19. Those remain separate work. Historical
 validation of the other three work blocks is not relabeled as a new unified
 acceptance run by this package.
+
