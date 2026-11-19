@@ -1,4 +1,5 @@
-import LeanCompletion.UAV.TreeBudgetFrameRunsTM2
+import LeanCompletion.UAV.TreeBudgetNatListLoop
+import LeanCompletion.UAV.TreeBudgetListCleanup
 import LeanCompletion.UAV.TreeBudgetCanonicalDigits
 import LeanCompletion.UAV.TreeBudgetCostedParsing
 
@@ -8,7 +9,7 @@ namespace UAVProof.TreeBudgetListGuardTM2
 open TreeBudgetBinaryCodec TreeBudgetFrameRoutineTM2 TreeBudgetCanonicalDigits
 open Turing StateTransition Turing.TM2.Stmt
 
-abbrev Label := Fin 12
+abbrev Label := TreeBudgetNatListLoop.L
 abbrev Stmt := Statement (Fin 7) Label
 abbrev Cfg := Configuration (Fin 7) Label
 
@@ -37,7 +38,8 @@ def program (l : Label) : Stmt :=
   | 6 => takeBit 0 (jump 10) (moveBit 3 (jump 4))
   | 7 => takeBit 1 (jump 8) (jump 7)
   | 8 => takeBit 3 (jump 9) (moveBit 0 (put 4 true (jump 8)))
-  | _ => halt
+  | 10 => TreeBudgetListCleanup.program
+  | _ => TreeBudgetNatListLoop.loopCode l
 
 def machine : FinTM2 where
   K := Fin 7
