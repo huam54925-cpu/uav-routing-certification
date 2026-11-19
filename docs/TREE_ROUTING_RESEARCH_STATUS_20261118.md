@@ -50,7 +50,7 @@
 
 下一阶段分别由 [#24 稀疏证书](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)、[#25 指定补全接口](https://github.com/huam54925-cpu/uav-routing-certification/issues/25)、[#26 路线置换商 DP](https://github.com/huam54925-cpu/uav-routing-certification/issues/26) 追踪；#15/#19/#21/#22/#23 保留当前分工与历史验收记录。
 
-1. **A：稀疏证书。** A0–A2 的线性化、增广计数、子集和界、奇偶界及原检查器连接已存为独立本地提交 `87cb4e0`；见[结构记录](TREE_BUDGET_SPARSE_CERTIFICATES_STATUS.md)。后续 [A3 记录](TREE_BUDGET_SPARSE_WIRE_STATUS.md)覆盖规范二进制编码、任意位串检查精化及实际界 `L * (L / 2 + 1)`。剩余 A4 验证位时间和标准复杂度模型连接待完成，尚不宣称一般 NP 成员性形式化完成。
+1. **A：稀疏证书。** A0–A2 的线性化、增广计数、子集和界、奇偶界及原检查器连接已存为独立本地提交 `87cb4e0`；见[结构记录](TREE_BUDGET_SPARSE_CERTIFICATES_STATUS.md)。[A3 记录](TREE_BUDGET_SPARSE_WIRE_STATUS.md)覆盖规范二进制编码、任意位串检查精化及实际界 `L * (L / 2 + 1)`，已存为本地提交 `be0b415`。[A4 第一批](TREE_BUDGET_SPARSE_BITCOST_STATUS.md)覆盖任意位串解析、前缀位宽与列执行成本，并给出以具体标准 TM2 为假设的 NP 转接。完整验证位时间、机器构造及无条件成员性仍未完成。
 2. **B：接口边界。** 五顶点树上指定补全的单位兼容矩阵已有纸面推导；一般等价类计数、树实例及置换版的 Lean 验证待实施。指数等价类数不等于任意摘要都需要指数位数，更不是所有求解器的时间/空间下界。
 3. **C：置换商 DP。** 运输表与相对匹配的完整性、联合类型和见证恢复构成设计依据；商执行器、整个 DP 归纳、计数与比较均待实施。不得以各子状态独立排序后同序相加代替匹配。
 
