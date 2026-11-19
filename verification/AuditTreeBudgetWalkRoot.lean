@@ -1,0 +1,29 @@
+import LeanCompletion.UAV.TreeBudgetWalkRootExamples
+
+#print axioms UAVProof.TreeBudgetWalkRootTM2.K
+#print axioms UAVProof.TreeBudgetWalkRootTM2.L
+#print axioms UAVProof.TreeBudgetWalkRootTM2.Cfg
+#print axioms UAVProof.TreeBudgetWalkRootTM2.cursor
+#print axioms UAVProof.TreeBudgetWalkRootTM2.rootCode
+#print axioms UAVProof.TreeBudgetWalkRootTM2.endWith
+#print axioms UAVProof.TreeBudgetWalkRootTM2.program
+#print axioms UAVProof.TreeBudgetWalkRootTM2.machine
+#print axioms UAVProof.TreeBudgetWalkRootTM2.called
+#print axioms UAVProof.TreeBudgetWalkRootTM2.checkCfg
+#print axioms UAVProof.TreeBudgetWalkRootTM2.prefixTest
+#print axioms UAVProof.TreeBudgetWalkRootTM2.finishCheck
+#print axioms UAVProof.TreeBudgetWalkRootTM2.compare_run
+#print axioms UAVProof.TreeBudgetWalkRootTM2.compare_value
+#print axioms UAVProof.TreeBudgetWalkRootTM2.at_root_code
+#print axioms UAVProof.TreeBudgetWalkRootTM2.start
+#print axioms UAVProof.TreeBudgetWalkRootTM2.finish
+#print axioms UAVProof.TreeBudgetWalkRootTM2.root_run
+#print axioms UAVProof.TreeBudgetWalkRootTM2.root_refines
+#print axioms UAVProof.TreeBudgetWalkRootTM2.typed_walk
+#print axioms UAVProof.TreeBudgetWalkRootTM2.endpoint_is_root
+#print axioms UAVProof.TreeBudgetWalkRootTM2.validate_tests
+#print axioms UAVProof.TreeBudgetWalkRootExamples.observe
+#print axioms UAVProof.TreeBudgetWalkRootExamples.reaches_root
+#print axioms UAVProof.TreeBudgetWalkRootExamples.misses_root
+#print axioms UAVProof.TreeBudgetWalkRootExamples.wrong_fixed_point
+#print axioms UAVProof.TreeBudgetWalkRootExamples.bad_query

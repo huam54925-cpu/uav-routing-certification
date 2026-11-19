@@ -8,6 +8,6 @@
 
 回归覆盖连续两跳、二环、第二次访问下标越界、首下标截断以及零次访问。复现可运行 `lake build LeanCompletion.UAV.TreeBudgetParentWalkExamples` 与 `lake env lean verification/AuditTreeBudgetParentWalk.lean`。[回归](../LeanCompletion/UAV/TreeBudgetParentWalkExamples.lean) · [审计入口](../verification/AuditTreeBudgetParentWalk.lean)
 
-全树验证还有根固定点检查、对全部顶点调度追溯并核对终点。整机还需连接输入记录、费用缩放、完整行列检查及标准布尔输出。一般 NP 成员性的机器假设仍保留。
+后续的[根终点机器](TREE_BUDGET_TM2_WALK_ROOT.md)已实现根固定点检查与单顶点终点比较。全树验证仍需在机器上调度全部顶点。整机还需连接输入记录、费用缩放、完整行列检查及标准布尔输出。一般 NP 成员性的机器假设仍保留。
 
 本批四个模块编译通过，五个机器回归通过内核归约，63 项声明的公理审计通过。
