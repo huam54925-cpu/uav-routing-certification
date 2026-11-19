@@ -1,0 +1,45 @@
+import LeanCompletion.UAV.TreeBudgetIntExamples
+
+/-! Explicit named declaration audit for the signed integer parser. -/
+#print axioms UAVProof.TreeBudgetIntTM2.ports
+#print axioms UAVProof.TreeBudgetIntTM2.labels
+#print axioms UAVProof.TreeBudgetIntTM2.base
+#print axioms UAVProof.TreeBudgetIntTM2.program
+#print axioms UAVProof.TreeBudgetIntTM2.machine
+#print axioms UAVProof.TreeBudgetIntTM2.routine_code
+#print axioms UAVProof.TreeBudgetIntTM2.start
+#print axioms UAVProof.TreeBudgetIntTM2.afterSign
+#print axioms UAVProof.TreeBudgetIntTM2.parsed
+#print axioms UAVProof.TreeBudgetIntTM2.rejected
+#print axioms UAVProof.TreeBudgetIntTM2.stopped
+#print axioms UAVProof.TreeBudgetIntTM2.step_sign
+#print axioms UAVProof.TreeBudgetIntTM2.step_empty
+#print axioms UAVProof.TreeBudgetIntTM2.step_parsed
+#print axioms UAVProof.TreeBudgetIntTM2.step_rejected
+#print axioms UAVProof.TreeBudgetIntTM2.rejectSuffix
+#print axioms UAVProof.TreeBudgetIntTM2.magnitudeOutcome
+#print axioms UAVProof.TreeBudgetIntTM2.magnitude_run
+#print axioms UAVProof.TreeBudgetIntTM2.intOutcome
+#print axioms UAVProof.TreeBudgetIntTM2.integer_run
+#print axioms UAVProof.TreeBudgetIntTM2.readResult
+#print axioms UAVProof.TreeBudgetIntTM2.bits_empty_iff
+#print axioms UAVProof.TreeBudgetIntTM2.bits_nil_iff
+#print axioms UAVProof.TreeBudgetIntTM2.integer_result
+#print axioms UAVProof.TreeBudgetIntTM2.refines_parseIntD
+#print axioms UAVProof.TreeBudgetIntTM2.context_preserved
+#print axioms UAVProof.TreeBudgetIntTM2.outcome_terminal
+#print axioms UAVProof.TreeBudgetIntTM2.finite_alphabet
+#print axioms UAVProof.TreeBudgetIntTM2.init_eq
+#print axioms UAVProof.TreeBudgetIntTM2.integer_from_init
+#print axioms UAVProof.TreeBudgetIntExamples.run
+#print axioms UAVProof.TreeBudgetIntExamples.observe
+#print axioms UAVProof.TreeBudgetIntExamples.zero
+#print axioms UAVProof.TreeBudgetIntExamples.positive_suffix
+#print axioms UAVProof.TreeBudgetIntExamples.negative_suffix
+#print axioms UAVProof.TreeBudgetIntExamples.reject_negative_zero
+#print axioms UAVProof.TreeBudgetIntExamples.reject_empty
+#print axioms UAVProof.TreeBudgetIntExamples.reject_sign_only
+#print axioms UAVProof.TreeBudgetIntExamples.reject_missing_payload
+#print axioms UAVProof.TreeBudgetIntExamples.reject_missing_terminator
+#print axioms UAVProof.TreeBudgetIntExamples.reject_positive_high_zero
+#print axioms UAVProof.TreeBudgetIntExamples.reject_negative_high_zero
