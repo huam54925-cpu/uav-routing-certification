@@ -51,7 +51,7 @@ $s_v=a_v/b_v$ 和预算 $T=a_T/b_T$。
  p_r&=0, &0\le p_v&\le H_v\quad(v\ne r),\label{eq:bounds}\\
  \sum_{v\ne r:\,f(v)=r}p_v&=1,\label{eq:root}\\
  p_v>0,\ v\ne r,\ f(v)\ne r&\ \Longrightarrow\ p_{f(v)}>0,\label{eq:support}\\
- \sum_{v\ne r}\bigl(s_v+mathbf1_{f(v)\ne r}s_{f(v)}\bigr)p_v&\le T.
+ \sum_{v\ne r}\bigl(s_v+\mathbf{1}_{f(v)\ne r}s_{f(v)}\bigr)p_v&\le T.
  \label{eq:budget}
 \end{align}
 这是当前 \texttt{RowValid} 的模式语义，采用单次根出发的路线约定。
@@ -160,7 +160,7 @@ $2(\size(m)+\sum_{v\ne r}\size(H_v))$ 位，
 用精确整数运算形成这些量。对\emph{每一条}记录检查
 式~\eqref{eq:bounds}--\eqref{eq:support}，以及
 \[
- \sum_{v\ne r}\bigl(A_v+\mathbf1_{f(v)\ne r}A_{f(v)}\bigr)p_{iv}\le A_T.
+ \sum_{v\ne r}\bigl(A_v+\mathbf{1}_{f(v)\ne r}A_{f(v)}\bigr)p_{iv}\le A_T.
 \]
 因为 $D>0$，这与原有理预算比较等价。
 \item 用二进制乘加直接核对式~\eqref{eq:totals}。
