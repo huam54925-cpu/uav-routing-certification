@@ -1,0 +1,289 @@
+\documentclass[UTF8,11pt]{ctexart}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{proposition}[theorem]{命题}
+\newcommand{\bits}{\operatorname{bits}}
+\newcommand{\size}{\operatorname{size}}
+\newcommand{\enc}{\operatorname{E}}
+\newcommand{\verify}{\operatorname{verify}}
+\newcommand{\Lang}{\mathcal L_{\mathrm{tree}}}
+\title{二进制重数下精确树路线可行性语言的 NP 成员性}
+\author{项目证明说明}
+\date{2026年11月20日}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+路线数和各边重数用二进制表示时，逐条列出路线不是合适的
+多项式长度证书。本文使用路线模式及其二进制重数，证明仓库中
+\texttt{TreeBudgetSparseNPBridge.language} 所定义语言属于 NP。
+证明包括短证书存在性、对任意输入和证书的确定性位验证算法，
+以及一个保守的多项式运行时间界。
+这是纸面上的标准图灵机论证；它不声称仓库已经构造出完整的
+Lean \texttt{StandardVerifier verify} 对象。
+\end{abstract}
+
+\section{语言与编码约定}
+
+代码对应
+\href{https://github.com/huam54925-cpu/uav-routing-certification/tree/research/structural-service-cuts-20261023}
+{\texttt{uav-routing-certification} 的研究分支}。
+既有语义与短证书定理的阅读基线为提交 \texttt{a8c1229}；
+本文末尾列出具体模块和声明。
+
+本文的 $n$ 是\emph{包括根在内}的顶点数，$V=\{0,\ldots,n-1\}$。
+一个结构合法的输入包含根 $r\in V$、父数组 $f:V\to V$、
+自然数向量 $H$、指定路线数 $m\in\mathbb N$、有理费用
+$s_v=a_v/b_v$ 和预算 $T=a_T/b_T$。
+分子可以为负，所有分母必须为正，分数不要求约分。
+父数组须满足
+\begin{equation}\label{eq:tree}
+ f(r)=r,\qquad \forall v\in V,\quad f^{\,n}(v)=r.
+\end{equation}
+其中 $f^j$ 表示迭代 $j$ 次。
+这与仓库的根树解释一致；$n=0$ 没有合法根，必须拒绝。
+
+规范路线模式是 $p\in\mathbb N^V$，满足
+\begin{align}
+ p_r&=0, &0\le p_v&\le H_v\quad(v\ne r),\label{eq:bounds}\\
+ \sum_{v\ne r:\,f(v)=r}p_v&=1,\label{eq:root}\\
+ p_v>0,\ v\ne r,\ f(v)\ne r&\ \Longrightarrow\ p_{f(v)}>0,\label{eq:support}\\
+ \sum_{v\ne r}\bigl(s_v+mathbf1_{f(v)\ne r}s_{f(v)}\bigr)p_v&\le T.
+ \label{eq:budget}
+\end{align}
+这是当前 \texttt{RowValid} 的模式语义，采用单次根出发的路线约定。
+它不要求 $p_v\le p_{f(v)}$，也不把一般图或任意多次根出发问题
+包含在本定理中。根坐标 $H_r$ 不参与列总量等式，可任意给定。
+
+可行性是存在 $m$ 个这样的模式，使每个非根坐标的和恰为 $H_v$。
+仓库中的矩阵可行性与该陈述等价。压缩表示为
+$(c_i,p_i)_{i=1}^k$，其中 $c_i\in\mathbb N$，并要求
+\begin{equation}\label{eq:totals}
+ \sum_i c_i=m,\qquad
+ \sum_i c_ip_{iv}=H_v\quad(v\ne r).
+\end{equation}
+每个记录的模式都必须合法，\emph{包括重数为零的记录}。
+重复合法模式和合法零重数记录可以被公开验证器接受；
+短证书存在性使用另一份模式互异、重数为正的表示。
+由式~\eqref{eq:root} 和~\eqref{eq:totals}，可行性蕴含
+\begin{equation}\label{eq:rootflow}
+ m=\sum_{v\ne r:\,f(v)=r}H_v.
+\end{equation}
+因此输入阶段检查此式不会删去任何可行实例。
+
+令 $\size(a)$ 是自然数 $a$ 的二进制位数，约定 $\size(0)=0$。
+对最低位在前的规范二进制串 $\bits(a)$，每一位 $b$ 编码为 $1b$，
+末尾加一个 $0$，得到 $\enc(a)$。于是
+\[
+ |\enc(a)|=2\size(a)+1.
+\]
+有符号整数先写符号位，再写绝对值的自然数编码；负零被拒绝。
+列表编码先写元素数的 $\enc$ 编码，再依次写元素。
+输入 $x$ 为 $\enc(m)$ 后接仓库的 \texttt{encodeInput}；
+记录编码为 $\enc(c_i)$ 后接含全部 $n$ 个坐标的列表编码；
+证书 $y$ 为 $\enc(k)$ 后接记录序列。各层解析器检查规范性、
+声明计数、行长及最终 EOF，不允许尾随数据。
+记 $L=|x|$、$W=|y|$、$N=L+W$。
+
+语言 $\Lang$ 由成功解析、通过结构与根流检查且矩阵可行的输入串组成。
+畸形位串不在语言中。此定义精确对应仓库的
+\texttt{TreeBudgetSparseNPBridge.language}。
+
+\section{同一份多项式长度证书}
+
+\begin{lemma}[支持界]\label{lem:sparse}
+每个可行实例都有模式互异、重数为正的压缩表示，且其支持数 $k$ 满足
+\[
+ 2^k\le (m+1)\prod_{v\ne r}(H_v+1),\qquad
+ k\le \size(m)+\sum_{v\ne r}\size(H_v).
+\]
+\end{lemma}
+\begin{proof}
+在所有压缩可行表示中选取支持最小的一份。
+对其 $k$ 个生成元 $g_i=(p_i|_{V\setminus\{r\}},1)$ 考虑子集和。
+因为 $c_i\ge1$ 且所有坐标非负，每个子集和逐坐标位于
+$\prod_{v\ne r}\{0,\ldots,H_v\}\times\{0,\ldots,m\}$ 内。
+若两个不同子集和相同，删去交集后得到不交集合 $A,B$，
+其生成元和仍相等。末坐标均为 $1$ 保证 $A,B$ 均非空。
+令 $t=\min_{i\in A}c_i>0$，对 $A$ 中的重数减 $t$，
+对 $B$ 中的重数加 $t$。全部目标坐标及总重数保持，
+模式不变且重数仍非负，至少一个原支持被删除，没有新支持被加入。
+这与最小性矛盾。因此全部子集和互异，得到第一式。
+使用 $a+1\le2^{\size(a)}$ 及 $2^j$ 的严格单调性得到第二式。
+整个论证不要求费用或预算非负，也不需要寻找该最小支持的算法。
+\end{proof}
+
+\begin{lemma}[实际编码长度]\label{lem:wire}
+若 $x\in\Lang$，则存在同一份被公开 $\verify(x,y)$ 接受的证书，满足
+\begin{equation}\label{eq:short}
+ W\le L\bigl(\lfloor L/2\rfloor+1\bigr).
+\end{equation}
+\end{lemma}
+\begin{proof}
+取引理~\ref{lem:sparse} 的表示。每个正重数 $c_i\le m$，
+非根坐标 $p_{iv}\le H_v$，根坐标为 $0\le H_r$。
+编码长度对数值单调，行列表与 $H$ 的列表有相同长度 $n$，故
+\[
+ |\enc(c_i)|+|\operatorname{EN}(p_i)|
+ \le |\enc(m)|+|\operatorname{EN}(H)|\le L.
+\]
+又由正重数与 $\sum_i c_i=m$ 得 $k\le m$，所以
+$|\enc(k)|\le |\enc(m)|\le L$。
+输入中 $m$ 与 $H$ 的实际编码占用至少
+$2(\size(m)+\sum_{v\ne r}\size(H_v))$ 位，
+引理~\ref{lem:sparse} 给出 $k\le\lfloor L/2\rfloor$。
+对上述记录长度求和即得式~\eqref{eq:short}。
+这份表示满足所有行条件和总量等式，编码往返及验证器精化保证它被接受。
+若 $m=0$，使用空记录列表；其计数头仍有一位，且合法输入 $L\ge1$，
+同一估计仍成立。
+\end{proof}
+
+\section{任意位串上的确定性位验证}
+
+算法在任何 $(x,y)$ 上都停机，采用以下次序。
+\begin{enumerate}
+\item 解析输入的各个规范字段和列表。每次读出列表计数后，
+先将它与剩余\emph{实际位数}比较；若计数过大立即拒绝。
+再检查维数、根和父下标范围、正分母、式~\eqref{eq:tree}、
+式~\eqref{eq:rootflow} 以及输入 EOF。
+维数字段只有与实际列表长度相等后，才用于建立顶点循环。
+\item 以同样的计数预检解析证书，检查每条记录的行长为 $n$，
+并检查证书 EOF。逐条列出的是实际记录，不是 $m$ 条路线。
+\item 设
+\[
+ D=b_T\prod_{v\in V}b_v>0,\qquad
+ A_v=a_v(D/b_v),\qquad A_T=a_T(D/b_T).
+\]
+用精确整数运算形成这些量。对\emph{每一条}记录检查
+式~\eqref{eq:bounds}--\eqref{eq:support}，以及
+\[
+ \sum_{v\ne r}\bigl(A_v+\mathbf1_{f(v)\ne r}A_{f(v)}\bigr)p_{iv}\le A_T.
+\]
+因为 $D>0$，这与原有理预算比较等价。
+\item 用二进制乘加直接核对式~\eqref{eq:totals}。
+不复制 $c_i$ 份模式，不枚举全部可能模式，不展开 $m$。
+\end{enumerate}
+这与公开 \texttt{verify} 的布尔结果一致：输入非法时拒绝；
+输入合法时，所有行检查和总量等式恰为原证书谓词。
+证明见仓库中的 \texttt{verify\_refines} 与
+\texttt{check\_eq\_true\_iff}。
+
+\begin{lemma}[任意解码数据的位宽]\label{lem:width}
+设 $N=|x|+|y|$。在上述算法实际到达的算术阶段中，
+可用 $B=6(N+1)^2$ 位容纳所需数值的幅值，另加常数个符号位。
+该结论不假设最终接受，也不假设证书坐标或重数符合目标。
+\end{lemma}
+\begin{proof}
+每个成功读出的原始字段幅值的位数至多 $N$。
+列表的每个元素至少占一位，所以成功解析的顶点数、记录数和
+实际字段总数均受 $N$ 控制；失败解析之前的循环也受计数预检控制。
+分母乘积的位数不超过各因子位数之和，因而不超过输入编码所占的位数。
+缩放后的费用和预算幅值位数至多 $2L+1\le2N+1$。
+
+对自然数使用
+$\size(uv)\le\size(u)+\size(v)$ 和
+$\size(\sum_j u_j)\le\sum_j\size(u_j)$。
+重数总和、加权列和分别由 $N$ 个至多 $N$ 位或 $2N$ 位的项组成。
+根流的同样估计为 $N^2$。
+有符号行费用各项的\emph{绝对值之和}的位数至多
+\[
+ n\bigl(2(2N+1)+N\bigr)\le 5N^2+2N\le B.
+\]
+任何有符号部分和的绝对值均不超过此绝对值之和，因此抵消不会掩盖
+较大的中间量。乘法的非负部分积及除法的余数也受相应幅值控制。
+这些界适用于含过大重数、过大坐标或最终预算失败的证书。
+\end{proof}
+
+\begin{proposition}[标准位时间]\label{prop:time}
+存在一台固定有限字母表的确定性多带图灵机，在任意 $(x,y)$ 上计算
+$\verify(x,y)$，其运行时间为 $O((N+1)^{12})$。
+此处常数和次数均独立于实例；该界只取作宽松的纸面上界。
+\end{proposition}
+\begin{proof}
+给出一个具体的常规实现方式。所有表按带上的带分隔符二进制记录顺序保存，
+用二进制索引顺序扫描定位，不使用单位成本的任意地址访问。
+只存已读字段、各列累加器、缩放费用和常数个工作字；
+即使将中间行及循环状态全部按多项式表物化，也至多需要
+$O((N+1)^2)$ 个数值槽位。由引理~\ref{lem:width}，
+含符号、分隔符和工作区的总带长可取 $S=O((N+1)^4)$。
+
+加法、比较和符号处理按位执行；乘法采用学校式部分积，
+精确除法采用二进制长除法。对至多 $B$ 位的操作数，
+多带实现各需至多 $O((B+1)^2)$ 次操作。
+将数据定位、工作区复制和头部回移一并收费，每个高级操作
+保守地计 $O(S^2)$ 次多带图灵机转移即可：
+扫描至多 $S$ 个符号，维护的索引、偏移及算术工作字也至多 $S$ 位。
+这种实现只使用固定个数的带和有限种符号。
+
+解析只循环到实际剩余位数所允许的次数。
+树检查使用一次根跳转和每个顶点至多 $n$ 次父跳转，总计 $1+n^2$ 次；
+索引范围在跳转前已检查。其余乘加和行列检查只对实际记录及坐标作
+固定层数的遍历。包括顺序列表处理和控制在内，高级操作数可统一
+宽松地界为 $O((N+1)^3)$。故总转移数为
+\[
+ O((N+1)^3 S^2)=O((N+1)^{11})\subseteq O((N+1)^{12}).
+\]
+任何拒绝都在上述有界阶段内发生，因而此结论覆盖任意输入和证书，
+不只是有效证书。算法完全确定性。
+
+若输入按仓库的 $\operatorname{pairWire}(x,y)=\operatorname{word}(x)\mathbin{+\!+}y$
+置于同一输入带，其长度为 $2L+1+W$，与 $N+1$ 线性等价；
+拆帧和最终写出单个结果位只增加多项式费用。
+每条工作带可用表示读头左侧与右侧的两个栈实现，
+读写和移动一步只需常数次有限字母表的栈操作，空白也只需一种固定符号。
+因此这一纸面构造同样给出标准有限栈模型的多项式验证器，
+但尚未给出其完整 Lean 实现和逐转移精化证明。
+\end{proof}
+
+\begin{theorem}\label{thm:np}
+按上述二进制编码给出的精确树路线可行性语言 $\Lang$ 属于 NP。
+\end{theorem}
+\begin{proof}
+若 $x\in\Lang$，引理~\ref{lem:wire} 提供同一份长度满足
+式~\eqref{eq:short} 且被接受的证书。
+反之，任何被接受的证书都满足全部行条件和式~\eqref{eq:totals}，
+展开重数在\emph{存在性证明}中给出一个可行矩阵，所以 $x\in\Lang$。
+验证算法本身不进行这种展开。
+命题~\ref{prop:time} 给出标准确定性多项式位验证时间，
+结合多项式见证长度即为 NP 的验证器刻画。
+例如可取见证长度上界 $L(L+1)$；代入该长度后，
+上面的纸面时间界给出关于 $L$ 的固定多项式上界。
+\end{proof}
+
+\section{退化情形与形式化边界}
+
+$m=0$ 时空证书的行条件是空合取，只有根流和非根列总量等式仍有内容。
+因此预算为负不会错误地排除空机队。
+单点根时没有模式能满足式~\eqref{eq:root}，只有 $m=0$ 可以可行；
+$H_r$ 仍被忽略。$H_v=0$、零费用、负费用和负预算均由同一论证覆盖。
+合法重复记录或零重数记录不影响可靠性；非法零重数记录必须拒绝。
+
+以下对应表用于区分数学结论与机器证明状态。
+文件均相对于仓库根目录，Lean 文件位于 \texttt{LeanCompletion/UAV/}。
+\begin{center}\small
+\begin{tabular}{p{0.32\textwidth}p{0.60\textwidth}}
+数学接口 & Lean 模块与声明\\\hline
+支持稀疏化与同一证书 & \texttt{TreeBudgetSparseCertificate}: \texttt{exists\_sparse\_certificate}\\
+实际短位串 & \texttt{TreeBudgetSparseWireBounds}: \texttt{language\_iff\_short\_witness}\\
+公开验证器可靠性 & \texttt{TreeBudgetSparseVerifier}: \texttt{verify\_refines}\\
+任意解码行的位宽 & \texttt{TreeBudgetSparseExecutionWidths}: \texttt{costTerms\_width}, \texttt{decoded\_fields}\\
+完整参考工作量 & \texttt{TreeBudgetSparseTotalWork}: \texttt{verifyD\_refines\_and\_polynomial}\\
+标准机器的条件转接 & \texttt{TreeBudgetSparseNPBridge}: \texttt{language\_inNP\_of\_standard\_verifier}
+\end{tabular}
+\end{center}
+
+已形式化的 $2^{22}(L+W+1)^6$ 是参考 \texttt{Costed} 模型中的
+步数加分配量；同一短证书另有 $2^{22}(L+1)^{12}$ 的参考界。
+两者都不等同于命题~\ref{prop:time} 的标准图灵机转移界，
+不得将常数或次数直接移植。
+本次整树机器的验收入口是已解析父表工作格式。
+原始 \texttt{pairWire} 到工作格式的制备、任意记录循环、根流、
+费用缩放和全部行列检查仍须在一个完整 TM2 程序内组合、证明精化及实际转移界，
+才能消去 \texttt{StandardVerifier verify} 这个形式化前提。
+本文的纸面 NP 证明不将该工程义务标记为完成，也不提供短不可行性证书、
+短最优性证书或多项式时间求解算法。
+
+\end{document}
