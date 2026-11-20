@@ -1,0 +1,260 @@
+\documentclass[UTF8,11pt]{ctexart}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,tabularx}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\cat}{\mathbin{+\!+}}
+\newcommand{\EN}{E_{\!N}}
+\newcommand{\EZ}{E_{\!Z}}
+\newcommand{\LN}{L_{\!N}}
+\newcommand{\LZ}{L_{\!Z}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\title{从根流入口到完整实例验证，再到稀疏证书的标准机器}
+\author{研究分支工作稿\qquad Issue 24}
+\date{2026 年 11 月 20 日\qquad 基线 \texttt{38e13d4}}
+\begin{document}
+\maketitle
+\noindent 本稿源自用户提供的 \code{A4_local_verification.zip}，给出与费用后缀程序逐段对应的纸面证明。
+仓库将代码拆为 \code{TreeBudgetFeeTailSpec}、\code{TreeBudgetFeeTailTM2} 和样例模块；机器把已有根流程序作为子程序调用。
+此次已实际运行 Python 的独立解码、逐栈程序和小树枚举。
+本地已编译六个纯语义定理、物理机器及七个内核样例，190 个语料也已通过 Lean 对照。\code{instance_polynomial} 与 \code{instance_from_init} 给出任意实例串的实际四次转移界；最终本地验收记录见 \code{docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md}。
+完整证书机器和最终 NP 桥接是后续交付。
+
+\section{根流阶段交出了什么}
+记原始实例为 $x$，$S=|x|$，$n$ 包含根。父数组 $p$ 的原文表体为
+$P_0=\operatorname{flatMap}(\EN,p)$。已有的 \code{root_flow_polynomial} 在任意
+上下文 $c$ 上至多用 $32768(S+1)^4$ 次转移。父表通过且 $H$ 成功解析后，
+\code{saved_fields} 读回 $m,n,r,p,H,t,c$ 的相应栈，其中 $t$ 是 $H$ 后面的精确后缀。
+仅当根流阶段接受才调用费用程序；此时
+\[
+ |p|=|H|=n,\qquad \operatorname{decodeParents}(r,p)\text{ 成功},\qquad
+ \sum_{v\ne r,\,p_v=r}H_v=m .
+\]
+维数栈存放最低位在前的 $n.\mathrm{bits}$，父表栈存放 $P_0$；
+上下文可以比实例长得多，费用程序没有指向它的读取或写入指令。
+
+\section{任意后缀的双向刻画}
+自然数帧 $\EN(u)$ 将每个有效位 $z$ 写成 $1z$，末尾加 $0$。
+$\EN(0)=0$；非空幅值的最后一位必须为 $1$。
+$\EZ(h)$ 由符号位和 $\EN(|h|)$ 组成。零只允许非负符号。
+$\LN$、$\LZ$ 均先写实际项数的自然数帧，再写列表所有元素。
+对 $F=(a,d,b,q)$ 定义
+\[
+ W(F)=\LZ(a)\cat\LN(d)\cat\EZ(b)\cat\EN(q),\qquad
+ G_n(F)\iff |a|=|d|=n\ \land\ q>0\ \land\ \forall j<n,\ d_j>0.
+\]
+\begin{lemma}[后缀与 EOF]
+固定 $n$。参考后缀解析器在且仅在 $t=W(F)$ 且 $G_n(F)$ 成立时返回 $F$；
+这样的 $F$ 唯一。
+\end{lemma}
+\begin{proof}
+先允许尾串 $u$。若四次解析返回 $(F,u)$，逐次应用
+\code{parseList_canonical}、\code{parseInt_canonical} 和 \code{parseNat_canonical}，
+按顺序替换四个剩余串，得 $t=W(F)\cat u$。
+反向使用四个 append 引理得同样的 $(F,u)$。最后的守卫恰是 $u=[]$、两项维数
+与分母正性；确定性给出唯一性。列表计数预检不会排除一个规范编码，
+因为每个元素至少消耗一位。以上对应 \code{TreeBudgetFeeTailSpec} 的 \code{prefix_append}、
+\code{prefix_canonical}、\code{read_iff} 及 \code{good_iff}。
+\end{proof}
+
+\section{具体程序与逐转移证明}
+\paragraph{计数头与字段个数。}
+分别处理 $a,d$ 两个列表。每次用 \code{copy_run} 的 framed 模式把维数栈复制为
+$\EN(n)$，同时恢复原维数栈；把副本与 $t$ 的开头逐位比较。
+两边连续相等且期望栈读完，才进入字段循环。期望位串自定界，
+少终止位、多高位零或另一计数均不能当成 $\EN(n)$。
+随后调用 \code{count_run}，从已验证的 $P_0$ 生成 $n$ 个标记并恢复 $P_0$。
+一个标记许可一次字段读取。两次遍历的循环次数由实际父表给出；
+输入声称 $2^{100}$ 项时也只会比较当前帧的相应位。
+该专用解析器可与通用列表解析器在不同的时刻拒绝，成功语言相同。
+
+\paragraph{规范整数与严格正数。}
+\code{marker f ok} 中的 $ok$ 表示现在若遇终止标记，已经消费的幅值可合法结束。
+读完正号（符号位 $0$）令 $ok=1$，读完负号令 $ok=0$；正分母也从 $ok=0$ 起步。
+每读一对 $1z$ 后令 $ok=z$。归纳载荷位数可知：空幅值只有允许正零时才能结束；
+非空幅值恰在最高位为 $1$ 时才能结束。标记或载荷截断均拒绝。
+从而负费用、负预算和未约分的 $-2/4$ 原样保留，零分母和负零拒绝。
+
+\paragraph{输出方向。}
+读字段符号、标记和载荷时，把每个实际位压到 \code{rev}。已读表体为 $u$ 时，
+该栈从顶到底是 $u^{\mathrm{rev}}$。完成一个列表或标量后，把它弹到该字段的专用输出栈；
+若已转移 $j$ 位，则两个栈合起来仍表示同一 $u$。转移结束得到正向表体 $u$ 和空的
+\code{rev}。两个列表的计数头单独核过，输出规格只保存表体。最后 $q$ 写出后只检查
+\code{src} 是否为空；证书上下文不参与实例 EOF。
+
+\begin{theorem}[实例入口]
+从 $x,c$ 启动组合程序，停止时结果位为
+$\operatorname{isSome}(\operatorname{parseInstance}(x))$，上下文仍是 $c$。
+成功时四个新输出栈依次是 $a$ 的有符号编码表体、$d$ 的自然数编码表体、
+$\EZ(b)$ 和 $\EN(q)$，费用输入栈为空；此前保存的维数、父表、$H$ 等仍可读。
+\end{theorem}
+\begin{proof}
+接受时，根流定理给出树、维数和根流条件。后缀引理给出 $G_n(F)$ 和精确 EOF。
+用两段规范性拼接得到 $x=\operatorname{encodeSpecified}(m,\mathrm{raw})$；
+四个列表的长度恰是 \code{Shape raw}。\code{decodeRaw} 先核对形状和父表，再核对
+\code{denominatorsPositiveB}；全部通过。\code{decodeSpecified} 的最后守卫
+是 $m$ 等于 \code{rootCountCost} 的值，\code{TreeBudgetRootFlowSpec.reference}
+把它化为上面的直接根孩子求和。因此 \code{parseInstance} 成功。
+反向若 \code{parseInstance} 成功，\code{parseInstance_canonical} 给出同一原文编码，
+\code{decodeRaw} 的成功分支给出形状、父表和全部正分母；
+\code{Instance.compatible} 给出根流等式。已有前缀程序必接受且留下 $W(F)$。
+逐位计数、标记循环和每个字段的 append 性质使后缀程序接受。确定性和停机
+使两个方向同时覆盖所有拒绝。字段保持来自地址互异、两次恢复及上面的反向栈不变量。
+在后缀畸形时只承诺结果和调用者上下文；已写出的部分费用数据没有成功语义。
+\end{proof}
+
+\paragraph{费用账本。}
+令 $P=|P_0|$、$D_n=|n.\mathrm{bits}|$、$U=|t|$。
+只在入口满足 $|p|=n$ 且各新工作栈为空时使用此账本。
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule 部分 & 转移上界及理由\\\midrule
+两次生成计数头 & $4D_n+4$，每次 \code{copy_run} 给出 $2D_n+2$。\\
+逐位计数头比较 & $4D_n+4$，每个模板长 $2D_n+1$，再测一次模板结束。\\
+两次从父表取标记 & $4P+4$，每次 \code{count_run} 至多 $2P+2$。\\
+标记循环 & $2n+2$，每组 $n$ 个标记和一次读空。\\
+四组字段读取 & 至多 $U+1$，一次转移消费一个位，或在第一个缺位处转拒绝。\\
+四次输出翻转 & 至多 $U+4$，每个已读取的字段位最多翻转一次。\\
+外层与结束 & 常数次，包括前缀返回分支、拒绝停机或最终 EOF。\\\bottomrule
+\end{tabularx}
+\end{center}
+据此可保守取 $Q=4P+8D_n+2n+3U+64$；$P,D_n,n,U\le S$，
+所以 $Q\le64(S+1)$。用 \code{call_run} 连接根流子程序，另留四步
+给组合边界，整段的\emph{纸面目标}可取
+\[
+ 32768(S+1)^4+64(S+1)+4.
+\]
+前缀拒绝时直接停机。后缀失败时，越早退出只减少尚未发生的转移。
+此估计逐项对应所附程序。Python 在其逐栈转写中对每个用例逐步核对 $Q$。
+正式 Lean 组合使用较宽的账本：每个费用列表组至多 $64(S+1)^2$，预算和 EOF
+至多 $16(S+1)$，故 \code{fee_tail_run} 给出 $256(S+1)^2$。
+加上根流与调用、返回、停机边界，\code{instance_polynomial} 对任意 $x,c$ 给出
+\[
+ \boxed{65536(S+1)^4}
+\]
+次实际转移的统一界和精确结果位；\code{instance_from_init} 从
+\code{initList machine x} 出发给出相同结论。
+两定理位于 \code{LeanCompletion/UAV/TreeBudgetInstanceTotal.lean}；
+费用运行定理位于 \code{TreeBudgetFeeTailTotal.lean}。
+\code{loop_run_linear} 独立证明了剩余字段循环的 $U+2n+3$ 界，
+\code{word_run_success} 与 \code{signed_run_success} 以实际消费位数为转移上界，
+\code{flush_run} 以反向栈长加一步为转移上界；保守组合 API 尚未使用线性循环界。
+因此纸面线性估计与正式二次费用界应分别引用，完整实例入口的四次界已经覆盖所有拒绝路径。
+
+\section{从实例成功走到所有证书}
+\paragraph{一、记录前缀。}
+证书 $y$ 首先给出记录条数 $k$。用现有列表守卫检验 $k$ 不超过剩余实际位数，
+再对每个记录调用 \code{parseEntry} 的实际机器，核对行长为 $n$。$c_i$ 是
+记录的二进制重数，不驱动循环。第 $j$ 次调用后，当前后缀恰为余下记录加原始尾串；
+$k=0$ 时也要检查 EOF。失败必须停机。建议先用机内回归验证第二项截断、
+巨大 $k$ 配短尾串、零记录带垃圾尾位。
+
+\paragraph{二、缩放有理费用。}
+令 $D=q\prod_{v<n}d_v>0$。前向计算 $L_0=1$、$L_{v+1}=L_v d_v$，
+反向计算 $R_n=q$、$R_v=d_vR_{v+1}$。归纳得到
+\[
+ A_v=a_vL_vR_{v+1}=a_vD/d_v,\qquad A_T=bL_n=bD/q .
+\]
+故所有系数与仓库的 \code{scaleFees}、\code{scaleBudget} 逐项相等。
+可用已有自然数乘法处理幅值，另处理符号和零；该选择把精确除法
+从这一步的机器实现中消去。$\mathrm{size}(D)$ 受所有原始分母位宽之和控制；
+存一张前缀积表和一个反向工作积，并明确对复制、定位和倒序收费。
+
+\paragraph{三、逐行合法性和总量。}
+对每条记录 $(c_i,z_i)$ 先核 $z_{ir}=0$、非根 $z_{iv}\le H_v$、根孩子坐标和为一，
+以及 $z_{iv}>0$ 且 $p_v\ne r$ 时父坐标也为正（此处 $v\ne r$）。
+再核
+\[
+ \sum_{v\ne r}\bigl(A_v+\mathbf{1}_{p_v\ne r} A_{p_v}\bigr)z_{iv}\le A_T .
+\]
+证明用 $D>0$ 同乘原不等式；$D$ 为正保证负费用和负预算也适用。
+不要因局部有符号部分和暂时超过预算便提前拒绝，后面的负项可抵消。
+处理完前 $j$ 条合法记录后，保持
+\[
+ M_j=\sum_{i<j}c_i,\qquad C_{jv}=\sum_{i<j}c_i z_{iv}\quad(v\ne r).
+\]
+空前缀成立；读一条时由加法与单列乘加定理逐坐标保持。末尾核
+$M_k=m$ 与所有非根 $C_{kv}=H_v$。每一行均要验证，含 $c_i=0$；
+合法重复记录逐次累加。有了精确行长，列循环才可同步结束。
+例如链 $r\to u\to v$ 可有 $z_u=1,z_v=3$，
+不能增加 $z_v\le z_u$ 守卫。
+
+\paragraph{四、任意位串上的位宽。}
+记 $N=|x|+|y|$。已解析字段的数值幅度至多 $N$ 位，物化的顶点数和记录数均至多 $N$。
+$A_v,A_T$ 的幅度至多 $2N+1$ 位。将行费用项绝对值相加，就得到所有有符号
+部分和的统一控制。粗略可取 $6(N+1)^2$ 的数值位宽，并另计符号。
+此论证无需假设最终成功。机器上若允许高位零，则数值位宽不能替代栈长；
+每个算术子程序都要给出实际输出长度界或实际规范化过程，尤其是重复乘加。
+最终的标准机时间由各具体扫描、复制、装载、算术和清理的界组成。
+仓库已有参考工作量 $2^{22}(N+1)^6$ 与既有纸面标准机上界可用于核对量纲。
+
+\paragraph{五、精确终态与 NP。}
+设 $z=\operatorname{pairWire}(x,y)$，$|z|=2|x|+1+|y|$。
+顶层先拆帧，实例机保持 $y$，证书机再计算结果 $b'=\operatorname{verify}(x,y)$。
+将 $b'$ 保存在有限控制的两个分支中，清空所有栈（含原输出栈），将 $[b']$
+写至指定输出栈，恢复初始控制状态并停机。这样终态逐字段等于
+\code{haltList tm [b']}。清理成本可直接证明：固定程序每次转移至多压入 $h$
+个符号，$h$ 是各有限标签的语句树中 push 数目的一个固定上界；运行 $T$
+步时总栈长至多 $|z|+hT$。按固定栈表逐个弹空，至多再花
+$|z|+hT+O(\#\mathrm{stacks})$ 步，故接受与拒绝用同一多项式控制。
+用 $N+1\le |z|+1$ 把最终多项式改写为编码长度的函数。
+栈种类、标签、控制和每个栈的字母表均有限，得到
+\code{StandardVerifier verify}。再调用
+\code{language_inNP_of_standard_verifier} 即得仓库语言的
+\code{InNP language}；短见证长度的输入二次界在仓库中已有。
+此段最后两个对象仍待 Lean 实现和审计。
+
+\section{本地验收与后续边界}
+\begin{enumerate}
+\item 固定研究分支上已执行 Python 独立解码和枚举；六个纯语义定理、七个内核机器样例
+及 190 个对固定仓库 \code{parseInstance}/\code{verify} 的运行对照分别验收。
+新增原始实例尾位拒绝，与合法实例携带非空证书上下文的接受成对检查 EOF。
+\item 费用机器的 marker/digit、header、more、flush 均有实际运行引理。
+\code{fee_tail_run} 接入两组列表、预算和 EOF；其前提列明维数、父表、空工作区及长度界，
+结论给出任意后缀的停机、精确结果、字段顺序和上下文保持。
+\item \code{instance_polynomial} 用 \code{root_flow_polynomial}、\code{saved_fields}、
+\code{call_run} 接到任意原始实例串和上下文；\code{instance_from_init} 再消去预装入口。
+\code{SavedInstance} 给出五个此前字段、四个费用字段及空实例游标。
+完整实例阶段是 Issue 24 的独立成果，整个议题仍保持开放。
+\item 后续分别验收记录循环、整数缩放、行列验证和终态清理，最后构造
+\code{StandardVerifier verify} 并调用语言桥接，得到无条件 \code{InNP language}。
+这些后续对象未由本批实例入口定理代替。
+\end{enumerate}
+仓库复现命令为 \code{python verification/check_fee_tail.py --repo . --lean}；
+它定向构建显式审计导入的模块，运行全部命名声明的公理报告，再执行 190 个语料。
+已有逐模块构建产物时可加 \code{--skip-build}；脚本先递归检查所有 \code{LeanCompletion.*} 项目依赖的源码与构建产物时间戳，本批闭包含 111 个模块。固定外部依赖仍采用本地缓存。
+原始输出与生成语料留在忽略目录，不随源码提交。17 个新增模块逐一编译，并重检四个基础依赖；另外 67 个继承缓存的源码和构建产物均与来源工作树做 SHA256 对照，确认来源构建时间有效后仅恢复当前源码副本的来源时间戳。此缓存核对不算重新构建，亦非全仓冷构建。
+本次逐模块构建后实际执行 \code{python verification/check_fee_tail.py --repo . --lean --skip-build}，
+退出码为 0。递归依赖检查覆盖 111 个项目模块；完整显式公理审计覆盖 17 个新增模块的
+197 项命名声明（含两个任意输入主定理），全部通过，报告只含
+\code{propext}、\code{Classical.choice}、\code{Quot.sound}，未出现 \code{sorryAx}。
+随后同一入口完成 190 例 Lean 对照。此结果依赖上述固定本地缓存，不是全仓冷构建或远端 CI；
+TeX 仅作源码检查，未生成 PDF。
+本次在 Windows 本地重新运行 Python，结果如下；不将随包历史输出当作新验收。所有计数均为本次运行的测试调用次数。
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule 检查 & 范围与结果\\\midrule
+后缀短串 & $n=0,1,2$，逐一枚举长度 0 至 11 的所有串。12,285 次，17 次接受。
+$n=0$ 仅用来测独立的后缀契约，整树要求合法根。\\
+后缀定向变化 & 维数 0、1、2、4；对生成的规范样本测试逐位翻转、每个严格截断、
+追加位、巨大计数。22,564 次，3,661 次接受。两种解析方式在全部用例一致，
+逐栈转写同时检查保存数据及纸面步界。\\
+小树矩阵与压缩证书 & 1 至 3 个顶点的所有带编号根树，非根 $H_v=0,1,2$，
+相容 $m\le2$，根 $H_r=7$，三组费用。237 例中 143 可行、94 不可行。
+逐行支持和线性化条件逐个一致；枚举有序矩阵与独立枚举重数的结论一致，
+并对最小支持中的最短见证检查盒子界、维数界与实际长度界。\\
+实例/证书语料 & 共 190 例。Python 参考解码中 34 例通过实例，18 例通过全验证。
+语料与预期结果由脚本生成；本次 Lean 本地入口已将同一语料交给仓库原函数及组合实例机，全部一致，并检查上下文、正向输出及实例 EOF。\\\bottomrule
+\end{tabularx}
+\end{center}
+\paragraph{固定源码。}
+\href{https://github.com/huam54925-cpu/uav-routing-certification/issues/24}{Issue 24}；
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/38e13d45687c65265c9b327830f010f46443d0fc/LeanCompletion/UAV/TreeBudgetRootFlowTotal.lean}{根流主定理}；
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/38e13d45687c65265c9b327830f010f46443d0fc/LeanCompletion/UAV/TreeBudgetStackRoutine.lean}{复制与计数}；
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/38e13d45687c65265c9b327830f010f46443d0fc/LeanCompletion/UAV/TreeBudgetSparseVerifier.lean}{公开验证器}；
+\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/38e13d45687c65265c9b327830f010f46443d0fc/LeanCompletion/UAV/TreeBudgetSparseNPBridge.lean}{NP 桥接}；
+\href{https://github.com/leanprover-community/mathlib4/blob/5450b53e5ddc75d46418fabb605edbf36bd0beb6/Mathlib/Computability/TuringMachine/Computable.lean}{固定 mathlib 的终态定义}。
+\end{document}

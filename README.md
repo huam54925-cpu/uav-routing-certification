@@ -4,7 +4,7 @@
 
 This research branch studies when an integer edge flow can be realized by legal depot routes with exact visit demands and individual service budgets. The current focus is tree-supported routing: explicit flow existence, exact decomposition, and a complete edge-count matrix characterization of budget feasibility.
 
-**Research snapshot: November 18, 2026** · Branch: `research/structural-service-cuts-20261023`
+**Research snapshot: November 20, 2026** · Branch: `research/structural-service-cuts-20261023`
 
 The November 18 proofs compute the least feasible tree budget, reuse one table across rational budget queries, certify the persistent heap growth of deduplication, and expand checked certificates into legal vertex routes. The module interfaces, cost boundaries and reproduction commands are in [Subtree budgets, deduplication and explicit routes](docs/TREE_BUDGET_PROFILES_HEAP_AND_ROUTES.md).
 
@@ -20,11 +20,13 @@ The [count precheck](docs/TREE_BUDGET_TM2_COUNT_GUARD.md) and [counted Nat list 
 
 The [record parser](docs/TREE_BUDGET_TM2_ENTRY_STATUS.md) returns the next record cursor. [Parent lookup and the root-coordinate row test](docs/TREE_BUDGET_TM2_INDEXED_TABLE_STATUS.md) operate on canonical table bodies. The [parent-walk machine](docs/TREE_BUDGET_TM2_PARENT_WALK.md) restores the table after each lookup. Its [root endpoint test](docs/TREE_BUDGET_TM2_WALK_ROOT.md) realizes both the single root check and the per-vertex bounded-walk predicate of the reference tree validator.
 
-The full verifier's standard-machine simulation and unconditional NP membership remain pending; B and C remain plans.
+The [complete instance entrance](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) combines raw parent parsing, tree validation, H/root flow, signed fees, positive denominators, budget and instance EOF. For every raw input x it halts within `65536*(|x|+1)^4` actual TM2 transitions and returns `(parseInstance x).isSome`, preserving certificate context and all successful instance fields. The [Chinese proof source](docs/TREE_BUDGET_INSTANCE_ENTRY_ZH.tex) separates the proved bound from the sharper paper estimate.
+
+Arbitrary certificate records, row/column checks and the full verifier's standard-machine NP bridge remain pending; B and C remain plans.
 
 | Package | Intended result | Status and scope |
 | --- | --- | --- |
-| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | Simultaneous support bounds, quadratic actual witness length, complete verifier refinement and `4194304*(L+W+1)^6` reference-word work on every input pair | A0–A4 first batch published through `981a07c`; [total-work follow-up](docs/TREE_BUDGET_SPARSE_TOTAL_WORK_STATUS.md) also constructs a linear-time TM2 framing recognizer; the [data-preserving parser](docs/TREE_BUDGET_TM2_PARSER_STATUS.md) now connects pair splitting to canonical Nat parsing with actual transition bounds. The complete verifier machine and unconditional NP membership remain pending |
+| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | Simultaneous support bounds, quadratic actual witness length, complete verifier refinement and `4194304*(L+W+1)^6` reference-word work on every input pair | A0–A3 published; A4 now includes the [complete instance TM2 entrance](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) with arbitrary-input refinement and a quartic transition bound. The full certificate verifier and standard-machine NP bridge remain pending |
 | [B: completion interfaces — #25](https://github.com/huam54925-cpu/uav-routing-certification/issues/25) | A five-vertex family with many context-distinguishable states, including a route-permutation version | Paper derivation available; a supplied-completion/representative-family lower bound, not a lower bound for all algorithms; linked to #19/#21 |
 | [C: route-permutation DP — #26](https://github.com/huam54925-cpu/uav-routing-certification/issues/26) | Joint-type histograms, exact transport-table matching, witness recovery, and state/coupling bounds | Planned new executor; preserves feasibility/optimum and checked witnesses, without assuming the old tie-breaking matrix is unchanged; linked to #19 |
 
