@@ -1,10 +1,8 @@
-# UAV Routing Certification · 树上路线分解与预算证书
+# UAV Routing Certification · 多无人机巡检严格验证
 
-给定树上的整数边流和路线数，能否把边流分解为从基地出发并返回的路线，使每条路线都满足自己的服务预算？本项目用 Lean 4 证明了预算可行性与整数矩阵证书的等价性，并给出了可执行的搜索与证书检查器。[研究分支与证明索引](https://github.com/huam54925-cpu/uav-routing-certification/tree/research/structural-service-cuts-20261023)
+整理原论文、问题一至三程序、后续 ALNS 研究及 Case1 的数学证明。研究重点从寻找候选路线发展为：在固定模型下证明最小机队规模。
 
-对于二进制编码的实例，每个可行实例都有一份位长至多为输入长度二次函数的压缩证书。研究分支还证明了完整实例解析机对任意位串的四次转移上界。下一步是读取任意条证书记录，核对行长和证书末尾，再验证行预算、总重数和各列总量。[完整实例入口验收](https://github.com/huam54925-cpu/uav-routing-certification/blob/75b6471ceac60904e29109780946c526937bc40c/docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) · [#24 证明与计划](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)
-
-## 历史应用 · Case1 最小机队规模（2026-10-18）
+## 当前结论（2026-10-18）
 
 对于本仓库固定的 Case1 坐标、精确巡检次数、合法路线及九小时时限：
 
