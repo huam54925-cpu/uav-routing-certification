@@ -83,4 +83,6 @@ lake env lean verification/AuditTreeBudgetParentPrefix.lean
 
 ## 下一步
 
-#24 保持开放。接下来把 H、费用和预算字段，以及任意条证书记录的计数、EOF、行长与现有算术/行检查组件串接，最后完成 `StandardVerifier verify` 与语言 NP 成员性桥接。现有纸面 NP 证明和 Lean 参考工作量界继续单独标注。
+后续 H 列表与根流入口已另行实现，见 [根流批验收](TREE_BUDGET_TM2_ROOT_FLOW.md)。本页以上仍记录 `6cc8b60` 批次的原始验收范围。
+
+#24 保持开放。当前下一步是费用和预算字段、正分母与实例 EOF，随后把任意条证书记录的计数、EOF、行长与现有算术/行检查组件串接，最后完成 `StandardVerifier verify` 与语言 NP 成员性桥接。现有纸面 NP 证明和 Lean 参考工作量界继续单独标注。

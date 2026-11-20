@@ -1,0 +1,192 @@
+\documentclass[UTF8,11pt,a4paper]{ctexart}
+\usepackage[margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,tabularx,array}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{lemma}{引理}
+\newtheorem{prop}[lemma]{命题}
+\newcommand{\enc}{\mathrm E}
+\newcommand{\ens}{\mathrm{EN}}
+\newcommand{\val}{\mathrm{val}}
+\newcommand{\bw}{\mathrm{size}}
+\newcommand{\cat}{\mathbin{\Vert}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/6cc8b60bc6c968a8fc9bfd4035f7949c80afd2db/#1}{#2}}
+\title{从父表前缀到根流预检\\\large 第 24 号议题 A4 的实现计划与纸面推导}
+\author{}
+\date{2026 年 11 月 20 日}
+\begin{document}
+\maketitle
+
+\noindent\textbf{下一次验收的主张。}
+从原始实例串出发，在已有父表验证之后读取重数向量 \(H\)，检查长度，并计算根的直接孩子承担的总重数。返回的布尔值与现有根流预检一致，成功时保留后续验证所需的完整表和精确的费用后缀。
+固定基线为 \code{6cc8b60}。下列推导保留原计划的证明目标；基线已经证明父表前缀、自然数列表解析及二进制算术子程序。本批实现后的具体程序与费用见第 \ref{sec:implemented} 节，定向验收记录见仓库 \code{docs/TREE_BUDGET_TM2_ROOT_FLOW.md}。
+
+\section{确定读到哪里、检查什么}
+
+令 \(s\) 是已经从外层配对格式拆出的实例串，\(S=|s|\)。\(\enc(t)\) 编码一个规范自然数，\(\ens(z)\) 先写列表长度，再逐项编码。一次成功的扩展前缀解析给出唯一分解
+\[
+s=\enc(m)\cat\enc(n)\cat\enc(r)\cat\ens(p)\cat\ens(H)\cat t .
+\]
+这里 \(p\) 是父下标列表，\(H\) 是非负重数列表。\(t\) 是任意位串；对于完整合法实例，它从费用分子列表开始。此阶段允许 \(t\) 为空，也允许它以错误的费用编码开头。文件结束检查属于实例收尾阶段。
+
+记 \(G(p,r)\) 为 \code{decodeParents r p} 成功，它已经涵盖根与父下标范围以及到根的可达性。以 \([P]\in\{0,1\}\) 表示命题 \(P\) 的指示值。本批接受谓词为上述规范分解存在，且
+\begin{equation}\label{eq:guard}
+ |p|=|H|=n,\qquad G(p,r),\qquad
+ m=\rho(p,H,r):=\sum_{v=0}^{n-1}[v\ne r]\,[p_v=r]\,H_v.
+\end{equation}
+此前的 \code{prefix_polynomial} 在任意 \(s\) 上停机，解析成功后保留 \(m,n,r,p\)、从 \(H\) 起的后缀和调用者上下文。调用者读取其接受位。只有取值为真时，才把保存的后缀交给列表解析器。
+
+\begin{lemma}[根流是可行性的必要条件]
+假设 \(m\) 条合法路线的模式 \(u^{(j)}\) 对每个非根顶点恰好实现 \(H_v\)。则式 \eqref{eq:guard} 中的根流等式成立。
+\end{lemma}
+\begin{proof}
+令 \(C_r=\{v\mid v\ne r,\ p_v=r\}\)。每条合法路线恰从根出发一次，因此 \(\sum_{v\in C_r}u^{(j)}_v=1\)。交换两个有限和得到
+\[
+\sum_{v\in C_r}H_v
+=\sum_{v\in C_r}\sum_{j=1}^{m}u^{(j)}_v
+=\sum_{j=1}^{m}\sum_{v\in C_r}u^{(j)}_v=m .
+\]
+当 \(m=0\) 时内层路线集合为空，该证明仍成立。根固定点满足 \(p_r=r\)，所以必须显式排除 \(v=r\)。尚未检查的预算和逐列分配仍然可能使实例不可行。
+\end{proof}
+
+\section{同步扫描的结果与栈布局}
+
+在已验证的父表和 \(H\) 的工作副本上维护二进制编号 \(i\) 及累加字 \(u_i\)。初始 \(i=0,u_0=[]\)。进入第 \(i\) 轮时使用如下不变量。
+\begin{enumerate}
+\item 两个工作游标分别指向 \(p_i,H_i\) 的编码起点；若 \(i=n\)，两份表体均耗尽。
+\item 调用者区保留 \(m,n,r\)、完整父表体、完整 \(H\) 表体、后缀 \(t\) 和原上下文。后续行列验证需要所有 \(H_v\)。
+\item 记 \(a_i=\val(u_i)\)，则
+\[
+a_i=\sum_{0\le j<i}[j\ne r]\,[p_j=r]\,H_j .
+\]
+\end{enumerate}
+空和给出初始条件。在第 \(i\) 轮读取一个父字段与一个重数字段。若 \(i\ne r\) 且 \(p_i=r\)，调用二进制加法，把 \(H_i\) 加到累加字；否则原样带到下一轮。由 \code{addWords_value}，返回字的数值分别为 \(a_i+H_i\) 或 \(a_i\)。两个游标各前进一步，二进制编号增加一，故三条不变量对 \(i+1\) 继续成立。终止时 \(a_n=\rho(p,H,r)\)。以 \code{rootTerm_value} 逐项改写，即可得到与 \code{rootCountCost} 的对应。若采用同时读到表尾来核对长度的实现，必须拒绝只有一个游标耗尽的情况；一般定理不能依赖截短的 \code{List.zip} 自动消去多余坐标。
+
+\section{数值位宽、实际字长与比较}
+
+对自然数约定 \(\bw(0)=0\)，写 \(b_j=\bw(H_j)\)。完整 \(H\) 表体有
+\[
+ B_H=\sum_{j<n}(2b_j+1)
+\]
+位。规范前缀分解说明 \(B_H\le S\)。以下两个长度分别服务于数学规格和实际机器计费。
+
+\begin{lemma}[前缀和的数值位宽]
+对每个 \(i\le n\)，均有 \(\bw(a_i)\le\sum_{j<i} b_j\)。
+\end{lemma}
+\begin{proof}
+若 \(J_i=\{j<i\mid j\ne r,\ p_j=r\}\)，利用 \(1+u+v\le(1+u)(1+v)\) 及 \(1+H_j\le2^{b_j}\)，得
+\[
+1+a_i\le\prod_{j\in J_i}(1+H_j)\le2^{\sum_{j<i}b_j}.
+\]
+据自然数位宽定义即得结论，空前缀和全零前缀同样适用。该界独立于指定的 \(m\) 是否正确。
+\end{proof}
+
+\begin{lemma}[实际累加栈的长度]\label{lem:word}
+若每个参与相加的 \(H_j\) 使用其规范数字载荷，且复制保持字长，则
+\[
+ |u_i|\le\sum_{j<i}(b_j+1)\le B_H\le S.
+\]
+\end{lemma}
+\begin{proof}
+初始累加字为空。跳过一个坐标时左边不变。加法时由现有 \code{addWords_length}，
+\[
+ |u_{i+1}|\le |u_i|+b_i+1 .
+\]
+逐项归纳，使用 \(b_j+1\le 2b_j+1\) 即得。这个论证允许中间累加字含高位零。
+\end{proof}
+
+应在类型和栈布局中区分带帧的 \(\enc(H_j)\) 和去帧后的数字载荷；加法器接收后者。比较 \(a_n\) 与 \(m\) 时，现有 \code{TreeBudgetCompareRoutine.words_eq} 判定原始位字相等。例如小端字 \([1]\) 与 \([1,0]\) 同值，却有不同长度。可直接执行两次数值比较
+\[
+ (\val(u_n)\le m)\ \land\ (m\le\val(u_n)),
+\]
+使用允许高位补零的 \code{leWords} 接口，其初始比较标志为真。两个源栈都会被消耗，应对需要再用的操作数制备副本。如果另行证明了所有可达累加字始终规范，则一次原始位字相等也足够。
+
+\section{如何把纸面费用落实到 TM2}
+
+已有前缀费用至多 \(16384(S+1)^4\)，已有自然数列表子程序对入口后缀 \(s_H\) 收费至多 \(20(|s_H|+1)^2\)。完整程序应包含子程序之间的真实调用、复制、返回以及最后的停机转移。可取下列分解作为归纳目标：
+\[
+ T(s)\le16384(S+1)^4+20(S+1)^2+P_{\rm setup}(S)
+                 +\sum_{i<k}U_i(S)+P_{\rm exit}(S).
+\]
+这里 \(k\) 只计实际进入的扫描轮次。计数头或字段错误时，列表子程序的全输入界照常适用；长度不合或提前拒绝时不应使用未建立的 \(H\) 字段性质。进入循环之前已确认父表维数；\(H\) 的维数可由同步双表尾检查确认。即使 \(H\) 不合长，仍由父表实际项数得到 \(k\le |p|=n\le S\)。
+
+一个足够宽松的实现目标是分别证明
+\(P_{\rm setup}+P_{\rm exit}\le c_0(S+1)^2\) 和
+\(U_i\le c_1(S+1)^2\)，常数固定且非负。其可行依据是每轮只作固定次数的字段解析、比较、加法、复制和计数推进，游标副本及累加字的实际长度有引理 \ref{lem:word} 等界。落实各子程序的装载和清理之后，即有
+\[
+ T(s)\le (16384+20+c_0+c_1)(S+1)^4 .
+\]
+本式是原计划的条件式组合推论；本批的具体常数见第 \ref{sec:implemented} 节。上下文可比 \(s\) 任意更长；要保持仅依赖 \(S\) 的界，调用者应隔离该栈。TM2 计时使用实际 \code{step} 次数。
+
+\section{本地实现与验收顺序}
+
+\begin{enumerate}
+\item \textbf{先写纯规格。} 复用 \code{TreeBudgetParentPrefix.parse}、\code{accepted}、\code{parseNats}；证明接受等价于式 \eqref{eq:guard}，以及任意尾串的前缀编码往返。
+\item \textbf{接上列表和数据布局。} 复用 \code{prefix_polynomial}、\code{saved_fields}、\code{list_halts}、\code{halted_refines}。从前缀成功后的实际栈制备输入。保存父表和 \(H\) 的原文，扫描工作副本；说明每一个新栈由何处构造。
+\item \textbf{先证明循环，再封装总定理。} 对一般起始编号和累加值证明剩余后缀的贡献，连同数值、物理长度、剩余游标和调用者区保持性一起归纳。随后令起点为零，给出任意输入的结果等式、读回、停机及多项式实际步数。
+\item \textbf{验收后转入完整实例入口。} 顺序读取费用分子列表、费用分母列表、预算分子和预算分母，核对相应维数、正分母、规范有符号编码及实例 EOF。目标是在任意 \(x\) 上，实例机器通过当且仅当 \code{parseInstance x} 成功，且成功时保留所有语义字段。根流先行的拒绝可用接受条件的合取与原参考次序对齐。
+\end{enumerate}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.44\linewidth}X@{}}
+\toprule
+本批回归输入 & 预期观察\\
+\midrule
+\(r=1,\ p=(1,1,0),\ H=(2,2^{80},7)\)，分别令 \(m=2,9\) &
+前者通过，后者拒绝。只有顶点 \(0\) 是根的直接孩子。\\
+\(r=0,\ p=(0,0,0),\ H=(0,2^k-1,1)\)，\(k\ge1\) &
+根流 \(2^k\)。以 \(k=8\) 作具体机器回归，以任意 \(k\) 检查纸面值与进位。\\
+单点根 \(p=(0),\,H=(2^{80}),\,m=0\) &
+根流为零，此阶段通过，任意费用后缀均逐位保持。\\
+少一个或多一个 \(H\) 坐标；巨大计数只配很短的后缀 &
+相应长度检查或计数守卫拒绝；后者避免按计数值展开。\\
+合法 \(H\) 后接空串或畸形费用字段 &
+本阶段仍应通过（前提是根流匹配），保留完全相同的尾串。\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+完整实例入口完成后，再验收任意记录数的证书解析、行长和证书 EOF；继而组合有符号费用缩放、每一行的预算与结构、总重数和非根列累加，覆盖重复合法行和零重数行的原验证语义。最后在 \code{pairWire (x,y)} 上生成规定的单比特布尔输出，给出对所有输入对成立的多项式 TM2 转移界及栈字母表有限性，再应用 \code{language_inNP_of_standard_verifier}。
+
+\section{本批实现后的具体费用}\label{sec:implemented}
+
+\code{TreeBudgetRootFlowScanTM2.scan_run} 对任意起始编号、两张剩余表及实际累加字归纳。除数值不变量外，保持
+\[
+ i+|p_{\rm remaining}|\le S,\qquad
+ |u|+|H_{\rm remaining}\text{ 的编码表体}|\le S.
+\]
+每轮包含循环测试、两个拆帧、选择判断、复制、可选加法和编号推进，\code{round_run} 给出 \(128(S+1)\) 步。单侧表尾立即拒绝，双侧表尾才进入最终比较。
+\code{exit_run} 的两次数值比较连同制备至多
+\(6(|u|+|m.\mathrm{bits}|)+12\) 步。连同最初两份表的复制，
+\code{scan_polynomial} 给出核心界 \(256(S+1)^2\)，覆盖长度不合及根流不匹配。
+
+原始入口把已有父表程序、计数列表、核心扫描和外层装载逐一串接。装载五个字段至多 \(10S+10\) 步，三个返回或停机转移另计。因此
+\[
+\begin{aligned}
+ T(s)&\le16384(S+1)^4+20(S+1)^2+256(S+1)^2+10S+13\\
+     &\le32768(S+1)^4.
+\end{aligned}
+\]
+该界由 \code{TreeBudgetRootFlowTM2.root_flow_polynomial} 证明，
+\code{root_flow_from_init} 从标准原始位串配置开始。
+组合机器使用 49 个布尔栈、410 个标签和 6 个内部状态。
+其返回位恰等于式 \eqref{eq:guard} 的接受条件，\code{reference} 将根流和连接到已有 \code{rootCountCost}。
+
+在父表通过且 \(H\) 解析成功后，\code{SavedH} 对通过和长度或根流拒绝均保留完整 \(H\) 表体及精确 \(t\)；\code{SavedPrefix} 保留此前解析字段与任意上下文。
+空的或畸形的费用后缀仍原样留给下一批。
+这不是完整实例解析器或完整验证器的验收，A4 继续开放。本文仅维护 LaTeX 源码，未编译 PDF。
+
+\section*{固定版本阅读入口}
+\begin{itemize}
+\item \src{LeanCompletion/UAV/TreeBudgetParentPrefixTotal.lean}{前缀主定理与保留字段}；
+\src{LeanCompletion/UAV/TreeBudgetCountedNatsHalt.lean}{计数自然数列表的停机与读回}。
+\item \src{LeanCompletion/UAV/TreeBudgetCostedCandidates.lean}{根流参考语义}；
+\src{LeanCompletion/UAV/TreeBudgetBinaryCodec.lean}{列表编码及实际长度}。
+\item \src{LeanCompletion/UAV/TreeBudgetAddWordsTM2.lean}{带进位的加法与字长定理}；
+\src{LeanCompletion/UAV/TreeBudgetCompareRoutine.lean}{位字比较}；
+\src{LeanCompletion/UAV/TreeBudgetLeWordsTM2.lean}{数值比较}。
+\item \src{LeanCompletion/UAV/TreeBudgetSparseVerifier.lean}{完整实例和公开验证器}；
+\src{LeanCompletion/UAV/TreeBudgetSparseNPBridge.lean}{标准机器与 NP 转接}；
+\href{https://leanprover-community.github.io/mathlib4_docs/Mathlib/Computability/TuringMachine/Computable.html}{Mathlib 的 TM2 计时定义}。
+\end{itemize}
+\end{document}
