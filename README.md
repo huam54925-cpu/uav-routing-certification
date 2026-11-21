@@ -4,9 +4,9 @@
 
 Given a rooted tree, edge multiplicities and a route count, can depot routes realize the flow while each route stays within budget? This branch proves an exact budget matrix characterization, constructs routes from certificates and gives complete search algorithms. Current work studies how to check a compressed certificate directly from its binary encoding.
 
-**Research snapshot: November 20, 2026** · Branch: `research/structural-service-cuts-20261023`
+**Research snapshot: November 21, 2026** · Branch: `research/structural-service-cuts-20261023`
 
-Every feasible binary instance has a compressed certificate of quadratic bit length. The verified instance parser returns all fields needed to check that certificate. The next milestone is to parse an arbitrary number of certificate records and preserve their order and multiplicities. [Instance parser and verification record](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) · [Active work in #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)
+Every feasible binary instance has a compressed certificate of quadratic bit length. The verified instance parser returns all fields needed to check that certificate. The certificate parser now handles arbitrary record counts with a proved polynomial transition bound, preserving order, multiplicities and caller context. The next milestone is fee scaling and row/column validation. [Certificate parser and verification record](docs/TREE_BUDGET_TM2_CERTIFICATE_RECORDS.md) · [Active work in #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)
 
 The November 18 proofs compute the least feasible tree budget, reuse one table across rational budget queries, certify the persistent heap growth of deduplication, and expand checked certificates into legal vertex routes. The module interfaces, cost boundaries and reproduction commands are in [Subtree budgets, deduplication and explicit routes](docs/TREE_BUDGET_PROFILES_HEAP_AND_ROUTES.md).
 
@@ -24,11 +24,11 @@ The [record parser](docs/TREE_BUDGET_TM2_ENTRY_STATUS.md) returns the next recor
 
 The [complete instance entrance](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) combines raw parent parsing, tree validation, H/root flow, signed fees, positive denominators, budget and instance EOF. For every raw input x it halts within `65536*(|x|+1)^4` actual TM2 transitions and returns `(parseInstance x).isSome`, preserving certificate context and all successful instance fields. The [Chinese proof source](docs/TREE_BUDGET_INSTANCE_ENTRY_ZH.tex) separates the proved bound from the sharper paper estimate.
 
-Arbitrary certificate records, row/column checks and the full verifier's standard-machine NP bridge remain pending; B and C remain plans.
+The [certificate-record entrance](docs/TREE_BUDGET_TM2_CERTIFICATE_RECORDS.md) proves `RecordsPolynomialSpec` for every certificate string and dimension, with strict certificate EOF and exact ordered readback. Its prepared input carries `n.bits`; instance-to-certificate loading and the outer verifier still need composition. Fee scaling, row/column checks and the full verifier's standard-machine NP bridge remain pending; B and C remain plans.
 
 | Package | Intended result | Status and scope |
 | --- | --- | --- |
-| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | Simultaneous support bounds, quadratic actual witness length, complete verifier refinement and `4194304*(L+W+1)^6` reference-word work on every input pair | A0–A3 published; A4 now includes the [complete instance TM2 entrance](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) with arbitrary-input refinement and a quartic transition bound. The full certificate verifier and standard-machine NP bridge remain pending |
+| [A: sparse certificates — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) | Simultaneous support bounds, quadratic actual witness length, complete verifier refinement and `4194304*(L+W+1)^6` reference-word work on every input pair | A0–A3 published; A4 includes the [complete instance TM2 entrance](docs/TREE_BUDGET_TM2_INSTANCE_ENTRY.md) with a quartic transition bound and [arbitrary certificate records](docs/TREE_BUDGET_TM2_CERTIFICATE_RECORDS.md) with a polynomial bound and ordered readback. The full certificate verifier and standard-machine NP bridge remain pending |
 | [B: completion interfaces — #25](https://github.com/huam54925-cpu/uav-routing-certification/issues/25) | A five-vertex family with many context-distinguishable states, including a route-permutation version | Paper derivation available; a supplied-completion/representative-family lower bound, not a lower bound for all algorithms; linked to #19/#21 |
 | [C: route-permutation DP — #26](https://github.com/huam54925-cpu/uav-routing-certification/issues/26) | Joint-type histograms, exact transport-table matching, witness recovery, and state/coupling bounds | Planned new executor; preserves feasibility/optimum and checked witnesses, without assuming the old tie-breaking matrix is unchanged; linked to #19 |
 
