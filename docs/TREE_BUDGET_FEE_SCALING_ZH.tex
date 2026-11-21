@@ -1,0 +1,159 @@
+% !TeX program = xelatex
+\documentclass[UTF8,fontset=fandol,11pt,a4paper]{ctexart}
+\usepackage[margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{proposition}{命题}
+\newtheorem{lemma}{引理}
+\renewcommand{\proofname}{证明}
+\newcommand{\len}[1]{\lvert #1\rvert}
+\newcommand{\src}[2]{\href{https://github.com/huam54925-cpu/uav-routing-certification/blob/b083efc56ecf5b4f96f2e5b06134d1ed05806351/LeanCompletion/UAV/#1.lean}{#2}}
+\title{从配对解析到精确整数费用\\[2pt]\large 树预算压缩证书的两遍缩放算法与位长证明}
+\author{}
+\date{2026 年 11 月 21 日}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+一份实例给出每个顶点的有符号有理费用以及每条路线的有理预算。对所有证书行，这些量都相同。本文给出一个两遍算法，在检查第一行之前，按顶点原序生成可反复使用的整数费用。利用现有移位加法机器可证明，任何一次乘法的两个输入字的长度之和至多为原始实例位长加一。由此得到全部乘法调用的显式转移界。字段装载、输出编码和子程序组合的完整 TM2 运行定理是下一批的形式化目标。
+\end{abstract}
+
+\section{配对入口已经给出的数据}
+
+记原始实例为 \(x\)，证书为 \(y\)，\(L=\len{x}\)，\(W=\len{y}\)。提交
+\href{https://github.com/huam54925-cpu/uav-routing-certification/commit/44e024b63efffe6c181ddf6836a56d7b7591b4b6}{\texttt{44e024b}}
+给出了任意条记录的 \texttt{records\_polynomial}。
+\src{TreeBudgetPairedParserTotal}{组合入口定理}进一步从
+\(\texttt{pairWire}(x,y)\) 的标准初态出发，在至多
+\(65614(L+W+1)^4\) 次实际转移内停机。接受条件为实例解析出 \(I\)，且 \(y\) 按 \(I\) 的维数能解出证书。对任意外层位串 \(s\)，另一条定理按 \(\len{s}\) 给出 \(65614(\len{s}+1)^4\) 的界，外层帧截断时拒绝。
+
+成功返回时，费用分子栈是 \(\texttt{flatMap encodeInt}\) 得到的表体，费用分母栈是 \(\texttt{flatMap encodeNat}\) 得到的表体。预算分子、分母各自占一个编码字段。分子表和分母表均按同一顶点顺序排列，表体从第一个顶点字段开始。另有完整的父表、\(H\)、路线数、维数、根，以及独立保存的证书标记和原序记录表体。
+\src{TreeBudgetInstanceTotal}{实例字段布局}，\src{TreeBudgetPairedParserTM2}{配对返回布局}。
+
+\section{两遍计算与整数判定}
+
+设 \(s_i=a_i/b_i\) 为顶点 \(i=0,\ldots,n-1\) 的费用，\(T=a_T/b_T\) 为预算，其中分子为整数，分母均为正整数。公共倍数取
+\[
+ D=b_T\prod_{j=0}^{n-1} b_j .
+\]
+按位置定义 \(P_0=1,\ P_{i+1}=P_i b_i\) 以及 \(U_n=b_T,\ U_i=b_i U_{i+1}\)。定义
+\[
+ A_i=a_iP_iU_{i+1},\qquad A_T=a_TP_n.
+\]
+
+\begin{proposition}
+向量 \((A_0,\ldots,A_{n-1})\) 和整数 \(A_T\) 分别等于仓库的
+\texttt{scaleFees} 和 \texttt{scaleBudget} 在同一输入上的值。
+\end{proposition}
+\begin{proof}
+固定 \(i\)，将积在位置 \(i\) 分开，得到 \(D=b_iP_iU_{i+1}\)。
+因 \(b_i>0\)，自然数除法给出 \(D/b_i=P_iU_{i+1}\)。预算同理有
+\(D=b_TP_n\) 和 \(D/b_T=P_n\)。把两式代入
+\(\texttt{scaledNumerator}(D,a,b)=a\cdot (D/b)\) 即得结论。
+同值分母出现在不同位置时，等式仍保留其余位置的全部因子。公共积包含根顶点的分母。
+\src{TreeBudgetIntegerCost}{整数费用定义}，\src{TreeBudgetVectorChecker}{向量缩放定义}。
+\end{proof}
+
+现有计数执行器用 \texttt{omitAt} 按位置取出其余分母，再用 \texttt{productCost} 求积。
+其 \texttt{cofactorCost\_value} 已将该积与 \(D/b_i\) 对齐。
+两遍算法共享相邻顶点的前缀积和后缀积。形式化时只需把每个 \(P_iU_{i+1}\) 对齐到同一余因子，然后复用已有的有符号缩放语义。
+\src{TreeBudgetBinaryPreprocessing}{无除法的计数执行器及正确性定理}。
+
+对树根 \(r\)、父映射 \(\pi\) 和一条路线的次数向量 \(p\)，仓库使用的行费用满足
+\[
+ \operatorname{intCost}(A,p)
+ =\sum_{v\ne r}
+    \bigl(A_v+\mathbf{1}_{\{\pi(v)\ne r\}} A_{\pi(v)}\bigr)p_v
+ = D\cdot\operatorname{cost}(s,p).
+\]
+最后的等式在有理数中成立。由 \(D>0\)，整数比较
+\(\operatorname{intCost}(A,p)\le A_T\) 等价于原预算比较，包括负费用、负预算和恰好等于预算的情形。现有
+\src{TreeBudgetVectorChecker}{\texttt{rowValidB\_scaled\_eq\_true\_iff}}
+可直接用于后续行验证。
+
+\paragraph{顺序与栈布局}
+正向同步读取分子表和分母表。处理第 \(i\) 个字段时，将
+\((a_i,b_i,P_i)\) 作为有字段边界的记录压到工作栈，再更新 \(P_{i+1}\)。
+正向遍历结束即可产生 \(A_T\)。逆向遍历只保留一个活动的后缀积，初值为 \(b_T\)。
+弹出第 \(i\) 项时，该积等于 \(U_{i+1}\)。用它和 \(P_i\) 计算 \(A_i\)，然后乘 \(b_i\) 供下一轮使用。把完整的 \(A_i\) 编码字段前置到输出栈，结束时栈顶起的顺序即为 \(A_0,\ldots,A_{n-1}\)。每个数的幅值载荷按低位在前的顺序读回，写栈时应计入恢复该顺序的转移。
+
+\section{约束连续乘法的实际字长}
+
+位字 \(u\) 的实际长度记为 \(\len{u}\)，允许工作字末端带有表示高位零的位。令
+\(F(u,h,a)=\texttt{weighted}\ u\ h\ a\) 为
+\src{TreeBudgetWeightedRuns}{移位加法程序}的输出字。它表示
+\(\operatorname{val}(a)+\operatorname{val}(u)\operatorname{val}(h)\)。
+
+\begin{lemma}
+对任意三个位字，
+\[
+  \len{F(u,h,a)}\le \len{u}+\max(\len{h},\len{a}).
+\]
+因此从空累加器计算的单次乘积的输出字长至多为两个输入字长之和。
+\end{lemma}
+\begin{proof}
+对剩余乘数字 \(u\) 归纳，同时允许 \(h,a\) 任意。空乘数字立即返回 \(a\)。
+设 \(u=d::u'\)，\(B=\max(\len{h},\len{a})\)。一次移位把 \(h\) 变为
+\(\texttt{false}::h\)，长度至多为 \(B+1\)。当 \(d=0\) 时累加器仍为 \(a\)，当 \(d=1\) 时累加器为 \texttt{addWords} 的结果。已有引理
+\texttt{add\_width} 给出后者的长度至多为 \(B+1\)。对余下的 \(u'\) 使用归纳假设得到
+\(B+1+\len{u'}=B+\len{u}\)。取 \(a=[]\) 即得第二句。
+\end{proof}
+
+令 \(\ell(t)\) 为自然数 \(t\) 的规范二进制载荷长度，\(\ell(0)=0\)，并记
+\[
+ S=\ell(b_T)+\ell(\lvert a_T\rvert)
+   +\sum_{i=0}^{n-1}\bigl(\ell(b_i)+\ell(\lvert a_i\rvert)\bigr).
+\]
+在解析成功的 \(x\) 中，这些载荷占据互不重叠的位置，所以 \(S\le L\)。
+在 Lean 中可由 \texttt{parseInstance\_canonical} 恢复原编码，再用
+\texttt{inputWeight\_le\_length} 和 \texttt{vertexCount\_le\_length}
+分别得到 \(S\le L\) 及 \(n\le L\)。
+\src{TreeBudgetSparseVerifier}{原串的规范性}，\src{TreeBudgetBinaryCodec}{编码与字段长度}。
+
+\begin{proposition}
+按上述算法用一个值为 \(1\) 的单比特字初始化 \(P_0\)，并直接用 \(b_T\) 的载荷初始化 \(U_n\)。全部乘法子程序调用花费的转移数在纸面上由
+\[
+       (4n+1)\bigl(16(L+2)^2+1\bigr)
+\]
+控制。
+\end{proposition}
+\begin{proof}
+由字长引理，存储 \(P_i\) 的字长至多为
+\(1+\sum_{j<i}\ell(b_j)\)，存储 \(U_{i+1}\) 的字长至多为
+\(\ell(b_T)+\sum_{j>i}\ell(b_j)\)。形成 \(P_iU_{i+1}\) 的两个字来自不相交的位置，再乘 \(\lvert a_i\rvert\) 时也只新增该分子的载荷。预算乘法用 \(P_n\) 和 \(\lvert a_T\rvert\)。正向和逆向更新各自引入一个新分母。故每次乘法的两个输入字长之和至多 \(1+S\le L+1\)。这里单比特种子只计入一次。
+
+现有 \texttt{product\_run} 对已装载的位字 \(u,h\) 给出
+\(16(\len{u}+\len{h}+1)^2+1\) 的停机界。正向有 \(n\) 次前缀乘法和一次预算乘法。逆向每个顶点至多用两次乘法形成系数，用一次乘法更新后缀。相加得结论。乘法调用的小计为 \(O((L+1)^3)\)。
+\src{TreeBudgetWeightedRuns}{\texttt{add\_width}、\texttt{weighted} 与 \texttt{product\_run}}。
+\end{proof}
+
+工作表含 \(n\) 个前缀字，连同有边界的原始字段占用 \(O(n(L+1))\) 个比特。
+具体 TM2 还需为装载、复制、恢复、符号处理、规范化、写出字段及循环返回计费。若每个工作字段都按顺序压入和弹出，搬运及编码对每个字段只作常数趟线性扫描，这些费用就可按字段累加。把各项实际转移数相加，就能得到完整缩放子程序的运行界，进而与已发布的配对入口四次界组合。
+
+\section{可独立验收的返回条件}
+
+建议从成功的配对解析布局调用缩放程序，分配独立工作栈。返回时可直接验收两个按物理内容表述的等式
+\[
+ \text{费用输出栈}=\texttt{flatMap encodeInt}\,[A_0,\ldots,A_{n-1}],
+ \qquad
+ \text{预算输出栈}=\texttt{encodeInt}\ A_T .
+\]
+有符号字段继承原分子的符号，因为所有倍率均为正。输出幅值按规范二进制写回，零用空载荷和非负符号编码。返回条件同时保留实例字段、证书记录标记与原序表体，并给出下一次调用所需的工作栈布局。缩放只依赖实例，独立子程序的计时可用 \(L\) 表述。外层在解析失败时直接返回拒绝，在解析成功时调用该子程序。
+
+\begin{center}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+顶点分子 \(a\) & 顶点分母 \(b\) & 预算 & \(D\) & 应读回的 \((A,A_T)\)\\
+\midrule
+\((-2,0)\) & \((4,3)\) & \(-3/6\) & \(72\) & \(((-36,0),-36)\)\\
+\((-2,0,3)\) & \((2,3,2)\) & \(-2/4\) & \(48\) & \(((-48,0,72),-24)\)\\
+\bottomrule
+\end{tabular}
+\end{center}
+第一行可直接复用
+\src{TreeBudgetPairedParserExamples}{现有回归 \texttt{twoVertices}}。
+第二行可取根 \(2\)、父表 \((2,2,2)\)、\(H=(1,1,0)\)、路线数 \(2\)，同时检查相等分母、非首位的根、零费用与反向还原的顺序。
+
+下一批逐行检查须覆盖每条记录，包括零重数行。随后核对总重数和各非根列的加权和。最后将配置布尔位写成 \([\texttt{verify}\ x\ y]\)，以实际多项式时间定理及有限栈字母表构造 \texttt{StandardVerifier verify}，再调用既有的语言 NP 桥接引理。
+\src{TreeBudgetSparseVerifier}{公开验证器}，\src{TreeBudgetSparseNPBridge}{标准机器接口}。
+\end{document}
