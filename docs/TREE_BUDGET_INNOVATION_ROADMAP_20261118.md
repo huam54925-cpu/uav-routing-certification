@@ -1,5 +1,7 @@
 # 树路由认证：三项创新计划与分阶段验收
 
+> **2026-11-22 后续：** 本文记录原批次的证明范围。A4 的标准验证器与 NP 定理已发布，见 [A4 终态验收](TREE_BUDGET_TM2_VERIFIER.md)。
+
 日期：2026-11-18。研究基线：`f3ea0823be69ffa7152dec903069c2ba79ad20a4`，分支 `research/structural-service-cuts-20261023`。
 
 实施追踪：[计划 A — #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24) · [计划 B — #25](https://github.com/huam54925-cpu/uav-routing-certification/issues/25) · [计划 C — #26](https://github.com/huam54925-cpu/uav-routing-certification/issues/26)。总览继续由 [#15](https://github.com/huam54925-cpu/uav-routing-certification/issues/15) 协调；本页 A0–A4、B0–B4、C0–C4 是阶段编号的统一定义。

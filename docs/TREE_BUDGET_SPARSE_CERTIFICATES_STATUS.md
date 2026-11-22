@@ -1,5 +1,7 @@
 # A 包第一交付：稀疏模式结构定理（A0–A2）
 
+> **2026-11-22 后续：** 本文记录原批次的证明范围。A4 的标准验证器与 NP 定理已发布，见 [A4 终态验收](TREE_BUDGET_TM2_VERIFIER.md)。
+
 研究基线：`3389ea74fa1d08a6bb0d4203fc3be7cfbad7f624`。
 本地分支：`codex/sparse-package-a-20261118`。追踪：[研究计划 #24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)。
 本页记录新增实现及其独立验收，不改写此前文档批次和历史证明批次的验证状态。
