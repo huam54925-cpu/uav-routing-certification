@@ -1,5 +1,8 @@
 # A4：完整参考字工作量与首个 TM2 组件
 
+> **2026-11-22 更新：** 下文保留当时的验收范围。A0–A4 已闭合，
+> 标准 TM2 验证器、无条件 NP 定理与终态验收见 [A4 总记录](TREE_BUDGET_TM2_VERIFIER.md)。
+
 基线为已发布的 `981a07c6ef238e9899010d75d1424eccec6cdd49`，包含 A0–A3 和
 [A4 第一批](TREE_BUDGET_SPARSE_BITCOST_STATUS.md)。本批继续
 [#24](https://github.com/huam54925-cpu/uav-routing-certification/issues/24)。

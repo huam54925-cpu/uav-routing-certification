@@ -1,5 +1,8 @@
 # 精确树路由：当前成果、证据边界与研究定位
 
+> **2026-11-22 更新：** 下文保留当时的验收范围。A0–A4 已闭合，
+> 标准 TM2 验证器、无条件 NP 定理与终态验收见 [A4 总记录](TREE_BUDGET_TM2_VERIFIER.md)。
+
 日期：2026-11-18。研究分支：`research/structural-service-cuts-20261023`。本次阅读的证明基线为 [`f3ea0823be69ffa7152dec903069c2ba79ad20a4`](https://github.com/huam54925-cpu/uav-routing-certification/commit/f3ea0823be69ffa7152dec903069c2ba79ad20a4)。
 
 本页是当前导航与研究定位说明，不替换各证明包的历史验收记录。`3389ea7` 的文档批次未执行新验证；随后 A0–A2 的新增源码与实际验证见 [稀疏证书验收记录](TREE_BUDGET_SPARSE_CERTIFICATES_STATUS.md)。依赖锁、默认求解器和历史应用材料保留。

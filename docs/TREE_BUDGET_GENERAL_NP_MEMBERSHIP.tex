@@ -22,8 +22,8 @@
 \texttt{TreeBudgetSparseNPBridge.language} 所定义语言属于 NP。
 证明包括短证书存在性、对任意输入和证书的确定性位验证算法，
 以及一个保守的多项式运行时间界。
-这是纸面上的标准图灵机论证；它不声称仓库已经构造出完整的
-Lean \texttt{StandardVerifier verify} 对象。
+仓库在 Lean 中构造了 \texttt{StandardVerifier verify}，并由
+\texttt{A4Verifier.tree\_budget\_inNP} 给出无条件的 NP 成员性。
 \end{abstract}
 
 \section{语言与编码约定}
