@@ -234,8 +234,8 @@ $O((N+1)^2)$ 个数值槽位。由引理~\ref{lem:width}，
 拆帧和最终写出单个结果位只增加多项式费用。
 每条工作带可用表示读头左侧与右侧的两个栈实现，
 读写和移动一步只需常数次有限字母表的栈操作，空白也只需一种固定符号。
-因此这一纸面构造同样给出标准有限栈模型的多项式验证器，
-但尚未给出其完整 Lean 实现和逐转移精化证明。
+因此这一纸面构造给出标准有限栈模型的多项式验证器。
+仓库的逐转移 Lean 实现见末节对应表。
 \end{proof}
 
 \begin{theorem}\label{thm:np}
@@ -271,7 +271,8 @@ $H_r$ 仍被忽略。$H_v=0$、零费用、负费用和负预算均由同一论�
 公开验证器可靠性 & \texttt{TreeBudgetSparseVerifier}: \texttt{verify\_refines}\\
 任意解码行的位宽 & \texttt{TreeBudgetSparseExecutionWidths}: \texttt{costTerms\_width}, \texttt{decoded\_fields}\\
 完整参考工作量 & \texttt{TreeBudgetSparseTotalWork}: \texttt{verifyD\_refines\_and\_polynomial}\\
-标准机器的条件转接 & \texttt{TreeBudgetSparseNPBridge}: \texttt{language\_inNP\_of\_standard\_verifier}
+标准机器的条件转接 & \texttt{TreeBudgetSparseNPBridge}: \texttt{language\_inNP\_of\_standard\_verifier}\\
+标准机器与 NP 结论 & \texttt{TreeBudgetVerifierNP}: \texttt{verifier}, \texttt{tree\_budget\_inNP}
 \end{tabular}
 \end{center}
 
@@ -279,11 +280,12 @@ $H_r$ 仍被忽略。$H_v=0$、零费用、负费用和负预算均由同一论�
 步数加分配量；同一短证书另有 $2^{22}(L+1)^{12}$ 的参考界。
 两者都不等同于命题~\ref{prop:time} 的标准图灵机转移界，
 不得将常数或次数直接移植。
-本次整树机器的验收入口是已解析父表工作格式。
-原始 \texttt{pairWire} 到工作格式的制备、任意记录循环、根流、
-费用缩放和全部行列检查仍须在一个完整 TM2 程序内组合、证明精化及实际转移界，
-才能消去 \texttt{StandardVerifier verify} 这个形式化前提。
-本文的纸面 NP 证明不将该工程义务标记为完成，也不提供短不可行性证书、
-短最优性证书或多项式时间求解算法。
+完整 Lean 入口为 \texttt{A4Verifier.executes}：
+它从原始 \texttt{pairWire} 出发，复用实例和证书解析、费用缩放、逐行检查、
+总重数与非根列校验，并在七次多项式步数内返回公开验证器的结果位。
+\texttt{A4Verifier.verifier} 计入最后的清栈、复位和单比特输出，
+得到 \texttt{StandardVerifier verify}；
+\texttt{A4Verifier.tree\_budget\_inNP} 给出语言的 NP 成员资格。
+本文不提供短不可行性证书、短最优性证书或多项式时间求解算法。
 
 \end{document}
