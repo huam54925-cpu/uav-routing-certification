@@ -135,3 +135,69 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixFold.
 'UAVProof.TreeBudgetOrbitPrototype.ex_two_child_hub_regression' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All five outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 5: Multi-Child Fold Step 2 (`prefixReach_iff_witness`) — `TreeBudgetPrefixReach.lean`
+
+### Deliverables (`TreeBudgetPrefixReach.lean`)
+Imports `TreeBudgetPrefixFold` (after exporting `TreeBudgetPrefixFold.olean` with `E4=0`).
+Fixed two minor elaboration details in the candidate file: removed unused `Multiset.mem_map` simp arg in `jointHist_support_image` and closed `reindexMatrix (Equiv.refl (Fin m)) (ns u) = ns u` by `rfl` in `histAdvance_prefixWitness_iff`.
+
+1. **Histogram-marginal bridge (`HistJoinOn`, `HistJoin`, `histJoin_jointHist_iff`)**: links histogram-level transport tables to `LegalTable` on arbitrary concrete representatives `(x, y)`.
+2. **Single-step witness equivalence (`histAdvance_prefixWitness_iff`)**: for a fresh child `u ∈ R.children v \ S`, proves `histAdvance ... (PrefixWitnessHist ... S) u h ↔ PrefixWitnessHist ... (insert u S) h` (forward via `prefixValid_insert_of_transport`, backward via `ns u` with `Equiv.refl` and `inside_join_hist_iff`).
+3. **Left-to-right list induction & order independence (`histFold_from_iff`, `prefixReach_iff_witness`, `prefixReach_iff_of_same_children`)**: proves `PrefixReach R H s v q us h ↔ ∃ ns, PrefixValid R H v q us.toFinset ns ∧ jointHist (parentState R s v q us.toFinset ns) = h` for any `us.Nodup` with `∀ u ∈ us, u ∈ R.children v`, plus order independence over lists with the same `toFinset`.
+4. **Boundary & regression checks**: `prefixReach_nil_iff`, `prefixReach_zero_routes_only_empty` (`m = 0`), and `ex_prefixReach_two_child_hub` (4-vertex signed-cost `{-1, 7}` witness lifted through `PrefixReach`).
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixReach.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw log**: `lean_check_prefix2.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.histJoin_jointHist_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.histAdvance_prefixWitness_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.histFold_from_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.prefixReach_iff_witness' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.prefixReach_iff_of_same_children' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.prefixReach_nil_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.prefixReach_zero_routes_only_empty' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ex_prefixReach_two_child_hub' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All eight outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 6: Multi-Child Fold Step 3 (`childHist_iff_fullPrefixReach`) — `TreeBudgetPrefixMerge.lean`
+
+### Deliverables (`TreeBudgetPrefixMerge.lean`)
+Imports `TreeBudgetPrefixReach` (after exporting `TreeBudgetPrefixReach.olean` with `E5=0`).
+
+1. **Full-node orbit equivalence (`childHist_iff_fullPrefixReach`)**:
+   - For any non-root vertex `v` (`hv : v ≠ R.root`) and any duplicate-free list `us` covering `R.children v` (`us.toFinset = R.children v`), proves:
+     `ChildHist R H m s v h ↔ ∃ q : Fin m → ℕ, (∑ i, q i) = H v ∧ RootChildCap R v q ∧ PrefixReach R H s v q us h`.
+   - Forward (`ChildHist → PrefixReach`): unpacks `compactRep_merge_iff.mp`, chooses child matrices `ns` from `CompactRep`, proves `PrefixValid` and `parentState ... = z`, then applies `prefixReach_iff_witness.mpr`.
+   - Backward (`PrefixReach → ChildHist`): unpacks `prefixReach_iff_witness.mp`, instantiates `z := parentState R s v q (R.children v) ns` and per-child `zs u` from `ns u`, and closes via `compactRep_merge_iff.mpr`.
+2. **Regression (`ex_childHist_two_child_hub`)**:
+   - Reuses `ex_prefixReach_two_child_hub` through `childHist_iff_fullPrefixReach.mpr` to derive `ChildHist R H 2 s 1 (jointHist ⟨Finset.univ, ![-1, 7]⟩)` on the 4-vertex signed-cost hub example.
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixMerge.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings, first-pass build)
+- **Saved raw log**: `lean_check_prefix3.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.childHist_iff_fullPrefixReach' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ex_childHist_two_child_hub' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+Both outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
