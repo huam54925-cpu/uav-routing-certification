@@ -299,3 +299,41 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetRootSplit.l
 'UAVProof.TreeBudgetOrbitPrototype.ex_root_split_negative_budget' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All five outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 10: C3 Executable Internal Histogram Join (`histJoinExec`, `exists_mem_histJoinExec_iff_histJoin`) — `TreeBudgetHistJoinExec.lean`
+
+### Deliverables (`TreeBudgetHistJoinExec.lean`)
+Imports `TreeBudgetTransportEnum` (after exporting `TreeBudgetTransportEnum.olean`, `E7=0`) and `TreeBudgetPrefixReach`.
+
+1. **Executable multiplicity-level join**:
+   - `HistEntries := List (JointType × ℕ)` with semantic denotation `denoteHist` and validity predicate `ValidHistEntries` (distinct keys, strictly positive multiplicities).
+   - `histJoinTables p c := tableChoices K_in_bool (c.map Prod.fst) p (c.map Prod.snd)` and `histJoinExec p c` accumulating positive cells `N a b` directly into `g_in a b` via `addEntry` / `addRowEntries` / `tableToEntries` (merging multiplicities on colliding output types and skipping zero cells).
+   - `validHistEntries_of_mem_histJoinExec`: every emitted output preserves distinct keys and positive multiplicities.
+2. **Exact membership theorem (`exists_mem_histJoinExec_iff_histJoin`)**:
+   - Under `ValidHistEntries p` and `ValidHistEntries c`, proves `(∃ out ∈ histJoinExec p c, denoteHist out = h) ↔ HistJoin (denoteHist p) (denoteHist c) h`, connecting `mem_tableChoices_iff` and `count_tablePushforwardHist`.
+3. **Three Executable Boundary Regressions**:
+   - **Double empty (`exExec_double_empty`, `exExec_double_empty_histJoin`)**: `histJoinExec [] [] = [[]]`, denoting `0`.
+   - **All pairings forbidden with positive demand (`exExec_all_forbidden`, `exExec_all_forbidden_not_histJoin`)**: `p = [((false, 0), 1)]`, `c = [((true, 1), 1)]` → `histJoinExec p c = []` and `¬ HistJoin ... h`.
+   - **Collision example (`exExec_collision_exact`, `exExec_collision_merged_mult_two`, `exExec_collision_both_histJoin`)**: `p = [((true, 0), 1), ((true, 1), 1)]`, `c = [((true, 1), 1), ((false, 0), 1)]` → exact output `[[((true, 0), 1), ((true, 2), 1)], [((true, 1), 2)]]` (preserving merged multiplicity `2` on `(true, 1)`), lifted to `HistJoin`.
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetHistJoinExec.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw log**: `lean_check_hist_join_exec.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.validHistEntries_of_mem_histJoinExec' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exists_mem_histJoinExec_iff_histJoin' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exExec_double_empty' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exExec_all_forbidden' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exExec_collision_exact' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exExec_collision_both_histJoin' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All six outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
