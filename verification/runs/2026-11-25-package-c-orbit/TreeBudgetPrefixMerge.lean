@@ -110,9 +110,44 @@ theorem ex_childHist_two_child_hub (R : RootedTree (Fin 4))
   · intro _ i
     fin_cases i <;> decide
 
+/-- Boundary regression 1 (non-root leaf): when `R.children v = ∅`, take `us = []`
+and reduce `childHist_iff_fullPrefixReach` via `prefixReach_nil_iff`. -/
+theorem childHist_leaf_iff
+    (R : RootedTree V) (H : V → ℕ) {m : ℕ} (s : V → ℚ)
+    (v : V) (hv : v ≠ R.root) (hleaf : R.children v = ∅)
+    (h : OrbitHist) :
+    ChildHist R H m s v h ↔
+      ∃ q : Fin m → ℕ, (∑ i, q i) = H v ∧
+        RootChildCap R v q ∧ prefixSeed R s v q = h := by
+  have hcover : ([] : List V).toFinset = R.children v := by simp [hleaf]
+  rw [childHist_iff_fullPrefixReach R H s v hv [] List.nodup_nil hcover h]
+  simp only [prefixReach_nil_iff]
+
+/-- Boundary regression 2 (zero routes, one-way implication): at any non-root vertex `v`,
+`ChildHist R H 0 s v h` forces `H v = 0` (empty `Fin 0` sum) and `h = 0`
+(`prefixReach_zero_routes_only_empty`). Kept one-way because descendants may still carry
+positive demand. -/
+theorem childHist_zero_routes_imp
+    (R : RootedTree V) (H : V → ℕ) (s : V → ℚ)
+    (v : V) (hv : v ≠ R.root) (h : OrbitHist)
+    (hch : ChildHist R H 0 s v h) :
+    H v = 0 ∧ h = 0 := by
+  classical
+  let us : List V := (R.children v).toList
+  have hd : us.Nodup := Finset.nodup_toList (R.children v)
+  have hcover : us.toFinset = R.children v := Finset.toList_toFinset (R.children v)
+  have hall : ∀ u ∈ us, u ∈ R.children v := fun u hu => by
+    rw [← hcover]; exact List.mem_toFinset.mpr hu
+  obtain ⟨q, hq, _, hreach⟩ :=
+    (childHist_iff_fullPrefixReach R H s v hv us hd hcover h).mp hch
+  refine ⟨?_, prefixReach_zero_routes_only_empty R H s v q us hd hall h hreach⟩
+  simpa using hq.symm
+
 end
 
 end UAVProof.TreeBudgetOrbitPrototype
 
 #print axioms UAVProof.TreeBudgetOrbitPrototype.childHist_iff_fullPrefixReach
 #print axioms UAVProof.TreeBudgetOrbitPrototype.ex_childHist_two_child_hub
+#print axioms UAVProof.TreeBudgetOrbitPrototype.childHist_leaf_iff
+#print axioms UAVProof.TreeBudgetOrbitPrototype.childHist_zero_routes_imp

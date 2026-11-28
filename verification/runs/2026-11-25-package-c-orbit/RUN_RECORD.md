@@ -236,3 +236,29 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetTransportEn
 'UAVProof.TreeBudgetOrbitPrototype.enumTables_pushforward_iff_exists_perm' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All five outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 8: Multi-Child Fold Step 3 Boundary Regressions (`childHist_leaf_iff`, `childHist_zero_routes_imp`) — `TreeBudgetPrefixMerge.lean`
+
+### Additions to `TreeBudgetPrefixMerge.lean`
+1. **Non-root leaf (`childHist_leaf_iff`)**: assuming `R.children v = ∅`, takes `us = []` and simplifies `childHist_iff_fullPrefixReach` via `prefixReach_nil_iff` to `ChildHist R H m s v h ↔ ∃ q, (∑ i, q i) = H v ∧ RootChildCap R v q ∧ prefixSeed R s v q = h`.
+2. **Zero routes (`childHist_zero_routes_imp`)**: one-way implication from `ChildHist R H 0 s v h` to `H v = 0 ∧ h = 0` via `childHist_iff_fullPrefixReach` (`Fin 0` empty sum) and `prefixReach_zero_routes_only_empty` (kept one-way because descendants may still carry positive demand).
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixMerge.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings, first-pass build)
+- **Saved raw log**: `lean_check_prefix3.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.childHist_iff_fullPrefixReach' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ex_childHist_two_child_hub' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.childHist_leaf_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.childHist_zero_routes_imp' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All four outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
