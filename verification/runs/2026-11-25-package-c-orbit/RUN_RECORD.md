@@ -201,3 +201,38 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixMerge
 'UAVProof.TreeBudgetOrbitPrototype.ex_childHist_two_child_hub' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 Both outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 7: C2 Closure (Zero-Multiplicity Regression, Executable Enumerator & Python Differential Check) — `TreeBudgetTransportEnum.lean`
+
+### Deliverables
+1. **Task 1 — Zero-multiplicity-in-support regression (`exZeroMult_legal`, `exZeroMult_unique`, `exZeroMult_realizable`)**:
+   - `m = 1`, `A = B = Finset.univ : Finset Bool`, `x = y = fun _ => false`, `K _ _ = True`.
+   - Proves `exZeroMult_N` (`N false false = 1`, other 3 cells `0`) is the unique `LegalTable`, and invokes `transport_realize_exact` to obtain the realizing permutation.
+2. **Task 2 — Executable enumerator & membership / permutation bridge (`TreeBudgetTransportEnum.lean`)**:
+   - Executable enumerators `rowChoices`, `tableChoices`, `enumTables` and table encoder `encodeTable`.
+   - `mem_rowChoices_iff`, `mem_tableChoices_iff`, and main theorem `encodeTable_mem_enumTables_iff_legalTable`: for duplicate-free ordered supports `as, bs` containing the images of `x, y`, `encodeTable as bs N ∈ enumTables K as bs x y ↔ LegalTable as.toFinset bs.toFinset x y (fun a b => K a b = true) N`.
+   - End-to-end bridge `enumTables_pushforward_iff_exists_perm` combining `encodeTable_mem_enumTables_iff_legalTable`, `transport_realize_exact`, and `merged_hist_eq_tablePushforwardHist` to equate enumerated pushforward histograms with all `K_in`-compatible permutations' merged histograms.
+3. **Task 3 — Independent Python exhaustive permutation check (`check_transport_enum.py`, `python_enum_check.log`)**:
+   - Tested 67 cases across `m = 0..4` (7 targeted cases covering empty support, zero-multiplicity support, `m = 4` repeated-type split-block, `K_in` forbidden infeasibility, `0+1`/`1+0` output-type merging, and signed rationals + 60 randomized stress cases).
+   - Verified exact set equality for both cell-count tables (total 84 tables) and merged output histograms (total 81 histograms), with `PY_EXIT=0`.
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetTransportEnum.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw logs**: `lean_check_c2_enum.log`, `python_enum_check.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.exZeroMult_legal' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exZeroMult_unique' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exZeroMult_realizable' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.encodeTable_mem_enumTables_iff_legalTable' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.enumTables_pushforward_iff_exists_perm' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All five outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
