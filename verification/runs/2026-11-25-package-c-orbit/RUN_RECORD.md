@@ -337,3 +337,41 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetHistJoinExe
 'UAVProof.TreeBudgetOrbitPrototype.exExec_collision_both_histJoin' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All six outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 11: C3 Executable Multi-Child Prefix Fold for Fixed `q` (`prefixFoldExec`, `exists_mem_prefixFoldExec_iff_prefixReach`) — `TreeBudgetPrefixExec.lean`
+
+### Deliverables (`TreeBudgetPrefixExec.lean`)
+Imports `TreeBudgetHistJoinExec` (after exporting `TreeBudgetHistJoinExec.olean`, `E8=0`).
+
+1. **Executable multi-child fold**:
+   - `seedEntries w q`, `advanceExec prev child`, `prefixFoldExec tables us seed`.
+   - `validHistEntries_seedEntries` and `denoteHist_seedEntries`: proves `seedEntries (linearWeight R s v) q` is valid (distinct keys, positive counts) and denotes `prefixSeed R s v q`.
+2. **Fold equivalence (`exists_mem_advanceExec_iff`, `exists_mem_foldl_advanceExec_iff`, `exists_mem_prefixFoldExec_iff_prefixReach`)**:
+   - Generalizes initial candidate list `[seed]` to arbitrary valid `prev` and applies `exists_mem_histJoinExec_iff_histJoin` at each step to prove:
+     `(∃ out ∈ prefixFoldExec tables us (seedEntries (linearWeight R s v) q), denoteHist out = h) ↔ PrefixReach R H s v q us h`.
+3. **Three Verification Examples**:
+   - **Empty child list (`exFold_nil`)**: `prefixFoldExec tables [] seed = [seed]`.
+   - **Empty child table (`exFold_empty_child_returns_nil`)**: encountering any `u ∈ us` with `tables u = []` yields `[]`.
+   - **4-vertex signed-cost example in `[2, 3]` and `[3, 2]` orders (`ex4_fold_23_eq`, `ex4_fold_32_eq`, `ex4_both_orders_same_denoted_hists`)**: under `denoteHist`, both orders produce the exact same set of two all-active histograms `{(true, -1), (true, 7)}` and `{(true, 2), (true, 4)}`, confirming order invariance and single charging of parent weight `w₁ * q_i = 2`.
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixExec.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw log**: `lean_check_prefix_exec.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.validHistEntries_seedEntries' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.denoteHist_seedEntries' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exists_mem_prefixFoldExec_iff_prefixReach' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exFold_nil' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exFold_empty_child_returns_nil' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ex4_both_orders_same_denoted_hists' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All six outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
