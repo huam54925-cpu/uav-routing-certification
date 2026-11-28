@@ -262,3 +262,40 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixMerge
 'UAVProof.TreeBudgetOrbitPrototype.childHist_zero_routes_imp' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All four outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 9: Root Branch Decomposition (`root_split_iff`, `matrixFeasible_iff_root_split`) — `TreeBudgetRootSplit.lean`
+
+### Deliverables (`TreeBudgetRootSplit.lean`)
+Imports `TreeBudgetPrefixMerge` (after exporting `TreeBudgetPrefixMerge.olean` with `E6=0`).
+
+1. **Local lemmas**:
+   - `compactRep_cost_zero_of_not_active`: inactive routes (`i ∉ z.active`) have zero counts across the entire subtree (`PartialValid.zero_of_top_zero`) and hence `z.cost i = 0`.
+   - `compactRep_rootChild_active_card`: at any root child `u ∈ R.children R.root`, `RootChildCap`, `capped_eq_indicator`, and the top-edge column sum give `z.active.card = H u`.
+   - `exists_perm_map_finset`: constructs a permutation `σ : Equiv.Perm (Fin m)` aligning any two `Finset (Fin m)` blocks of equal cardinality.
+2. **Main theorem (`root_split_iff`)**:
+   - Proves `CompactRootAccept R H m s T ↔ (∑ u ∈ R.children R.root, H u) = m ∧ ∀ u ∈ R.children R.root, ∃ h : OrbitHist, ChildHist R H m s u h ∧ ∀ c : ℚ, (true, c) ∈ h → c ≤ T`, checking budget only on active routes so `T < 0` is handled accurately.
+3. **Bridge to original matrix feasibility (`matrixFeasible_iff_root_split`)**:
+   - Chains `compactRootAccept_iff_matrixFeasible.symm` with `root_split_iff`.
+4. **Negative-budget regression (`ex_root_split_negative_budget`)**:
+   - Root `0` with two leaf children `1, 2`, `m = 2`, `H = ![0, 1, 1]`, leaf costs `s = ![0, -3, -2]`, budget `T = -1`; proves `MatrixFeasible R H 2 s (-1)` through `matrixFeasible_iff_root_split`, verifying that inactive rows (`cost = 0 > -1`) are not tested against `T`.
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetRootSplit.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw log**: `lean_check_root_split.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.compactRep_cost_zero_of_not_active' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.compactRep_rootChild_active_card' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.root_split_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.matrixFeasible_iff_root_split' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ex_root_split_negative_budget' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+All five outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
