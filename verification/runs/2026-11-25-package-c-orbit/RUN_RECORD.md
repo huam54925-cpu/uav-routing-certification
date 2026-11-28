@@ -375,3 +375,42 @@ lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetPrefixExec.
 'UAVProof.TreeBudgetOrbitPrototype.ex4_both_orders_same_denoted_hists' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 All six outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
+
+---
+
+## Round 12: C3 Executable Complete Non-Root Node (`topRows`, `nodeExec`, `exists_mem_nodeExec_iff_childHist`) — `TreeBudgetNodeExec.lean`
+
+### Deliverables (`TreeBudgetNodeExec.lean`)
+Imports `TreeBudgetPrefixExec` (after exporting `TreeBudgetPrefixExec.olean`, `E9=0`) and `TreeBudgetPrefixMerge`.
+
+1. **Exact top-row enumeration (`topRows`, `mem_topRows_length`, `ofFn_mem_topRows_iff`)**:
+   - Reuses `rowChoices d (List.replicate m (true, if isRootChild then 1 else d))`.
+   - Proves every emitted row has length `m` (so `row.getD i.val 0` is always in-bounds) and `List.ofFn q ∈ topRows m (H v) (decide (R.parent v = R.root)) ↔ (∑ i, q i) = H v ∧ RootChildCap R v q`.
+2. **Complete non-root node interface (`nodeExec`, `validHistEntries_of_mem_nodeExec`, `exists_mem_nodeExec_iff_childHist`)**:
+   - Proves every emitted candidate satisfies `ValidHistEntries` (ready for parent-layer recursion).
+   - Chains `exists_mem_prefixFoldExec_iff_prefixReach` and `childHist_iff_fullPrefixReach` to prove `(∃ out ∈ nodeExec m (H v) (decide (R.parent v = R.root)) (linearWeight R s v) tables us, denoteHist out = h) ↔ ChildHist R H m s v h`.
+3. **Two Boundary Regressions**:
+   - `m = 0`: `exTopRows_m0_d0` (`topRows 0 0 _ = [[]]`), `exTopRows_m0_dpos` (`d > 0 → topRows 0 d _ = []`).
+   - `m = 2, d = 2`: `exTopRows_m2_d2_rootChild` (`topRows 2 2 true = [[1, 1]]`), `exTopRows_m2_d2_deeper` (`topRows 2 2 false = [[0, 2], [1, 1], [2, 0]]`).
+
+### Verification Command & Output
+Command run from `G:\lean666\jsp_001022_extension`:
+```powershell
+$env:LEAN_PATH = "G:\lean666\jsp_001022_extension\verification\runs\2026-11-25-package-c-orbit"
+lake env lean verification/runs/2026-11-25-package-c-orbit/TreeBudgetNodeExec.lean
+```
+
+- **Exit code**: `0` (zero errors, zero warnings)
+- **Saved raw log**: `lean_check_node_exec.log`
+- **Axiom audit (`#print axioms`)**:
+```text
+'UAVProof.TreeBudgetOrbitPrototype.mem_topRows_length' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.ofFn_mem_topRows_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.validHistEntries_of_mem_nodeExec' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exists_mem_nodeExec_iff_childHist' depends on axioms: [propext, Classical.choice, Quot.sound]
+'UAVProof.TreeBudgetOrbitPrototype.exTopRows_m0_d0' does not depend on any axioms
+'UAVProof.TreeBudgetOrbitPrototype.exTopRows_m0_dpos' depends on axioms: [propext]
+'UAVProof.TreeBudgetOrbitPrototype.exTopRows_m2_d2_rootChild' does not depend on any axioms
+'UAVProof.TreeBudgetOrbitPrototype.exTopRows_m2_d2_deeper' does not depend on any axioms
+```
+All eight outputs are subsets of `{propext, Classical.choice, Quot.sound}` with no `sorryAx` or custom axioms.
